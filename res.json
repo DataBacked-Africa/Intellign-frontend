@@ -1,0 +1,88 @@
+{
+    "status": "COMPLETED",
+    "progress": 100,
+    "message": "Optimization complete. Database updated.",
+    "resultData": {
+        "status": "OPTIMAL",
+        "convergence_score": 0.99,
+        "iterations_run": 428,
+        "processing_time_ms": 2680,
+        "resources_allocated": [
+            {
+                "id": "RES-01",
+                "target": "GOAL-A",
+                "amount": 4027,
+                "efficiency": 0.79
+            },
+            {
+                "id": "RES-02",
+                "target": "GOAL-B",
+                "amount": 2687,
+                "efficiency": 0.92
+            },
+            {
+                "id": "RES-03",
+                "target": "GOAL-C",
+                "amount": 5548,
+                "efficiency": 0.86
+            },
+            {
+                "id": "RES-04",
+                "target": "GOAL-D",
+                "amount": 5676,
+                "efficiency": 0.93
+            },
+            {
+                "id": "RES-05",
+                "target": "GOAL-E",
+                "amount": 2911,
+                "efficiency": 0.88
+            }
+        ],
+        "timeline_data": [
+            {
+                "gen": 0,
+                "score": 0
+            },
+            {
+                "gen": 42,
+                "score": 0.29
+            },
+            {
+                "gen": 84,
+                "score": 0.49
+            },
+            {
+                "gen": 126,
+                "score": 0.62
+            },
+            {
+                "gen": 168,
+                "score": 0.7
+            },
+            {
+                "gen": 210,
+                "score": 0.75
+            },
+            {
+                "gen": 252,
+                "score": 0.79
+            },
+            {
+                "gen": 294,
+                "score": 0.81
+            },
+            {
+                "gen": 336,
+                "score": 0.84
+            },
+            {
+                "gen": 378,
+                "score": 0.85
+            }
+        ],
+        "anomalies_detected": [
+            "Row 45: Cost exceeds variance cap"
+        ]
+    }
+}
