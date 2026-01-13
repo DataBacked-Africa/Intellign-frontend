@@ -13,6 +13,7 @@ export const useSessionOrchestrator = () => {
         schemaFile,
         setSessionId,
         setStatus,
+        setSchemaPreview,
         setProgress,
         addLog,
         setResult,
@@ -73,14 +74,33 @@ export const useSessionOrchestrator = () => {
                             if (data.message) {
                                 addLog(data.message);
                             }
+
+                            // Check for Analysis completion/Schema data
+                            if (data.schema_preview || data.columns) {
+                                setSchemaPreview({
+                                    columns: data.schema_preview?.columns || data.columns || []
+                                });
+                                // Automatically move to configuration if we have the data
+                                setStatus('CONFIGURING');
+                            }
+                        }
+
+                        if (data.status === 'CONFIGURING') {
+                            if (data.schema_preview || data.columns) {
+                                setSchemaPreview({
+                                    columns: data.schema_preview?.columns || data.columns || []
+                                });
+                            }
+                            setStatus('CONFIGURING');
                         }
 
                         if (data.status === 'COMPLETED') {
                             setResult(data.resultData);
                             setProgress(100);
-                            saveSession(); // Auto-save to history
-                            showToast.success("Analysis Complete", "Your optimization plan is ready.");
-                            ctrl.abort(); // Close connection
+                            // Instead of finishing, we move to Goal Configuration using this result
+                            setStatus('CONFIGURING');
+                            showToast.success("Initialization Complete", "Please define your optimization goals.");
+                            ctrl.abort();
                         }
 
                         if (data.status === 'FAILED') {
@@ -138,11 +158,8 @@ export const useSessionOrchestrator = () => {
                             }
                         }
                     })
-                },
-                goals: {
-                    target_metric: "accuracy",
-                    priority: "high"
                 }
+                // goals removed from init payload
             };
 
             const response = await axiosInstance.post('/sessions/init', payload);

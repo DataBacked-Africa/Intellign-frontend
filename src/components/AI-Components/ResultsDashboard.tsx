@@ -78,7 +78,7 @@ const ResultsDashboard = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-lg font-semibold text-gray-800 mb-6">Optimized Allocation</h3>
                     <div className="space-y-4">
-                        {optimized_allocation.map((alloc, idx) => (
+                        {optimized_allocation?.map((alloc, idx) => (
                             <div key={idx} className="space-y-1">
                                 <div className="flex justify-between text-sm">
                                     <span className="font-medium text-gray-700">{alloc.category}</span>

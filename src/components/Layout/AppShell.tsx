@@ -32,13 +32,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col h-full relative min-w-0">
                 {/* Mobile Header */}
-                <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-gray-100">
-                    <button onClick={() => setIsMobileMenuOpen(true)}>
-                        <Menu className="w-6 h-6 text-gray-700" />
-                    </button>
-                    <span className="font-semibold text-gray-800">DBA Intelligence</span>
-                    <div className="w-6" /> {/* Spacer */}
-                </div>
+              
 
                 {/* Content */}
                 <main className="flex-1 overflow-y-auto relative scroll-smooth">

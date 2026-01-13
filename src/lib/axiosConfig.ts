@@ -96,6 +96,11 @@ axiosInstance.interceptors.response.use(
                             if (newRefreshToken) {
                                 localStorage.setItem('refreshToken', newRefreshToken);
                             }
+                            // Also update Zustand store without causing circular dependency if possible,
+                            // or just rely on localStorage which the store hydrates from on reload, 
+                            // BUT ideally we should sync them.
+                            // Since we can't import the hook directly here easily without circular deps sometimes,
+                            // we rely on the interceptor reading from localStorage next time.
                         }
 
                         // Update queue

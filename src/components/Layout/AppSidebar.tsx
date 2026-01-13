@@ -30,12 +30,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
             initial={{ width: isOpen ? 260 : 60 }}
             animate={{ width: isOpen ? 260 : 60 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="h-screen bg-[#0F0F0F] border-r border-[#2A2A2A] flex flex-col flex-shrink-0 z-50 relative"
+            className="h-screen bg-[#1a050b] border-r border-[#3d0e19] flex flex-col flex-shrink-0 z-50 relative"
         >
             {/* Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="absolute -right-3 top-6 bg-[#2A2A2A] text-gray-400 hover:text-white p-1 rounded-full border border-gray-700 shadow-sm z-50"
+                className="absolute -right-3 top-6 bg-[#3d0e19] text-[#5c1427] hover:text-[#7a1b34] p-1 rounded-full border border-[#5c1427]/30 shadow-sm z-50"
             >
                 {isOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
             </button>
@@ -45,7 +45,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                 <button
                     onClick={handleNewChat}
                     className={cn(
-                        "flex items-center gap-3 w-full p-3 rounded-lg border border-[#2A2A2A] hover:bg-[#1F1F1F] transition-colors group",
+                        "flex items-center gap-3 w-full p-3 rounded-lg border border-[#3d0e19] hover:bg-[#5c1427]/10 transition-colors group",
                         !isOpen && "justify-center px-0"
                     )}
                 >
@@ -76,8 +76,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                             key={session.sessionId || Math.random()}
                             onClick={() => session.sessionId && loadSession(session.sessionId)}
                             className={cn(
-                                "flex items-center gap-3 w-full p-2.5 rounded-lg text-sm text-gray-400 hover:bg-[#1F1F1F] hover:text-white transition-colors text-left",
-                                session.sessionId === sessionId && "bg-[#1F1F1F] text-white",
+                                "flex items-center gap-3 w-full p-2.5 rounded-lg text-sm text-gray-400 hover:bg-[#5c1427]/20 hover:text-white transition-colors text-left",
+                                session.sessionId === sessionId && "bg-[#5c1427]/20 text-white border border-[#5c1427]/30",
                                 !isOpen && "justify-center"
                             )}
                         >
@@ -93,9 +93,9 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
             </div>
 
             {/* Footer / User Profile */}
-            <div className="p-3 border-t border-[#2A2A2A]">
+            <div className="p-3 border-t border-[#3d0e19]">
                 <div className={cn(
-                    "flex items-center gap-3 p-2 rounded-lg hover:bg-[#1F1F1F] transition-colors cursor-pointer text-gray-300",
+                    "flex items-center gap-3 p-2 rounded-lg hover:bg-[#5c1427]/10 transition-colors cursor-pointer text-gray-300",
                     !isOpen && "justify-center"
                 )}>
                     <div className="w-8 h-8 rounded-full bg-[#5c1427]/20 flex items-center justify-center text-[#5c1427] border border-[#5c1427]/30">

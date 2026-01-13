@@ -4,22 +4,21 @@ import React from 'react';
 import UploadArea from './UploadArea';
 import ProcessingConsole from './ProcessingConsole';
 import ResultsDashboard from './ResultsDashboard';
+import GoalDefinitionForm from './GoalDefinitionForm';
 import { useSessionStore } from '@/store/useSessionStore';
 import { motion } from 'framer-motion';
 
+
 const MainWorkspace = () => {
-    const { sessionStatus } = useSessionStore();
-    const isIngesting = sessionStatus !== 'IDLE';
+    const { sessionStatus, setStatus } = useSessionStore();
+    const isIngesting = sessionStatus !== 'IDLE' && sessionStatus !== 'CONFIGURING';
+    const isConfiguring = sessionStatus === 'CONFIGURING';
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 relative">
 
             {/* Background Branding (Subtle) */}
-            {!isIngesting && (
-                <div className="absolute top-10 left-1/2 -translate-x-1/2 text-center opacity-30 select-none pointer-events-none">
-                    <h1 className="text-3xl font-bold text-gray-300">DBA Intelligence</h1>
-                </div>
-            )}
+            
 
             <div className="w-full max-w-5xl z-10">
                 {sessionStatus === 'COMPLETED' ? (
@@ -29,6 +28,14 @@ const MainWorkspace = () => {
                         transition={{ duration: 0.4 }}
                     >
                         <ResultsDashboard />
+                    </motion.div>
+                ) : isConfiguring ? (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4 }}
+                    >
+                        <GoalDefinitionForm onNext={() => { }} />
                     </motion.div>
                 ) : !isIngesting ? (
                     <motion.div

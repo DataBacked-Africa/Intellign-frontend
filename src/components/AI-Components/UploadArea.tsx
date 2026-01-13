@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
-import { Upload, FileSpreadsheet, Settings, X, CheckCircle, File as FileIcon, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Settings, X, CheckCircle2, File as FileIcon, Loader2, Sparkles, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { useSessionStore } from "@/store/useSessionStore";
 import { showToast } from "@/components/ui/CustomToast";
 import { useSessionOrchestrator } from "@/hooks/useSessionOrchestrator";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface UploadAreaProps {
     onFilesSelected?: (files: { source: File | null; schema: File | null }) => void;
@@ -16,7 +17,7 @@ interface UploadAreaProps {
 type ZoneType = "source" | "schema";
 
 const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngestion }) => {
-    const { setSourceFile, setSchemaFile, sourceFile: sessionSource, schemaFile: sessionSchema, sessionStatus } = useSessionStore();
+    const { setSourceFile, setSchemaFile, sourceFile: sessionSource, schemaFile: sessionSchema, sessionStatus, setStatus } = useSessionStore();
     const { startIngestion } = useSessionOrchestrator();
 
     // Local loading states
@@ -26,15 +27,8 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
     const [sourceError, setSourceError] = useState<string | null>(null);
     const [schemaError, setSchemaError] = useState<string | null>(null);
 
-    // Initialize state from session store if available (optional, depends on UX preference)
-    // For now, we keep local file references separate from uploaded metadata
-    // but we can check sessionSource to show "uploaded" state immediately if we wanted implementation complexity.
-
     const [sourceFileLocal, setSourceFileLocal] = useState<File | null>(null);
     const [schemaFileLocal, setSchemaFileLocal] = useState<File | null>(null);
-
-    // Drag states
-    const [dragActiveZone, setDragActiveZone] = useState<ZoneType | null>(null);
 
     const sourceInputRef = useRef<HTMLInputElement>(null);
     const schemaInputRef = useRef<HTMLInputElement>(null);
@@ -44,17 +38,14 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
 
         if (type === "source") {
             if (!['pdf', 'csv', 'xlsx', 'json', 'parquet', 'geojson', 'gpkg'].includes(ext || '')) {
-                return "Invalid Format: Source requires data format (PDF, CSV, XLSX, JSON, etc.)";
+                return "Invalid Format. Support: CSV, XLSX, JSON, Parquet, etc.";
             }
         } else {
-            // Matching the subtext from the UI update
             if (!['json', 'parquet', 'csv', 'xlsx', 'geojson', 'gpkg'].includes(ext || '')) {
-                return "Invalid Format: Schema requires valid data format.";
+                return "Invalid Format. Schema requires data format.";
             }
         }
-
-        if (file.size > 100 * 1024 * 1024) return "File exceeds 100MB limit."; // Updated to 100MB per UI text
-
+        if (file.size > 100 * 1024 * 1024) return "File exceeds 100MB limit.";
         return null;
     };
 
@@ -73,9 +64,9 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
                     size: data.bytes,
                     createdAt: data.created_at
                 });
-                showToast.success("Source Uploaded", `${file.name} ready for processing.`);
+                showToast.success("Source Attached", `${file.name} ready.`);
             } else {
-                setSourceFileLocal(null); // Reset local if upload failed
+                setSourceFileLocal(null);
             }
         } else {
             setIsUploadingSchema(true);
@@ -91,50 +82,14 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
                     size: data.bytes,
                     createdAt: data.created_at
                 });
-                showToast.success("Schema Uploaded", `${file.name} ready for processing.`);
+                showToast.success("Schema Attached", `${file.name} ready.`);
             } else {
                 setSchemaFileLocal(null);
             }
         }
     };
 
-    const handleDrag = useCallback((e: React.DragEvent, zone: ZoneType) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActiveZone(zone);
-        } else if (e.type === "dragleave") {
-            setDragActiveZone(null);
-        }
-    }, []);
-
-    const handleDrop = useCallback((e: React.DragEvent, zone: ZoneType) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragActiveZone(null);
-
-        const droppedFiles = Array.from(e.dataTransfer.files);
-        if (!droppedFiles.length) return;
-
-        const file = droppedFiles[0]; // Take only the first file
-        const error = validateFile(file, zone);
-
-        if (zone === "source") {
-            setSourceError(error);
-            if (!error) {
-                setSourceFileLocal(file);
-                handleUpload(file, 'source');
-            }
-        } else {
-            setSchemaError(error);
-            if (!error) {
-                setSchemaFileLocal(file);
-                handleUpload(file, 'schema');
-            }
-        }
-    }, []);
-
-    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>, zone: ZoneType) => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, zone: ZoneType) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             const error = validateFile(file, zone);
@@ -159,11 +114,11 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
         if (zone === "source") {
             setSourceFileLocal(null);
             setSourceError(null);
-            setSourceFile(null); // Clear from store
+            setSourceFile(null);
         } else {
             setSchemaFileLocal(null);
             setSchemaError(null);
-            setSchemaFile(null); // Clear from store
+            setSchemaFile(null);
         }
     };
 
@@ -171,184 +126,138 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
     const isProcessing = sessionStatus === 'PROCESSING';
 
     return (
-        <div className="w-full max-w-5xl mx-auto flex flex-col gap-8">
+        <div className="w-full h-full flex flex-col items-center justify-center p-6 relative">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Main Content Container */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full max-w-2xl flex flex-col items-center text-center space-y-10"
+            >
+                {/* Header / Greeting */}
+                <div className="space-y-4">
+                    <div className="inline-flex items-center justify-center p-3 bg-white/5 rounded-full mb-2">
+                        <Sparkles className="w-6 h-6 text-[#5c1427]" />
+                    </div>
+                    <h1 className="text-4xl font-semibold text-gray-900 tracking-tight">
+                        Start your optimization
+                    </h1>
+                    <p className="text-gray-500 text-lg max-w-lg mx-auto leading-relaxed">
+                        Upload your source data and constraint schema to initialize the AI analysis model.
+                    </p>
+                </div>
 
-                {/* ZONE 1: Source Dataset */}
-                <UploadZone
-                    type="source"
-                    file={sourceFileLocal}
-                    isLoading={isUploadingSource}
-                    error={sourceError}
-                    isDragActive={dragActiveZone === 'source'}
-                    onDrag={(e) => handleDrag(e, 'source')}
-                    onDrop={(e) => handleDrop(e, 'source')}
-                    onClick={() => sourceInputRef.current?.click()}
-                    onRemove={() => removeFile('source')}
-                    inputRef={sourceInputRef as React.RefObject<HTMLInputElement>}
-                    onInputChange={(e) => handleFileInput(e, 'source')}
-                    accept=".pdf,.csv,.xlsx"
-                />
+                {/* Upload Section - Cleaner, Stacked or Grid */}
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                {/* ZONE 2: Constraint Schema */}
-                <UploadZone
-                    type="schema"
-                    file={schemaFileLocal}
-                    isLoading={isUploadingSchema}
-                    error={schemaError}
-                    isDragActive={dragActiveZone === 'schema'}
-                    onDrag={(e) => handleDrag(e, 'schema')}
-                    onDrop={(e) => handleDrop(e, 'schema')}
-                    onClick={() => schemaInputRef.current?.click()}
-                    onRemove={() => removeFile('schema')}
-                    inputRef={schemaInputRef as React.RefObject<HTMLInputElement>}
-                    onInputChange={(e) => handleFileInput(e, 'schema')}
-                    accept=".json,.yaml,.xml"
-                />
+                    {/* Source File Input */}
+                    <MinimalUploadCard
+                        label="Source Dataset"
+                        subtext="CSV, Excel, JSON"
+                        file={sourceFileLocal}
+                        isLoading={isUploadingSource}
+                        error={sourceError}
+                        onClick={() => sourceInputRef.current?.click()}
+                        onRemove={() => removeFile('source')}
+                    />
+                    <input ref={sourceInputRef} type="file" className="hidden" onChange={(e) => handleFileSelect(e, 'source')} accept=".csv,.xlsx,.json,.parquet" />
 
-            </div>
+                    {/* Schema File Input */}
+                    <MinimalUploadCard
+                        label="Constraint Schema"
+                        subtext="JSON, YAML"
+                        file={schemaFileLocal}
+                        isLoading={isUploadingSchema}
+                        error={schemaError}
+                        onClick={() => schemaInputRef.current?.click()}
+                        onRemove={() => removeFile('schema')}
+                    />
+                    <input ref={schemaInputRef} type="file" className="hidden" onChange={(e) => handleFileSelect(e, 'schema')} accept=".json,.yaml" />
 
-            {/* Action Button */}
-            <div className="flex justify-center">
-                <button
-                    disabled={!isReady || isProcessing}
-                    onClick={startIngestion}
-                    className={cn(
-                        "px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 w-full md:w-auto min-w-[300px]",
-                        (isReady && !isProcessing)
-                            ? "bg-[#5c1427] text-white shadow-lg hover:bg-[#7a1b34] hover:shadow-xl hover:scale-105"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300"
+                </div>
+
+                {/* Action Area */}
+                <div className="w-full pt-4">
+                    <button
+                        onClick={startIngestion}
+                        disabled={!isReady || isProcessing}
+                        className={cn(
+                            "group relative w-full md:w-auto px-8 py-3 rounded-full font-medium text-white shadow-lg transition-all duration-300 flex items-center justify-center gap-2 mx-auto overflow-hidden",
+                            (isReady && !isProcessing)
+                                ? "bg-[#5c1427] hover:bg-[#7a1b34]"
+                                : "bg-gray-300 cursor-not-allowed"
+                        )}
+                    >
+                        {isProcessing ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Analyzing Data...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>Initialize Session</span>
+                                <Sparkles className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                            </>
+                        )}
+                    </button>
+                    {isReady && !isProcessing && (
+                        <p className="text-xs text-gray-400 mt-4 animate-in fade-in">
+                            Ready to process {(sourceFileLocal?.size || 0) / 1024 > 1024 ? `${((sourceFileLocal?.size || 0) / 1024 / 1024).toFixed(1)} MB` : `${((sourceFileLocal?.size || 0) / 1024).toFixed(1)} KB`} of data.
+                        </p>
                     )}
-                >
-                    {isProcessing ? (
-                        <span className="flex items-center gap-2">
-                            <Loader2 className="w-5 h-5 animate-spin" /> Processing Session...
-                        </span>
-                    ) : isReady ? "Initialize Ingestion Sequence" : "Awaiting Uploads..."}
-                </button>
-            </div>
+                </div>
+
+            </motion.div>
 
         </div>
     );
 };
 
-
-// Sub-component for a single Zone to keep things clean
-interface UploadZoneProps {
-    type: ZoneType;
-    file: File | null;
-    isLoading?: boolean;
-    error: string | null;
-    isDragActive: boolean;
-    onDrag: (e: React.DragEvent) => void;
-    onDrop: (e: React.DragEvent) => void;
-    onClick: () => void;
-    onRemove: () => void;
-    inputRef: React.RefObject<HTMLInputElement>;
-    onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    accept: string;
-}
-
-const UploadZone: React.FC<UploadZoneProps> = ({
-    type, file, isLoading, error, isDragActive, onDrag, onDrop, onClick, onRemove, inputRef, onInputChange, accept
-}) => {
-
-    const isSource = type === 'source';
-    const title = isSource ? "Resources Dataset (Agent, Staff, etc.)" : "Target Dataset (Tasks, Facilities, etc.)";
-    const subText = isSource ? "Supported: .json, .parquet, .csv, .xlsx, .geojson, .gpkg (Max 100MB)" : "Supported: .json, .parquet, .csv, .xlsx, .geojson, .gpkg (Max 100MB)";
-    const Icon = isSource ? FileSpreadsheet : Settings;
-
+// Reusable Minimal Card
+const MinimalUploadCard = ({ label, subtext, file, isLoading, error, onClick, onRemove }: any) => {
     return (
-        <div className="relative group flex-1 h-full min-h-[300px]">
-            {/* Gradient Glow */}
-            <div className={cn(
-                "absolute -inset-0.5 bg-gradient-to-r rounded-2xl blur opacity-20 transition duration-500",
-                error ? "from-red-500 to-red-600 opacity-50" : "from-[#5c1427] to-[#8a243f] group-hover:opacity-40"
-            )}></div>
-
-            <div
-                className={cn(
-                    "relative h-full bg-[#1E1E1E] rounded-2xl p-6 border-2 transition-all duration-300 flex flex-col items-center justify-between text-center",
-                    error ? "border-red-500" : (isDragActive || file ? "border-[#5c1427] bg-[#5c1427]/5" : "border-gray-800 hover:border-[#5c1427]/30")
-                )}
-                onDragEnter={onDrag}
-                onDragLeave={onDrag}
-                onDragOver={onDrag}
-                onDrop={onDrop}
-            >
-                <input
-                    ref={inputRef}
-                    type="file"
-                    className="hidden"
-                    onChange={onInputChange}
-                    accept={accept}
-                />
-
-                {/* Header Section */}
-                <div className="w-full flex flex-col items-center pt-4">
-                    <div className={cn(
-                        "p-4 rounded-full mb-4 transition-colors",
-                        file ? "bg-[#5c1427] text-white" : "bg-[#2A2A2A] text-gray-400 group-hover:text-[#5c1427]"
-                    )}>
-                        {isLoading ? (
-                            <Loader2 className="w-8 h-8 animate-spin" />
-                        ) : file ? (
-                            <CheckCircle className="w-8 h-8" />
-                        ) : (
-                            <Icon className="w-8 h-8" />
-                        )}
+        <div
+            onClick={!file ? onClick : undefined}
+            className={cn(
+                "relative group flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-200 cursor-pointer min-h-[160px]",
+                file
+                    ? "bg-white border-gray-200 shadow-sm"
+                    : "bg-white border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50/50",
+                error && "border-red-300 bg-red-50/10"
+            )}
+        >
+            {isLoading ? (
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                    <span className="text-sm text-gray-500">Uploading...</span>
+                </div>
+            ) : file ? (
+                <div className="w-full flex flex-col items-center gap-3 relative z-10">
+                    <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600 mb-1">
+                        <CheckCircle2 className="w-5 h-5" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-1">{title}</h3>
-                    <p className="text-xs text-gray-500 font-mono">
-                        {isLoading ? "Uploading..." : (isSource ? "Upload Invoice or Raw CSV" : "Upload Optimization Targets")}
-                    </p>
+                    <div className="text-center">
+                        <p className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">{file.name}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{(file.size / 1024).toFixed(0)} KB</p>
+                    </div>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                        className="absolute -top-3 -right-3 p-1.5 bg-gray-100 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"
+                    >
+                        <X className="w-3 h-3" />
+                    </button>
                 </div>
-
-                {/* Middle Section: Drop Area or File Info */}
-                <div className="flex-1 flex items-center justify-center w-full my-6">
-                    {file ? (
-                        <div className="bg-[#2A2A2A] w-full p-4 rounded-lg flex items-center justify-between border border-gray-700">
-                            <div className="flex items-center gap-3 overflow-hidden text-left">
-                                <FileIcon className="w-8 h-8 text-[#5c1427] flex-shrink-0" />
-                                <div>
-                                    <p className="text-sm font-medium text-white truncate max-w-[150px]">{file.name}</p>
-                                    <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
-                                </div>
-                            </div>
-                            <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-full text-gray-400 transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                    ) : (
-                        <div
-                            onClick={onClick}
-                            className={cn(
-                                "w-full h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all",
-                                error ? "border-red-500/50 bg-red-500/5" : "border-gray-700 bg-[#252525] hover:border-[#5c1427]/50 hover:bg-[#5c1427]/5"
-                            )}>
-                            {error ? (
-                                <div className="flex flex-col items-center text-red-400 px-4">
-                                    <AlertCircle className="w-6 h-6 mb-2" />
-                                    <p className="text-sm font-medium">{error}</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <Upload className="w-6 h-6 text-gray-500 mb-2 group-hover:text-[#5c1427] transition-colors" />
-                                    <p className="text-sm text-gray-400">Drag & drop file here</p>
-                                    <span className="text-xs text-[#5c1427] mt-1 hover:underline">or browse local drive</span>
-                                </>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer Section: Supported Formats */}
-                <div className="w-full border-t border-gray-800 pt-4">
-                    <p className="text-[10px] uppercase tracking-wider text-gray-500">{subText}</p>
-                </div>
-
-            </div>
+            ) : (
+                <>
+                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 mb-3 group-hover:scale-110 transition-transform">
+                        <Paperclip className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-sm font-medium text-gray-900">{label}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{subtext}</p>
+                    {error && <p className="text-xs text-red-500 mt-2 font-medium">{error}</p>}
+                </>
+            )}
         </div>
     );
 }

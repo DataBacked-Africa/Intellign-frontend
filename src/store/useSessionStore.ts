@@ -14,6 +14,11 @@ export interface FileMetadata {
     }
 }
 
+export interface SchemaPreview {
+    columns: string[];
+    // Add other analysis data if needed (e.g., data types, row counts)
+}
+
 export interface SessionSnapshot {
     sessionId: string; // Mapped from 'id'
     createdAt: string;
@@ -24,46 +29,57 @@ export interface SessionSnapshot {
     constraintsFile?: FileMetadata;
 }
 
-// Union type for the two different result structures
-export type OptimizationResult = ComplexOptimizationResult | SimpleOptimizationResult;
-
-export interface ComplexOptimizationResult {
-    status?: "OPTIMAL" | "FAILED"; // Optional because simple result doesn't have it
-    convergence_score: number;
-    iterations_run: number;
-    processing_time_ms: number;
-    resources_allocated: Array<{
-        id: string;
-        target: string;
-        amount: number;
-        efficiency: number;
-    }>;
-    timeline_data: Array<{
-        gen: number;
-        score: number;
-    }>;
-    anomalies_detected: string[];
+export interface GoalParams {
+    impact_type: 'reward' | 'penalty';
+    resource_load_columns?: string[];
+    target_load_columns: string[];
+    aggregation: string;
+    operator: '<=' | '>=' | '==' | '<' | '>';
+    use_static_threshold: boolean;
+    capacity_column?: string;
+    static_threshold_value?: number;
+    [key: string]: any;
 }
 
-export interface SimpleOptimizationResult {
-    score: number;
-    feedback: string;
-    timestamp: string;
-    optimized_allocation: Array<{
-        category: string;
-        percentage: number;
+export interface GoalDefinitionPayload {
+    [goalId: string]: {
+        description: string;
+        priority: number; // 0-100
+        logic_type: string;
+        params: GoalParams;
+    }
+}
+
+// Updated Result Structure based on user JSON
+export interface OptimizationResult {
+    run_id: string;
+    status: string;
+    global_score: number;
+    iterations_run: number;
+    processing_time_ms: number;
+    timeline: Array<{
+        generation: number;
+        score: number;
     }>;
-    // Discriminator to distinguish? Usually checking properties is enough.
+    allocations: Array<{
+        resource_id: string;
+        target_id: string;
+        score: number;
+    }>;
+    goal_analysis: any[];
+    anomalies_detected: string[];
 }
 
 interface SessionState {
     sourceFile: FileMetadata | null;
     schemaFile: FileMetadata | null;
+    schemaPreview: SchemaPreview | null;
+    goals: GoalDefinitionPayload; // Stored goal definitions
     isUploadingRequest: boolean;
 
     // Session Orchestration State
     sessionId: string | null;
-    sessionStatus: 'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    sessionStatus: 'IDLE' | 'CONFIGURING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
     progress: number; // 0 to 100
     // Live logs from the server
     logs: string[];
@@ -76,6 +92,8 @@ interface SessionState {
     // Actions
     setSourceFile: (file: FileMetadata | null) => void;
     setSchemaFile: (file: FileMetadata | null) => void;
+    setSchemaPreview: (preview: SchemaPreview | null) => void;
+    setGoals: (goals: GoalDefinitionPayload) => void;
     setUploading: (isUploading: boolean) => void;
     setSessionId: (id: string | null) => void;
     setStatus: (status: SessionState['sessionStatus']) => void;
@@ -94,6 +112,8 @@ export const useSessionStore = create<SessionState>()(
         (set) => ({
             sourceFile: null,
             schemaFile: null,
+            schemaPreview: null,
+            goals: {},
             isUploadingRequest: false,
             sessionId: null,
             sessionStatus: 'IDLE',
@@ -106,6 +126,8 @@ export const useSessionStore = create<SessionState>()(
 
             setSourceFile: (file) => set({ sourceFile: file }),
             setSchemaFile: (file) => set({ schemaFile: file }),
+            setSchemaPreview: (preview) => set({ schemaPreview: preview }),
+            setGoals: (goals) => set({ goals }),
             setUploading: (isUploading) => set({ isUploadingRequest: isUploading }),
             setSessionId: (id) => set({ sessionId: id }),
             setStatus: (status) => set({ sessionStatus: status }),
@@ -113,21 +135,18 @@ export const useSessionStore = create<SessionState>()(
             addLog: (log) => set((state) => ({ logs: [...state.logs, log] })),
             setResult: (data) => set({ resultData: data }),
             setError: (error) => set({ error }),
-            clearSession: () => set((state) => {
-                // We rely on backend history now, but local state reset is needed
-                return {
-                    sourceFile: null,
-                    schemaFile: null,
-                    isUploadingRequest: false,
-                    sessionId: null,
-                    sessionStatus: 'IDLE',
-                    progress: 0,
-                    logs: [],
-                    resultData: null,
-                    error: null,
-                    // sessions: newSessions // Don't modify sessions on clear, they are fetched
-                };
-            }),
+            clearSession: () => set(() => ({
+                sourceFile: null,
+                schemaFile: null,
+                goals: {},
+                isUploadingRequest: false,
+                sessionId: null,
+                sessionStatus: 'IDLE',
+                progress: 0,
+                logs: [],
+                resultData: null,
+                error: null
+            })),
             saveSession: () => set((state) => {
                 // Legacy local save - might not be needed if we rely on GET /sessions
                 // But keeping it for immediate updates if needed
@@ -141,8 +160,8 @@ export const useSessionStore = create<SessionState>()(
                     status: 'COMPLETED', // simplified
                     resultData: state.resultData,
                     logs: state.logs,
-                    sourceFile: state.sourceFile!,
-                    constraintsFile: state.schemaFile!
+                    sourceFile: state.sourceFile || undefined,
+                    constraintsFile: state.schemaFile || undefined
                 };
                 return { sessions: [snapshot, ...state.sessions] };
             }),
