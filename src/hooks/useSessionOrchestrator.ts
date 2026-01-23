@@ -18,7 +18,8 @@ export const useSessionOrchestrator = () => {
         addLog,
         setResult,
         setError,
-        saveSession
+        saveSession,
+        fetchHistory
     } = useSessionStore();
 
     const { token } = useUserStore();
@@ -171,6 +172,11 @@ export const useSessionOrchestrator = () => {
                     setSessionId(sessionId);
                     showToast.success("Session Initialized", "Starting analysis...");
                     connectToEvents(sessionId);
+
+                    // Refresh history after 3 seconds to update sidebar with new session
+                    setTimeout(() => {
+                        fetchHistory();
+                    }, 3000);
                 } else {
                     throw new Error("No session ID returned");
                 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import AuthProvider from "@/components/AuthProvider";
 import "./globals.css";
 
 const raleway = Raleway({
@@ -24,7 +25,9 @@ export default function RootLayout({
         className={`${raleway.className} antialiased`}
       >
         <Toaster position="top-right" />
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
