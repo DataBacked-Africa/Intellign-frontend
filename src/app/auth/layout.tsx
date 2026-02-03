@@ -8,31 +8,62 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="relative min-h-screen bg-[#F5F5F5] flex flex-col items-center justify-center p-4 overflow-hidden">
-            {/* Grid Background Pattern */}
-            <div className="absolute inset-0 pointer-events-none"
-                style={{
-                    backgroundImage: 'linear-gradient(to right, #e5e5e5 1px, transparent 1px), linear-gradient(to bottom, #e5e5e5 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }}
-            />
+    
+        <div className="flex h-screen w-full bg-white overflow-hidden text-gray-900">
+            {/* Left Side - Visual Feature */}
+            <div className="hidden md:flex flex-col justify-between w-1/2 lg:w-[45%] bg-[#171717] text-white p-12 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 pointer-events-none opacity-20"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
+                        backgroundSize: '32px 32px'
+                    }}
+                />
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-900/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-            {/* Logo / Header */}
-            <div className="absolute top-8 left-8 z-10">
-                <Link href="/">
-                    <div className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                        {/* Replace with actual logo if available, for now using Next/Image placeholder or just text if preferred, but usually logo.png exists based on NavBar */}
-                        <Image src="/logo.png" alt="Logo" width={100} height={40} className="object-contain" />
+                {/* Logo Area */}
+                <div className="relative z-10">
+                    <Link href="/">
+                        <div className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                            {/* Replace with actual logo or text */}
+                            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center border border-white/20">
+                                <span className="font-bold text-lg">D</span>
+                            </div>
+                            <span className="font-medium text-lg tracking-tight">DataBackedAfrica</span>
+                        </div>
+                    </Link>
+                </div>
+
+                {/* Hero Content */}
+                <div className="relative z-10 max-w-lg">
+                    <h2 className="text-3xl font-light mb-6 leading-tight">
+                        Transform your data ingestion into a <span className="text-white font-medium">strategic advantage</span>.
+                    </h2>
+                    <div className="flex gap-4">
+                        <div className="h-1 w-12 bg-white/20 rounded-full" />
+                        <div className="h-1 w-2 bg-white/10 rounded-full" />
+                        <div className="h-1 w-2 bg-white/10 rounded-full" />
                     </div>
-                </Link>
+                </div>
+
+                {/* Footer */}
+                <div className="relative z-10 text-xs text-white/40">
+                    &copy; {new Date().getFullYear()} DataBackedAfrica.
+                </div>
             </div>
 
-            <div className="relative z-10 w-full flex flex-col items-center">
-                {children}
-            </div>
+            {/* Right Side - Form */}
+            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 relative">
+                {/* Mobile Logo (visible only on small screens) */}
+                <div className="md:hidden absolute top-6 left-6">
+                    <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+                        <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center">D</div>
+                    </Link>
+                </div>
 
-            <div className="absolute bottom-6 text-xs text-gray-400">
-                &copy; {new Date().getFullYear()} DataBackedAfrica. All rights reserved.
+                <div className="w-full max-w-[420px]">
+                    {children}
+                </div>
             </div>
         </div>
     );

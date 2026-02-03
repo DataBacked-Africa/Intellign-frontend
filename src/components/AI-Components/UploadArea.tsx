@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
-import { Upload, FileSpreadsheet, Settings, X, CheckCircle2, File as FileIcon, Loader2, Sparkles, Paperclip } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { X, CheckCircle2, File as FileIcon, Loader2, Sparkles, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { uploadToCloudinary } from "@/lib/cloudinary";
 import { useSessionStore } from "@/store/useSessionStore";
-import { showToast } from "@/components/ui/CustomToast";
 import { useSessionOrchestrator } from "@/hooks/useSessionOrchestrator";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface UploadAreaProps {
     onFilesSelected?: (files: { source: File | null; schema: File | null }) => void;
@@ -17,12 +15,9 @@ interface UploadAreaProps {
 type ZoneType = "source" | "schema";
 
 const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngestion }) => {
-    const { setSourceFile, setSchemaFile, sourceFile: sessionSource, schemaFile: sessionSchema, sessionStatus, setStatus } = useSessionStore();
+    // We only use store for status checking, not for file storage anymore in this phase
+    const { sessionStatus } = useSessionStore();
     const { startIngestion } = useSessionOrchestrator();
-
-    // Local loading states
-    const [isUploadingSource, setIsUploadingSource] = useState(false);
-    const [isUploadingSchema, setIsUploadingSchema] = useState(false);
 
     const [sourceError, setSourceError] = useState<string | null>(null);
     const [schemaError, setSchemaError] = useState<string | null>(null);
@@ -49,45 +44,6 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
         return null;
     };
 
-    const handleUpload = async (file: File, zone: ZoneType) => {
-        if (zone === "source") {
-            setIsUploadingSource(true);
-            const data = await uploadToCloudinary(file);
-            setIsUploadingSource(false);
-
-            if (data) {
-                setSourceFile({
-                    url: data.secure_url,
-                    publicId: data.public_id,
-                    originalName: data.original_filename,
-                    format: data.format,
-                    size: data.bytes,
-                    createdAt: data.created_at
-                });
-                showToast.success("Source Attached", `${file.name} ready.`);
-            } else {
-                setSourceFileLocal(null);
-            }
-        } else {
-            setIsUploadingSchema(true);
-            const data = await uploadToCloudinary(file);
-            setIsUploadingSchema(false);
-
-            if (data) {
-                setSchemaFile({
-                    url: data.secure_url,
-                    publicId: data.public_id,
-                    originalName: data.original_filename,
-                    format: data.format,
-                    size: data.bytes,
-                    createdAt: data.created_at
-                });
-                showToast.success("Schema Attached", `${file.name} ready.`);
-            } else {
-                setSchemaFileLocal(null);
-            }
-        }
-    };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, zone: ZoneType) => {
         if (e.target.files && e.target.files[0]) {
@@ -98,13 +54,11 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
                 setSourceError(error);
                 if (!error) {
                     setSourceFileLocal(file);
-                    handleUpload(file, 'source');
                 }
             } else {
                 setSchemaError(error);
                 if (!error) {
                     setSchemaFileLocal(file);
-                    handleUpload(file, 'schema');
                 }
             }
         }
@@ -114,15 +68,21 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
         if (zone === "source") {
             setSourceFileLocal(null);
             setSourceError(null);
-            setSourceFile(null);
+            if (sourceInputRef.current) sourceInputRef.current.value = '';
         } else {
             setSchemaFileLocal(null);
             setSchemaError(null);
-            setSchemaFile(null);
+            if (schemaInputRef.current) schemaInputRef.current.value = '';
         }
     };
 
-    const isReady = !!sessionSource && !!sessionSchema && !isUploadingSource && !isUploadingSchema;
+    const handleStart = () => {
+        if (sourceFileLocal) {
+            startIngestion(sourceFileLocal, schemaFileLocal);
+        }
+    };
+
+    const isReady = !!sourceFileLocal;
     const isProcessing = sessionStatus === 'PROCESSING';
 
     return (
@@ -136,16 +96,13 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
                 className="w-full max-w-2xl flex flex-col items-center text-center space-y-10"
             >
                 {/* Header / Greeting */}
-                <div className="space-y-4">
-                    <div className="inline-flex items-center justify-center p-3 bg-white/5 rounded-full mb-2">
-                        <Sparkles className="w-6 h-6 text-[#5c1427]" />
+                <div className="space-y-6">
+                    <div className="inline-flex items-center justify-center p-4 bg-white shadow-sm border border-gray-100 rounded-2xl mb-4">
+                        <Sparkles className="w-8 h-8 text-gray-900" />
                     </div>
-                    <h1 className="text-4xl font-semibold text-gray-900 tracking-tight">
-                        Start your optimization
+                    <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
+                        What can I help you optimize?
                     </h1>
-                    <p className="text-gray-500 text-lg max-w-lg mx-auto leading-relaxed">
-                        Upload your source data and constraint schema to initialize the AI analysis model.
-                    </p>
                 </div>
 
                 {/* Upload Section - Cleaner, Stacked or Grid */}
@@ -156,7 +113,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
                         label="Source Dataset"
                         subtext="CSV, Excel, JSON"
                         file={sourceFileLocal}
-                        isLoading={isUploadingSource}
+                        isLoading={false}
                         error={sourceError}
                         onClick={() => sourceInputRef.current?.click()}
                         onRemove={() => removeFile('source')}
@@ -168,7 +125,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
                         label="Constraint Schema"
                         subtext="JSON, YAML"
                         file={schemaFileLocal}
-                        isLoading={isUploadingSchema}
+                        isLoading={false}
                         error={schemaError}
                         onClick={() => schemaInputRef.current?.click()}
                         onRemove={() => removeFile('schema')}
@@ -178,34 +135,31 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onFilesSelected, onStartIngesti
                 </div>
 
                 {/* Action Area */}
-                <div className="w-full pt-4">
+                <div className="w-full pt-8 flex justify-center">
                     <button
-                        onClick={startIngestion}
+                        onClick={handleStart}
                         disabled={!isReady || isProcessing}
                         className={cn(
-                            "group relative w-full md:w-auto px-8 py-3 rounded-full font-medium text-white shadow-lg transition-all duration-300 flex items-center justify-center gap-2 mx-auto overflow-hidden",
+                            "group relative px-6 py-3 rounded-xl font-medium text-white shadow-sm transition-all duration-200 flex items-center gap-2 overflow-hidden",
                             (isReady && !isProcessing)
-                                ? "bg-[#5c1427] hover:bg-[#7a1b34]"
-                                : "bg-gray-300 cursor-not-allowed"
+                                ? "bg-black hover:bg-gray-800"
+                                : "bg-gray-200 cursor-not-allowed text-gray-400"
                         )}
                     >
                         {isProcessing ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                <span>Analyzing Data...</span>
+                                <span>Analyzing...</span>
                             </>
                         ) : (
                             <>
                                 <span>Initialize Session</span>
-                                <Sparkles className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                                <div className="bg-white/20 p-1 rounded-md">
+                                    <Sparkles className="w-3 h-3 text-white" />
+                                </div>
                             </>
                         )}
                     </button>
-                    {isReady && !isProcessing && (
-                        <p className="text-xs text-gray-400 mt-4 animate-in fade-in">
-                            Ready to process {(sourceFileLocal?.size || 0) / 1024 > 1024 ? `${((sourceFileLocal?.size || 0) / 1024 / 1024).toFixed(1)} MB` : `${((sourceFileLocal?.size || 0) / 1024).toFixed(1)} KB`} of data.
-                        </p>
-                    )}
                 </div>
 
             </motion.div>

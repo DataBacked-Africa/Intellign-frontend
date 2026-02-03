@@ -19,7 +19,9 @@ export const useSessionOrchestrator = () => {
         setResult,
         setError,
         saveSession,
-        fetchHistory
+        fetchHistory,
+        fetchSessionStatus,
+        goals // Access goals from the store
     } = useSessionStore();
 
     const { token } = useUserStore();
@@ -127,8 +129,8 @@ export const useSessionOrchestrator = () => {
         }
     }, [token, setStatus, setProgress, addLog, setResult, setError, saveSession]);
 
-    const startIngestion = async () => {
-        if (!sourceFile) {
+    const startIngestion = async (sourceFileRaw: File, schemaFileRaw: File | null) => {
+        if (!sourceFileRaw) {
             showToast.error("Missing Files", "Please upload a source dataset.");
             return;
         }
@@ -138,45 +140,35 @@ export const useSessionOrchestrator = () => {
         setProgress(0);
 
         try {
-            // Prepare payload
-            const payload = {
-                files: {
-                    source: {
-                        url: sourceFile.url,
-                        publicId: sourceFile.publicId,
-                        meta: {
-                            mimeType: sourceFile.format, // Cloudinary provides 'pdf', 'csv' etc.
-                            size: sourceFile.size
-                        }
-                    },
-                    ...(schemaFile && {
-                        constraints: {
-                            url: schemaFile.url,
-                            publicId: schemaFile.publicId,
-                            meta: {
-                                mimeType: schemaFile.format,
-                                size: schemaFile.size
-                            }
-                        }
-                    })
+            const formData = new FormData();
+            formData.append('resourceFile', sourceFileRaw);
+
+            if (schemaFileRaw) {
+                formData.append('targetFile', schemaFileRaw);
+            }
+
+            // Append empty goal object if needed, or omit if optional
+            formData.append('goals', JSON.stringify({}));
+
+            const response = await axiosInstance.post('/sessions/init', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
                 }
-                // goals removed from init payload
-            };
+            });
 
-            const response = await axiosInstance.post('/sessions/init', payload);
-
-            if (response.status === 202) {
-                const { sessionId } = response.data.data || response.data; // Adjust based on actual API
+            if (response.status === 200 || response.status === 201 || response.status === 202) {
+                const { sessionId } = response.data.data || response.data;
 
                 if (sessionId) {
                     setSessionId(sessionId);
                     showToast.success("Session Initialized", "Starting analysis...");
                     connectToEvents(sessionId);
 
-                    // Refresh history after 3 seconds to update sidebar with new session
+                    // Refresh history and fetch latest status after 2 seconds
                     setTimeout(() => {
                         fetchHistory();
-                    }, 3000);
+                        fetchSessionStatus(sessionId);
+                    }, 2000);
                 } else {
                     throw new Error("No session ID returned");
                 }
@@ -190,8 +182,71 @@ export const useSessionOrchestrator = () => {
         }
     };
 
+    const startOptimization = async () => {
+        const { sessionId, goals } = useSessionStore.getState();
+
+        if (!sessionId) {
+            showToast.error("Missing Session", "No active session found to optimize.");
+            return;
+        }
+
+        const goalList = Object.values(goals).map(goal => {
+            const cleanedGoal: any = { ...goal };
+
+            // Filter and potentially omit columns
+            if (cleanedGoal.resource_columns) {
+                cleanedGoal.resource_columns = cleanedGoal.resource_columns.filter((c: string) => c.trim() !== "");
+                if (cleanedGoal.resource_columns.length === 0) {
+                    delete cleanedGoal.resource_columns;
+                }
+            }
+
+            if (cleanedGoal.target_columns) {
+                cleanedGoal.target_columns = cleanedGoal.target_columns.filter((c: string) => c.trim() !== "");
+                if (cleanedGoal.target_columns.length === 0) {
+                    delete cleanedGoal.target_columns;
+                }
+            }
+
+            // Clean logic_config
+            if (cleanedGoal.logic_config) {
+                if (cleanedGoal.logic_config.comparison_column === "") {
+                    cleanedGoal.logic_config.comparison_column = null;
+                }
+            }
+
+            return cleanedGoal;
+        });
+
+        if (goalList.length === 0) {
+            showToast.error("No Goals", "Please define at least one optimization goal.");
+            return;
+        }
+
+        setStatus('PROCESSING');
+        setError(null);
+        setProgress(0);
+        addLog("Submitting optimization goals...");
+
+        try {
+            const response = await axiosInstance.post(`/sessions/${sessionId}/optimize`, goalList);
+
+            if (response.status === 200 || response.status === 201 || response.status === 202) {
+                showToast.success("Optimization Started", "The AI is now processing your request.");
+                connectToEvents(sessionId);
+            }
+        } catch (error: any) {
+            console.error("Optimization Failed:", error);
+            const msg = error.response?.data?.message || "Could not start optimization.";
+            setError(msg);
+            setStatus('FAILED');
+            showToast.error("Optimization Failed", msg);
+        }
+    };
+
     return {
         startIngestion,
-        connectToEvents // Exposed just in case, but startIngestion calls it automatically
+        startOptimization,
+        connectToEvents
     };
 };

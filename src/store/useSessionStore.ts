@@ -11,6 +11,7 @@ export interface FileMetadata {
     createdAt?: string;
     meta?: {
         size: number;
+        mimeType?: string;
     }
 }
 
@@ -24,50 +25,91 @@ export interface SessionSnapshot {
     createdAt: string;
     status: 'OPTIMAL' | 'FAILED' | 'COMPLETED';
     resultData: OptimizationResult | null;
+    resourcesMetadata: DatasetMetadata | null;
+    targetsMetadata: DatasetMetadata | null;
     logs: string[];
     sourceFile?: FileMetadata;
     constraintsFile?: FileMetadata;
 }
 
-export interface GoalParams {
-    impact_type: 'reward' | 'penalty';
-    resource_load_columns?: string[];
-    target_load_columns: string[];
-    aggregation: string;
-    operator: '<=' | '>=' | '==' | '<' | '>';
-    use_static_threshold: boolean;
-    capacity_column?: string;
-    static_threshold_value?: number;
-    [key: string]: any;
+export interface LogicConfig {
+    logic_type: string;
+    aggregation_method: string | null;
+    comparison_column: string | null;
+    threshold_value: number | null;
+    numeric_operator: string;
+    mapping_rules?: Record<string, string[]> | null;
+    exact_match?: boolean;
+    max_distance_value?: number | null;
+    distance_unit?: string;
+    minimize_distance?: boolean;
+    set_operation?: string | null;
+    min_intersection_size?: number;
+    time_unit?: string;
+    buffer_time?: number;
+    scoring_rules?: Record<string, number> | null;
+    value_splitter?: string | null;
 }
 
 export interface GoalDefinitionPayload {
     [goalId: string]: {
+        id: string;
         description: string;
-        priority: number; // 0-100
-        logic_type: string;
-        params: GoalParams;
+        resource_columns: string[];
+        target_columns: string[];
+        logic_config: LogicConfig;
+        weight: number;
+        award_type: 'Reward' | 'Penalty';
+        logic_primitive: string | null;
     }
 }
 
 // Updated Result Structure based on user JSON
-export interface OptimizationResult {
-    run_id: string;
+export interface ColumnMetadata {
+    column_name: string;
+    data_type: string;
+    is_nullable: boolean;
+    unique_values_count?: number | null;
+    sample_values: any[];
+    min_value?: number | null;
+    max_value?: number | null;
+}
+
+export interface DatasetMetadata {
+    count: number;
+    columns: ColumnMetadata[];
+    preview: any[];
+    type?: string;
+}
+
+export interface IngestionData {
     status: string;
-    global_score: number;
-    iterations_run: number;
-    processing_time_ms: number;
-    timeline: Array<{
+    session_id: string;
+    targets_metadata: DatasetMetadata;
+    resources_metadata: DatasetMetadata;
+}
+
+export interface OptimizationResult {
+    ingestion: IngestionData;
+    // Optimization specific fields (optional for now as we focus on ingestion/planning)
+    run_id?: string;
+    status?: string;
+    global_score?: number;
+    iterations_run?: number;
+    processing_time_ms?: number;
+    resources_metadata?: DatasetMetadata; // Legacy/Direct mapping
+    targets_metadata?: DatasetMetadata;   // Legacy/Direct mapping
+    timeline?: Array<{
         generation: number;
         score: number;
     }>;
-    allocations: Array<{
+    allocations?: Array<{
         resource_id: string;
         target_id: string;
         score: number;
     }>;
-    goal_analysis: any[];
-    anomalies_detected: string[];
+    goal_analysis?: any[];
+    anomalies_detected?: string[];
 }
 
 interface SessionState {
@@ -84,6 +126,11 @@ interface SessionState {
     // Live logs from the server
     logs: string[];
     resultData: OptimizationResult | null; // The final output (e.g., optimization plan)
+
+    // Ingestion Metadata
+    resourcesMetadata: DatasetMetadata | null;
+    targetsMetadata: DatasetMetadata | null;
+
     error: string | null;
 
     // History
@@ -94,6 +141,9 @@ interface SessionState {
     setSchemaFile: (file: FileMetadata | null) => void;
     setSchemaPreview: (preview: SchemaPreview | null) => void;
     setGoals: (goals: GoalDefinitionPayload) => void;
+    addGoal: (goalId: string, goal: GoalDefinitionPayload[string]) => void;
+    removeGoal: (goalId: string) => void;
+    updateGoal: (goalId: string, goal: Partial<GoalDefinitionPayload[string]>) => void;
     setUploading: (isUploading: boolean) => void;
     setSessionId: (id: string | null) => void;
     setStatus: (status: SessionState['sessionStatus']) => void;
@@ -105,6 +155,7 @@ interface SessionState {
     saveSession: () => void; // Keeps current session in history (local)
     loadSession: (sessionId: string) => void;
     fetchHistory: () => Promise<void>; // Fetch from API
+    fetchSessionStatus: (sessionId: string) => Promise<void>;
 }
 
 export const useSessionStore = create<SessionState>()(
@@ -120,6 +171,8 @@ export const useSessionStore = create<SessionState>()(
             progress: 0,
             logs: [],
             resultData: null,
+            resourcesMetadata: null,
+            targetsMetadata: null,
             error: null,
             sessions: [],
 
@@ -128,12 +181,37 @@ export const useSessionStore = create<SessionState>()(
             setSchemaFile: (file) => set({ schemaFile: file }),
             setSchemaPreview: (preview) => set({ schemaPreview: preview }),
             setGoals: (goals) => set({ goals }),
+            addGoal: (goalId, goal) => set((state) => ({
+                goals: { ...state.goals, [goalId]: goal }
+            })),
+            removeGoal: (goalId) => set((state) => {
+                const newGoals = { ...state.goals };
+                delete newGoals[goalId];
+                return { goals: newGoals };
+            }),
+            updateGoal: (goalId, goalUpdate) => set((state) => ({
+                goals: {
+                    ...state.goals,
+                    [goalId]: {
+                        ...state.goals[goalId],
+                        ...goalUpdate,
+                        logic_config: {
+                            ...state.goals[goalId]?.logic_config,
+                            ...(goalUpdate.logic_config || {})
+                        }
+                    }
+                }
+            })),
             setUploading: (isUploading) => set({ isUploadingRequest: isUploading }),
             setSessionId: (id) => set({ sessionId: id }),
             setStatus: (status) => set({ sessionStatus: status }),
             setProgress: (progress) => set({ progress }),
             addLog: (log) => set((state) => ({ logs: [...state.logs, log] })),
-            setResult: (data) => set({ resultData: data }),
+            setResult: (data) => set({
+                resultData: data,
+                resourcesMetadata: data.ingestion?.resources_metadata || data.resources_metadata || null,
+                targetsMetadata: data.ingestion?.targets_metadata || data.targets_metadata || null
+            }),
             setError: (error) => set({ error }),
             clearSession: () => set(() => ({
                 sourceFile: null,
@@ -145,6 +223,8 @@ export const useSessionStore = create<SessionState>()(
                 progress: 0,
                 logs: [],
                 resultData: null,
+                resourcesMetadata: null,
+                targetsMetadata: null,
                 error: null
             })),
             saveSession: () => set((state) => {
@@ -159,6 +239,8 @@ export const useSessionStore = create<SessionState>()(
                     createdAt: new Date().toISOString(),
                     status: 'COMPLETED', // simplified
                     resultData: state.resultData,
+                    resourcesMetadata: state.resultData.ingestion?.resources_metadata || state.resultData.resources_metadata || null,
+                    targetsMetadata: state.resultData.ingestion?.targets_metadata || state.resultData.targets_metadata || null,
                     logs: state.logs,
                     sourceFile: state.sourceFile || undefined,
                     constraintsFile: state.schemaFile || undefined
@@ -172,6 +254,8 @@ export const useSessionStore = create<SessionState>()(
                     sessionId: session.sessionId,
                     sessionStatus: 'COMPLETED',
                     resultData: session.resultData,
+                    resourcesMetadata: session.resultData?.ingestion?.resources_metadata || session.resultData?.resources_metadata || null,
+                    targetsMetadata: session.resultData?.ingestion?.targets_metadata || session.resultData?.targets_metadata || null,
                     logs: session.logs || [],
                     progress: 100,
                     error: null,
@@ -196,6 +280,35 @@ export const useSessionStore = create<SessionState>()(
                     }
                 } catch (error) {
                     console.error("Failed to fetch session history:", error);
+                }
+            },
+            fetchSessionStatus: async (sessionId: string) => {
+                try {
+                    const response = await axiosInstance.get(`/sessions/${sessionId}`);
+                    if (response.data.status === 'success') {
+                        const data = response.data.data; // this is the full object (session details)
+
+                        // If the endpoint returns the standard session object:
+                        // { id, status, resources_metadata, targets_metadata, ... }
+
+                        set({
+                            sessionStatus: data.status,
+                            sessionId: data.session_id || data.id,
+                            resultData: data.resultData,
+                            resourcesMetadata: data.resultData?.ingestion?.resources_metadata || data.resultData?.resources_metadata || null,
+                            targetsMetadata: data.resultData?.ingestion?.targets_metadata || data.resultData?.targets_metadata || null,
+                            sourceFile: data.sourceFile,
+                            schemaFile: data.constraintsFile,
+                            goals: data.optimizationGoals || {}
+                        });
+
+                        // Force progress to 100 if we are in a post-processing state
+                        if (['CONFIGURING', 'COMPLETED'].includes(data.status)) {
+                            set({ progress: 100 });
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch session status:", error);
                 }
             }
         }),

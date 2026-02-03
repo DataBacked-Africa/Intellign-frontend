@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { Plus, MessageSquare, History, Settings, LogOut, ChevronLeft, ChevronRight, LayoutDashboard, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserStore } from '@/store/useUserStore';
@@ -20,99 +21,82 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
         fetchHistory();
     }, [fetchHistory]);
 
-    const handleNewChat = () => {
-        clearSession();
-        // Optional: close sidebar on mobile if needed
-    };
-
     return (
         <motion.div
-            initial={{ width: isOpen ? 260 : 60 }}
-            animate={{ width: isOpen ? 260 : 60 }}
+            initial={{ width: isOpen ? 260 : 0 }} // 0 width for closed state on mobile, but here 60 or 0
+            animate={{ width: isOpen ? 260 : 0 }} // ChatGPT hides it completely usually or just icon
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="h-screen bg-[#1a050b] border-r border-[#3d0e19] flex flex-col flex-shrink-0 z-50 relative"
+            className={cn(
+                "h-screen bg-[#171717] flex flex-col flex-shrink-0 z-40 relative border-r border-white/5",
+                !isOpen && "hidden md:flex md:w-[0px] overflow-hidden" // Simply hide if closed for that crisp look
+            )}
         >
-            {/* Toggle Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="absolute -right-3 top-6 bg-[#3d0e19] text-[#5c1427] hover:text-[#7a1b34] p-1 rounded-full border border-[#5c1427]/30 shadow-sm z-50"
-            >
-                {isOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-            </button>
+            {/* Toggle Button - Floating outside if closed, or inside? ChatGPT puts it top left of main content. 
+                For now, let's keep it simple: if open, show content. If closed, user opens via top navbar usually. 
+                But let's keep the toggle absolute like before but cleaner.
+             */}
 
-            {/* Header / New Chat */}
-            <div className="p-3">
-                <button
-                    onClick={handleNewChat}
+            {/* New Chat Button */}
+            <div className="p-3 px-3 pt-4">
+                <Link
+                    href="/"
+                    onClick={clearSession}
                     className={cn(
-                        "flex items-center gap-3 w-full p-3 rounded-lg border border-[#3d0e19] hover:bg-[#5c1427]/10 transition-colors group",
-                        !isOpen && "justify-center px-0"
+                        "flex items-center gap-2 w-full p-2.5 rounded-lg hover:bg-white/5 transition-colors group border border-white/10 text-sm text-white",
                     )}
                 >
-                    <Plus className="w-5 h-5 text-[#5c1427] group-hover:text-[#7a1b34]" />
-                    {isOpen && (
-                        <div className="flex flex-col items-start">
-                            <span className="text-sm font-medium text-gray-200">New Optimization</span>
-                        </div>
-                    )}
-                </button>
+                    <div className="bg-white text-black p-0.5 rounded-sm">
+                        <Plus className="w-4 h-4" />
+                    </div>
+                    {isOpen && <span className="font-medium">New chat</span>}
+                </Link>
             </div>
 
-            {/* Navigation / History */}
-            <div className="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar">
-                {isOpen && (
-                    <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                        History
-                    </p>
+            {/* History List */}
+            <div className="flex-1 overflow-y-auto py-2 px-3 custom-scrollbar">
+                {sessions.length > 0 && (
+                    <div className="mb-2 px-2 text-xs font-medium text-gray-500">Today</div>
                 )}
-                <div className="space-y-1">
-                    {/* Mock History Items if empty */}
-                    {sessions.length === 0 && isOpen && (
-                        <p className="px-4 text-xs text-gray-600 italic">No past sessions</p>
-                    )}
 
+                <div className="space-y-1">
                     {sessions.map((session) => (
-                        <button
+                        <Link
                             key={session.sessionId || Math.random()}
-                            onClick={() => session.sessionId && loadSession(session.sessionId)}
+                            href={`/sessions/${session.sessionId}`}
                             className={cn(
-                                "flex items-center gap-3 w-full p-2.5 rounded-lg text-sm text-gray-400 hover:bg-[#5c1427]/20 hover:text-white transition-colors text-left",
-                                session.sessionId === sessionId && "bg-[#5c1427]/20 text-white border border-[#5c1427]/30",
-                                !isOpen && "justify-center"
+                                "flex items-center gap-3 w-full p-2.5 rounded-lg text-sm text-gray-300 hover:bg-[#2A2B32] transition-colors text-left group",
+                                session.sessionId === sessionId && "bg-[#2A2B32] text-white"
                             )}
                         >
-                            <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                            <MessageSquare className="w-4 h-4 text-gray-400 group-hover:text-white" />
                             {isOpen && (
-                                <span className="truncate">
-                                    {session.createdAt ? new Date(session.createdAt).toLocaleDateString() : "Session"} - {session.status}
+                                <span className="truncate flex-1">
+                                    {/* Mock Title Logic */}
+                                    Optimization {session.sessionId?.substring(0, 4)}
                                 </span>
                             )}
-                        </button>
+                        </Link>
                     ))}
                 </div>
             </div>
 
-            {/* Footer / User Profile */}
-            <div className="p-3 border-t border-[#3d0e19]">
-                <div className={cn(
-                    "flex items-center gap-3 p-2 rounded-lg hover:bg-[#5c1427]/10 transition-colors cursor-pointer text-gray-300",
-                    !isOpen && "justify-center"
-                )}>
-                    <div className="w-8 h-8 rounded-full bg-[#5c1427]/20 flex items-center justify-center text-[#5c1427] border border-[#5c1427]/30">
-                        <span className="font-bold text-xs">{user?.name?.charAt(0) || "U"}</span>
+            {/* User Profile */}
+            <div className="p-3 border-t border-white/5">
+                <button
+                    className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-[#2A2B32] transition-colors text-gray-300 text-left"
+                >
+                    <div className="w-8 h-8 rounded-sm bg-purple-500/20 flex items-center justify-center text-purple-400 font-medium">
+                        {user?.name?.charAt(0) || "U"}
                     </div>
                     {isOpen && (
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{user?.name || "User"}</p>
-                            <p className="text-xs text-gray-500 truncate">{user?.organizationName || "Organization"}</p>
+                            <p className="text-sm font-medium text-white truncate">{user?.name || "User"}</p>
                         </div>
                     )}
-                    {isOpen && (
-                        <button onClick={logout} className="text-gray-500 hover:text-red-400">
-                            <LogOut className="w-4 h-4" />
-                        </button>
-                    )}
-                </div>
+                    <div onClick={(e) => { e.stopPropagation(); logout(); }} className="p-1 hover:text-white">
+                        <LogOut className="w-4 h-4" />
+                    </div>
+                </button>
             </div>
         </motion.div>
     );

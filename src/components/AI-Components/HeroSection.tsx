@@ -3,6 +3,7 @@ import React from 'react';
 import UploadArea from './UploadArea';
 import ProcessingConsole from './ProcessingConsole';
 import ResultsDashboard from './ResultsDashboard';
+import GoalDefinitionForm from './GoalDefinitionForm';
 import { useSessionStore } from '@/store/useSessionStore';
 import { ScanLine, Workflow, FileText } from 'lucide-react';
 
@@ -53,14 +54,33 @@ const HeroSection = () => {
                     />
                 </div>
 
-                {/* Upload Area */}
+                {/* Content Area Switcher */}
                 <div className="w-full relative">
-                    {!isIngesting ? (
+                    {sessionStatus === 'IDLE' && (
                         <div className="animate-in fade-in zoom-in duration-500">
-                            {/* No need to pass onStartIngestion anymore as store handles it */}
                             <UploadArea />
                         </div>
-                    ) : (
+                    )}
+
+                    {sessionStatus === 'PROCESSING' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-10 duration-500">
+                            <ProcessingConsole />
+                        </div>
+                    )}
+
+                    {sessionStatus === 'CONFIGURING' && (
+                        <div className="animate-in fade-in slide-in-from-right-10 duration-500 w-full">
+                            {/* Import GoalDefinitionForm if not imported, or lazily load it */}
+                            <GoalDefinitionForm onNext={() => { }} />
+                        </div>
+                    )}
+
+                    {sessionStatus === 'COMPLETED' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-10 duration-500 w-full">
+                            <ResultsDashboard />
+                        </div>
+                    )}
+                    {sessionStatus === 'FAILED' && (
                         <div className="animate-in fade-in slide-in-from-bottom-10 duration-500">
                             <ProcessingConsole />
                         </div>

@@ -49,17 +49,15 @@ const SignupForm = () => {
     };
 
     return (
+
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-[400px] bg-white rounded-2xl shadow-sm border border-gray-200 p-8"
+            className="w-full space-y-8"
         >
-            <div className="text-center mb-8 space-y-2">
-                <div className="w-12 h-12 bg-[#5c1427]/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-6 h-6 text-[#5c1427]" />
-                </div>
-                <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Create Account</h2>
-                <p className="text-sm text-gray-500">Join us to start optimizing your data.</p>
+            <div className="text-left space-y-2">
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Create an account</h1>
+                <p className="text-gray-500">Start optimizing your data workflows today.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -96,10 +94,10 @@ const SignupForm = () => {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-[#5c1427] hover:bg-[#7a1b34] text-white h-10 rounded-lg font-medium shadow-sm transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group text-sm"
+                    className="w-full bg-[#171717] hover:bg-black text-white h-12 rounded-xl font-medium shadow-xl shadow-black/5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group text-[15px]"
                 >
                     {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                         <>
                             Get Started
@@ -109,12 +107,12 @@ const SignupForm = () => {
                 </button>
             </form>
 
-            <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+            <div className="pt-6 border-t border-gray-100 text-center">
                 <p className="text-gray-500 text-sm">
                     Already have an account?{' '}
                     <Link
                         href="/auth/login"
-                        className="font-semibold text-[#5c1427] hover:underline decoration-[#5c1427]/30 underline-offset-4 transition-all"
+                        className="font-semibold text-black hover:underline underline-offset-4 transition-all"
                     >
                         Sign In
                     </Link>
