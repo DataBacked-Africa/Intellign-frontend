@@ -9,14 +9,12 @@ import { Loader2 } from 'lucide-react';
 
 
 const MainWorkspace = () => {
-    const { sessionStatus, sessionId } = useSessionStore();
+    const { clearSession } = useSessionStore();
     const router = useRouter();
 
-    // useEffect(() => {
-    //     if (sessionId && sessionStatus !== 'IDLE') {
-    //         router.push(`/sessions/${sessionId}`);
-    //     }
-    // }, [sessionId, sessionStatus, router]);
+    useEffect(() => {
+        clearSession();
+    }, [clearSession]);
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 relative">
@@ -25,16 +23,16 @@ const MainWorkspace = () => {
 
 
             <div className="w-full max-w-5xl z-10">
-               
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="w-full max-w-3xl mx-auto"
-                    >
-                        <UploadArea />
-                    </motion.div>
-                
+
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="w-full max-w-3xl mx-auto"
+                >
+                    <UploadArea />
+                </motion.div>
+
             </div>
         </div>
     );

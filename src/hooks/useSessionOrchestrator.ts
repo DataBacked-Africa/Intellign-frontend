@@ -103,6 +103,7 @@ export const useSessionOrchestrator = () => {
                             // Instead of finishing, we move to Goal Configuration using this result
                             setStatus('CONFIGURING');
                             showToast.success("Initialization Complete", "Please define your optimization goals.");
+                            window.location.href = `/sessions/${sessionId}`;
                             ctrl.abort();
                         }
 
