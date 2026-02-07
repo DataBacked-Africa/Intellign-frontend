@@ -29,11 +29,11 @@ const AGGREGATIONS = [
 ];
 
 const OPERATORS = [
-    { value: '<=', label: '≤ (Max Limit)' },
-    { value: '>=', label: '≥ (Min Req)' },
-    { value: '==', label: '= (Exact)' },
-    { value: '<', label: '< (Less)' },
-    { value: '>', label: '> (More)' }
+    { value: 'ge', label: '≤ (Max Limit)' },
+    { value: 'le', label: '≥ (Min Req)' },
+    { value: 'eq', label: '= (Exact)' },
+    { value: 'le', label: '< (Less)' },
+    { value: 'ge', label: '> (More)' }
 ];
 
 const MOCK_COLUMNS = ['column_a', 'column_b'];
