@@ -1,0 +1,533 @@
+"use client";
+
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { useSessionStore } from '@/store/useSessionStore';
+import {
+    Users, Target, TrendingUp, Layers, CheckCircle2, Clock, XCircle, Edit3,
+    Search, Filter, ChevronLeft, ChevronRight, Check, X, Download, ArrowRight
+} from 'lucide-react';
+
+// Types for the optimization data
+interface Assignment {
+    assignment_id: string;
+    resource: { id: string };
+    target: { id: string };
+    score: number;
+    approval_status: 'pending' | 'approved' | 'rejected' | 'modified';
+    notes: string | null;
+    modified_at: string | null;
+    modified_by: string | null;
+}
+
+interface OptimizationMetrics {
+    best_fitness: number;
+    total_targets: number;
+    assigned_count: number;
+    generations_run: number;
+    population_size: number;
+    total_resources: number;
+    elapsed_time_seconds: number;
+    average_final_fitness: number;
+}
+
+interface OptimizationData {
+    job_id: string;
+    status: string;
+    metrics: OptimizationMetrics;
+    assignments: Assignment[];
+    pagination: {
+        page: number;
+        page_size: number;
+        total_items: number;
+        total_pages: number;
+    };
+    status_counts: {
+        pending: number;
+        approved: number;
+        modified: number;
+        rejected: number;
+    };
+    fitness_history: number[];
+    average_history: number[];
+    optimization_status: string;
+}
+
+// Metric Card Component
+const MetricCard = ({ label, value, subtext, icon: Icon, highlight }: {
+    label: string;
+    value: string | number;
+    subtext?: string;
+    icon?: any;
+    highlight?: boolean;
+}) => (
+    <div className={cn(
+        "bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-1",
+        highlight && "border-emerald-200 bg-emerald-50/30"
+    )}>
+        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{label}</span>
+        <div className="flex items-end gap-2">
+            <span className={cn(
+                "text-3xl font-bold tracking-tight",
+                highlight ? "text-emerald-600" : "text-gray-900"
+            )}>
+                {typeof value === 'number' ? value.toLocaleString() : value}
+            </span>
+            {subtext && <span className="text-sm text-gray-400 mb-1">{subtext}</span>}
+        </div>
+    </div>
+);
+
+// Status Badge Component
+const StatusBadge = ({ status }: { status: string }) => {
+    const styles: Record<string, string> = {
+        pending: 'bg-amber-100 text-amber-700',
+        approved: 'bg-emerald-100 text-emerald-700',
+        rejected: 'bg-red-100 text-red-700',
+        modified: 'bg-blue-100 text-blue-700',
+    };
+    return (
+        <span className={cn(
+            "px-2.5 py-1 rounded-full text-xs font-semibold capitalize",
+            styles[status] || 'bg-gray-100 text-gray-600'
+        )}>
+            {status}
+        </span>
+    );
+};
+
+// Simple Line Chart (SVG-based)
+const FitnessChart = ({ fitnessHistory, averageHistory }: { fitnessHistory: number[], averageHistory: number[] }) => {
+    if (!fitnessHistory || fitnessHistory.length === 0) return null;
+
+    const width = 600;
+    const height = 200;
+    const padding = 40;
+
+    const maxVal = Math.max(...fitnessHistory, ...averageHistory);
+    const minVal = Math.min(...fitnessHistory, ...averageHistory);
+    const range = maxVal - minVal || 1;
+
+    const getX = (index: number) => padding + (index / (fitnessHistory.length - 1)) * (width - 2 * padding);
+    const getY = (value: number) => height - padding - ((value - minVal) / range) * (height - 2 * padding);
+
+    const fitnessPath = fitnessHistory.map((val, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(val)}`).join(' ');
+    const averagePath = averageHistory.map((val, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(val)}`).join(' ');
+
+    return (
+        <div className="w-full bg-gray-900 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold">Fitness Convergence</h3>
+                <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-0.5 bg-emerald-400"></span>
+                        <span className="text-gray-400">Best</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-0.5 bg-gray-500 opacity-50"></span>
+                        <span className="text-gray-400">Average</span>
+                    </div>
+                </div>
+            </div>
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-48">
+                {/* Grid lines */}
+                {[0, 1, 2, 3, 4].map(i => (
+                    <line
+                        key={i}
+                        x1={padding}
+                        y1={padding + i * (height - 2 * padding) / 4}
+                        x2={width - padding}
+                        y2={padding + i * (height - 2 * padding) / 4}
+                        stroke="rgba(255,255,255,0.1)"
+                        strokeDasharray="4"
+                    />
+                ))}
+                {/* Average line */}
+                <path d={averagePath} fill="none" stroke="rgba(107, 114, 128, 0.5)" strokeWidth="2" />
+                {/* Fitness line */}
+                <path d={fitnessPath} fill="none" stroke="#34d399" strokeWidth="2.5" />
+                {/* Glow effect */}
+                <path d={fitnessPath} fill="none" stroke="#34d399" strokeWidth="6" opacity="0.2" />
+            </svg>
+            <div className="flex justify-between text-xs text-gray-500 mt-2 px-4">
+                <span>Gen 1</span>
+                <span>Gen {Math.floor(fitnessHistory.length / 2)}</span>
+                <span>Gen {fitnessHistory.length}</span>
+            </div>
+        </div>
+    );
+};
+
+// Approval Status Sidebar
+const ApprovalStatusPanel = ({ statusCounts }: { statusCounts: { pending: number; approved: number; modified: number; rejected: number } }) => {
+    const total = statusCounts.pending + statusCounts.approved + statusCounts.modified + statusCounts.rejected;
+    const items = [
+        { label: 'Approved', count: statusCounts.approved, color: 'bg-emerald-500', icon: CheckCircle2 },
+        { label: 'Pending', count: statusCounts.pending, color: 'bg-amber-500', icon: Clock },
+        { label: 'Rejected', count: statusCounts.rejected, color: 'bg-red-500', icon: XCircle },
+        { label: 'Modified', count: statusCounts.modified, color: 'bg-blue-500', icon: Edit3 },
+    ];
+
+    return (
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+            <h3 className="font-semibold text-gray-900 mb-4">Approval Status</h3>
+            <div className="space-y-3">
+                {items.map(item => (
+                    <div key={item.label} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className={cn("w-2 h-2 rounded-full", item.color)}></span>
+                            <span className="text-sm text-gray-600">{item.label}</span>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">{item.count}</span>
+                    </div>
+                ))}
+            </div>
+            {/* Progress bar */}
+            <div className="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden flex">
+                {total > 0 && (
+                    <>
+                        <div className="bg-emerald-500 h-full" style={{ width: `${(statusCounts.approved / total) * 100}%` }} />
+                        <div className="bg-amber-500 h-full" style={{ width: `${(statusCounts.pending / total) * 100}%` }} />
+                        <div className="bg-red-500 h-full" style={{ width: `${(statusCounts.rejected / total) * 100}%` }} />
+                        <div className="bg-blue-500 h-full" style={{ width: `${(statusCounts.modified / total) * 100}%` }} />
+                    </>
+                )}
+            </div>
+            <div className="flex justify-between text-xs text-gray-400 mt-2">
+                <span>Approved {statusCounts.approved}</span>
+                <span>Pending {statusCounts.pending}</span>
+            </div>
+        </div>
+    );
+};
+
+// Modify Assignment Modal Component
+const ModifyAssignmentModal = ({
+    isOpen,
+    onClose,
+    assignment
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    assignment: Assignment | null;
+}) => {
+    const [newTargetId, setNewTargetId] = useState('');
+    const [reason, setReason] = useState('');
+
+    if (!isOpen || !assignment) return null;
+
+    const handleModify = () => {
+        // TODO: Implement API call to modify assignment
+        console.log('Modifying assignment:', {
+            assignment_id: assignment.assignment_id,
+            new_target_id: newTargetId,
+            reason
+        });
+        onClose();
+        setNewTargetId('');
+        setReason('');
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <>
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                    />
+                    {/* Modal */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+                    >
+                        <div className="bg-gray-900 rounded-2xl border border-gray-700/50 shadow-2xl p-6">
+                            {/* Header */}
+                            <h2 className="text-lg font-semibold text-blue-400 mb-1">Modify Assignment</h2>
+                            <p className="text-sm text-gray-400 mb-6 flex items-center gap-2">
+                                <span className="text-white font-medium">{assignment.resource.id}</span>
+                                <ArrowRight className="w-4 h-4 text-gray-500" />
+                                <span>currently assigned to Target {assignment.target.id}</span>
+                            </p>
+
+                            {/* Form */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                                        New Target ID
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter new target ID..."
+                                        value={newTargetId}
+                                        onChange={(e) => setNewTargetId(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                                        Reason
+                                    </label>
+                                    <textarea
+                                        placeholder="Why are you reassigning?"
+                                        value={reason}
+                                        onChange={(e) => setReason(e.target.value)}
+                                        rows={3}
+                                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors resize-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button
+                                    onClick={onClose}
+                                    className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleModify}
+                                    disabled={!newTargetId.trim()}
+                                    className="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Modify
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+    );
+};
+
+// Main Component
+const OptimizationResultsView = () => {
+    const { resultData } = useSessionStore();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [modifyModalOpen, setModifyModalOpen] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+
+    const openModifyModal = (assignment: Assignment) => {
+        setSelectedAssignment(assignment);
+        setModifyModalOpen(true);
+    };
+
+    const closeModifyModal = () => {
+        setModifyModalOpen(false);
+        setSelectedAssignment(null);
+    };
+
+    // Extract optimization data from resultData
+    const optimization = (resultData as any)?.optimization as OptimizationData | undefined;
+
+    if (!optimization) {
+        return (
+            <div className="w-full flex items-center justify-center p-12 text-gray-400">
+                No optimization data available.
+            </div>
+        );
+    }
+
+    const { metrics, assignments, status_counts, fitness_history, average_history, pagination } = optimization;
+
+    // Filter assignments
+    const filteredAssignments = assignments?.filter(a => {
+        const matchesSearch = searchQuery === '' ||
+            a.resource.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            a.target.id.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || a.approval_status === statusFilter;
+        return matchesSearch && matchesStatus;
+    }) || [];
+
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(filteredAssignments.length / itemsPerPage);
+    const paginatedAssignments = filteredAssignments.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    return (
+        <div className="w-full space-y-6 p-4 md:p-6">
+            {/* Metrics Row */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <MetricCard
+                    label="Resources Assigned"
+                    value={metrics?.assigned_count || 0}
+                    subtext={`of ${metrics?.total_resources || 0} total`}
+                    highlight
+                />
+                <MetricCard
+                    label="Target Pool Size"
+                    value={metrics?.total_targets || 0}
+                    subtext="available"
+                />
+                <MetricCard
+                    label="Best Fitness"
+                    value={metrics?.best_fitness || 0}
+                />
+                <MetricCard
+                    label="Generations"
+                    value={metrics?.generations_run || 0}
+                    subtext="completed"
+                />
+                <MetricCard
+                    label="Processing Time"
+                    value={`${(metrics?.elapsed_time_seconds || 0).toFixed(2)}s`}
+                />
+            </div>
+
+            {/* Chart + Status Panel Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                    <FitnessChart
+                        fitnessHistory={fitness_history || []}
+                        averageHistory={average_history || []}
+                    />
+                </div>
+                <div>
+                    <ApprovalStatusPanel statusCounts={status_counts || { pending: 0, approved: 0, modified: 0, rejected: 0 }} />
+                </div>
+            </div>
+
+            {/* Assignments Table */}
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                {/* Table Header */}
+                <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 className="font-semibold text-gray-900">
+                        Assignments ({filteredAssignments.length})
+                    </h3>
+                    <div className="flex items-center gap-3">
+                        {/* Search */}
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search ID, target, resource..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-gray-300 focus:ring-0 outline-none w-64"
+                            />
+                        </div>
+                        {/* Status Filter */}
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:border-gray-300 focus:ring-0 outline-none"
+                        >
+                            <option value="all">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="modified">Modified</option>
+                        </select>
+                        {/* Actions */}
+                        <button className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-2 transition-colors">
+                            <Check className="w-4 h-4" /> Approve All Pending
+                        </button>
+                        <button className="px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors">
+                            <Download className="w-4 h-4" /> Export
+                        </button>
+                    </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Resource ID</th>
+                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Target ID</th>
+                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Score</th>
+                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Status</th>
+                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {paginatedAssignments.map((assignment) => (
+                                <tr key={assignment.assignment_id} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-4 py-3">
+                                        <span className="text-sm font-medium text-gray-900">{assignment.resource.id}</span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="text-sm text-gray-600">{assignment.target.id}</span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="text-sm font-semibold text-emerald-600">{assignment.score}</span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <StatusBadge status={assignment.approval_status} />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-1">
+                                            <button className="p-1.5 rounded-lg hover:bg-emerald-100 text-emerald-600 transition-colors" title="Approve">
+                                                <Check className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => openModifyModal(assignment)}
+                                                className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 transition-colors"
+                                                title="Modify"
+                                            >
+                                                <Edit3 className="w-4 h-4" />
+                                            </button>
+                                            <button className="p-1.5 rounded-lg hover:bg-red-100 text-red-600 transition-colors" title="Reject">
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="p-4 border-t border-gray-100 flex items-center justify-between">
+                        <span className="text-sm text-gray-500">
+                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAssignments.length)} of {filteredAssignments.length}
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <span className="text-sm font-medium text-gray-700 px-3">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Modify Assignment Modal */}
+            <ModifyAssignmentModal
+                isOpen={modifyModalOpen}
+                onClose={closeModifyModal}
+                assignment={selectedAssignment}
+            />
+        </div>
+    );
+};
+
+export default OptimizationResultsView;

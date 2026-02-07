@@ -5,20 +5,21 @@ import { FileText, Target, Zap, BarChart3, CheckCircle2, Lock } from 'lucide-rea
 import { cn } from '@/lib/utils';
 import UploadedFilesStep from './UploadedFilesStep';
 import GoalDefinitionForm from './GoalDefinitionForm';
-import ProcessingConsole from './ProcessingConsole';
-import ResultsDashboard from './ResultsDashboard';
+import OptimizationResultsView from './OptimizationResultsView';
+// import ResultsDashboard from './ResultsDashboard'; // Commented out for now
 
 const STEPS = [
     { id: 'uploads', label: 'Data Assets', icon: FileText },
     { id: 'goals', label: 'Goal Planning', icon: Target },
     { id: 'optimization', label: 'Optimization', icon: Zap },
-    { id: 'results', label: 'Results', icon: BarChart3 }
+    // { id: 'results', label: 'Results', icon: BarChart3 } // Commented out for now
 ];
 
 const SessionOrchestratorView = () => {
     const { sessionStatus, resultData } = useSessionStore();
     const [activeStep, setActiveStep] = useState('uploads');
     const hasGoals = resultData;
+    const hasOptimization = (resultData as any)?.optimization;
 
     // Sync active step with session status
     useEffect(() => {
@@ -32,7 +33,8 @@ const SessionOrchestratorView = () => {
                 setActiveStep('uploads');
             }
         } else if (sessionStatus === 'COMPLETED') {
-            setActiveStep('results');
+            // Show optimization results when completed
+            setActiveStep('optimization');
         } else if (sessionStatus === 'FAILED') {
             setActiveStep(hasGoals ? 'optimization' : 'uploads');
         }
@@ -46,12 +48,12 @@ const SessionOrchestratorView = () => {
         const ingestionDone = sessionStatus !== 'IDLE' && !(sessionStatus === 'PROCESSING' && !hasGoals);
         if (stepId === 'goals') return ingestionDone;
 
-        // Opt/Results accessible if we reached that stage
+        // Optimization accessible if we reached that stage or have optimization data
         const passedGoals = ['PROCESSING', 'COMPLETED', 'FAILED'].includes(sessionStatus) && hasGoals;
-        const passedOpt = ['COMPLETED'].includes(sessionStatus);
+        if (stepId === 'optimization') return passedGoals || hasOptimization;
 
-        if (stepId === 'optimization') return passedGoals;
-        if (stepId === 'results') return passedOpt;
+        // Results tab commented out
+        // if (stepId === 'results') return ['COMPLETED'].includes(sessionStatus);
 
         return false;
     };
@@ -118,11 +120,12 @@ const SessionOrchestratorView = () => {
                             </div>
                         )}
                         {activeStep === 'optimization' && (
-                            <div className="w-full flex justify-center">
-                                <ProcessingConsole />
+                            <div className="w-full">
+                                <OptimizationResultsView />
                             </div>
                         )}
-                        {activeStep === 'results' && <ResultsDashboard />}
+                        {/* Results tab commented out for now */}
+                        {/* {activeStep === 'results' && <ResultsDashboard />} */}
                     </motion.div>
                 </AnimatePresence>
             </div>
@@ -131,3 +134,4 @@ const SessionOrchestratorView = () => {
 };
 
 export default SessionOrchestratorView;
+
