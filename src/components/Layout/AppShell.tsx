@@ -69,7 +69,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 </div>
 
                 {/* Content */}
-                <main className="flex-1 overflow-y-auto relative scroll-smooth">
+                <main className="flex-1 h-full overflow-hidden relative">
                     {children}
                 </main>
             </div>

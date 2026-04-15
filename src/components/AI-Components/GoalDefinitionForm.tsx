@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSessionStore, GoalDefinitionPayload } from '@/store/useSessionStore';
 import { useSessionOrchestrator } from '@/hooks/useSessionOrchestrator';
 import { motion } from 'framer-motion';
-import { Plus, Play, X, HelpCircle, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { Plus, Play, X, HelpCircle, ChevronDown, ChevronUp, Trash2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showToast } from '../ui/CustomToast';
 
@@ -87,8 +87,8 @@ const GoalItemForm: React.FC<{ id: string; goal: GoalDefinitionPayload[string]; 
     const [logicType, setLogicType] = useState(goal.logic_config.logic_type);
     const [awardType, setAwardType] = useState(goal.award_type || 'Reward');
 
-    const [resourceLoadCols, setResourceLoadCols] = useState<string[]>(goal.resource_columns || []);
-    const [targetLoadCols, setTargetLoadCols] = useState<string[]>(goal.target_columns || []);
+    const [resourceLoadCols, setResourceLoadCols] = useState<string[]>((goal.resource_columns || []).filter(Boolean));
+    const [targetLoadCols, setTargetLoadCols] = useState<string[]>((goal.target_columns || []).filter(Boolean));
 
     const [aggregation, setAggregation] = useState(goal.logic_config.aggregation_method || 'sum');
     const [operator, setOperator] = useState(goal.logic_config.numeric_operator || '<=');
@@ -237,16 +237,18 @@ const GoalItemForm: React.FC<{ id: string; goal: GoalDefinitionPayload[string]; 
                                             </button>
                                         </div>
                                         <select
-                                            onChange={(e) => { if (e.target.value) { setResourceLoadCols(prev => [...prev, e.target.value]); e.target.value = ""; } }}
+                                            value=""
+                                            onChange={(e) => { if (e.target.value) setResourceLoadCols(prev => [...prev, e.target.value]); }}
                                             className="w-full h-9 px-3 rounded-lg bg-white border border-gray-200 text-sm focus:border-black outline-none"
                                         >
                                             <option value="">+ Add Column</option>
                                             {resourceColumns.filter(c => !resourceLoadCols.includes(c)).map(c => <option key={c} value={c}>{c}</option>)}
                                         </select>
                                         <div className="flex flex-wrap gap-2">
-                                            {resourceLoadCols.map(c => (
-                                                <span key={c} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700">
-                                                    {c} <X className="w-3 h-3 cursor-pointer hover:text-red-500" onClick={() => setResourceLoadCols(prev => prev.filter(x => x !== c))} />
+                                            {resourceLoadCols.filter(Boolean).map(c => (
+                                                <span key={c} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-md">
+                                                    <span className="text-xs font-medium text-gray-800">{c}</span>
+                                                    <X className="w-3 h-3 text-gray-400 cursor-pointer hover:text-red-500 shrink-0" onClick={() => setResourceLoadCols(prev => prev.filter(x => x !== c))} />
                                                 </span>
                                             ))}
                                         </div>
@@ -255,16 +257,18 @@ const GoalItemForm: React.FC<{ id: string; goal: GoalDefinitionPayload[string]; 
                                     <div className="space-y-3">
                                         <label className="text-xs font-semibold text-gray-900">Target Columns</label>
                                         <select
-                                            onChange={(e) => { if (e.target.value) { setTargetLoadCols(prev => [...prev, e.target.value]); e.target.value = ""; } }}
+                                            value=""
+                                            onChange={(e) => { if (e.target.value) setTargetLoadCols(prev => [...prev, e.target.value]); }}
                                             className="w-full h-9 px-3 rounded-lg bg-white border border-gray-200 text-sm focus:border-black outline-none"
                                         >
                                             <option value="">+ Add Column</option>
                                             {targetColumns.filter(c => !targetLoadCols.includes(c)).map(c => <option key={c} value={c}>{c}</option>)}
                                         </select>
                                         <div className="flex flex-wrap gap-2">
-                                            {targetLoadCols.map(c => (
-                                                <span key={c} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700">
-                                                    {c} <X className="w-3 h-3 cursor-pointer hover:text-red-500" onClick={() => setTargetLoadCols(prev => prev.filter(x => x !== c))} />
+                                            {targetLoadCols.filter(Boolean).map(c => (
+                                                <span key={c} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-md">
+                                                    <span className="text-xs font-medium text-gray-800">{c}</span>
+                                                    <X className="w-3 h-3 text-gray-400 cursor-pointer hover:text-red-500 shrink-0" onClick={() => setTargetLoadCols(prev => prev.filter(x => x !== c))} />
                                                 </span>
                                             ))}
                                         </div>
@@ -349,7 +353,9 @@ const GoalDefinitionForm: React.FC<any> = ({ onNext }) => {
     const { goals, addGoal, clearSession } = useSessionStore();
     const { startOptimization } = useSessionOrchestrator();
 
-    useEffect(() => { if (Object.keys(goals).length === 0) handleAddNewGoal(); }, [goals]);
+    // Add a blank goal only on first mount if there are none — not on every change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { if (Object.keys(goals).length === 0) handleAddNewGoal(); }, []);
 
     const handleAddNewGoal = () => {
         const id = crypto.randomUUID();
@@ -368,6 +374,17 @@ const GoalDefinitionForm: React.FC<any> = ({ onNext }) => {
                         <p className="text-gray-500 mt-2">Define logic to guide the AI allocation engine.</p>
                     </div>
                     <button onClick={clearSession} className="px-4 py-2 text-sm text-gray-500 hover:text-black font-medium transition-colors">Reset All</button>
+                </div>
+
+                {/* AI Assistant Hint */}
+                <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-xl">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-sm font-semibold text-violet-900">Need help defining goals?</p>
+                        <p className="text-xs text-violet-600">Use the AI Assistant (bottom-right) to describe your goals in plain English and auto-configure them.</p>
+                    </div>
                 </div>
 
                 <div className="space-y-4">

@@ -32,8 +32,17 @@ const iconColors = {
     info: 'text-blue-500',
 };
 
+const toStr = (val: unknown): string => {
+    if (typeof val === 'string') return val;
+    if (val == null) return '';
+    if (val instanceof Error) return val.message;
+    return JSON.stringify(val);
+};
+
 export const CustomToast = ({ t, type, message, description }: CustomToastProps) => {
     const Icon = icons[type];
+    const safeMessage = toStr(message);
+    const safeDescription = toStr(description);
 
     return (
         <div
@@ -49,9 +58,9 @@ export const CustomToast = ({ t, type, message, description }: CustomToastProps)
                         <Icon className={cn("h-6 w-6", iconColors[type])} />
                     </div>
                     <div className="ml-3 flex-1">
-                        <p className="text-sm font-semibold">{message}</p>
-                        {description && (
-                            <p className="mt-1 text-sm opacity-90">{description}</p>
+                        <p className="text-sm font-semibold">{safeMessage}</p>
+                        {safeDescription && (
+                            <p className="mt-1 text-sm opacity-90">{safeDescription}</p>
                         )}
                     </div>
                 </div>

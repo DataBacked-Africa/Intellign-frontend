@@ -31,8 +31,9 @@ const LoginForm = () => {
                 showToast.success('Welcome back!', 'You have successfully logged in.');
                 router.push('/'); // Redirect to dashboard
             }
-        } catch (error) {
-            console.error('Login failed', error);
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'Login failed. Please try again.';
+            showToast.error('Login Failed', msg);
         } finally {
             setIsLoading(false);
         }

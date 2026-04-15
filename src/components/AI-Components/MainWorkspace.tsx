@@ -17,7 +17,7 @@ const MainWorkspace = () => {
     }, [clearSession]);
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 relative">
+        <div className="w-full h-full overflow-y-auto flex flex-col items-center justify-start pt-16 md:pt-24 p-4 md:p-8 relative">
 
             {/* Background Branding (Subtle) */}
 

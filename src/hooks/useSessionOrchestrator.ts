@@ -108,10 +108,11 @@ export const useSessionOrchestrator = () => {
                         }
 
                         if (data.status === 'FAILED') {
-                            setError(data.message || "Unknown error occurred.");
+                            const failMsg = typeof data.message === 'string' ? data.message : (data.error || "Unknown error occurred.");
+                            setError(failMsg);
                             setStatus('FAILED');
                             saveSession(); // Auto-save failure
-                            showToast.error("Processing Failed", data.message);
+                            showToast.error("Processing Failed", failMsg);
                             ctrl.abort();
                         }
                     } catch (err) {
@@ -176,7 +177,8 @@ export const useSessionOrchestrator = () => {
             }
         } catch (error: any) {
             console.error("Session Init Failed:", error);
-            const msg = error.response?.data?.message || "Could not start session.";
+            const rawMsg = error.response?.data?.message || error.response?.data?.error;
+            const msg = typeof rawMsg === 'string' ? rawMsg : "Could not start session.";
             setError(msg);
             setStatus('FAILED');
             showToast.error("Initialization Failed", msg);
@@ -238,7 +240,8 @@ export const useSessionOrchestrator = () => {
             }
         } catch (error: any) {
             console.error("Optimization Failed:", error);
-            const msg = error.response?.data?.message || "Could not start optimization.";
+            const rawOptMsg = error.response?.data?.message || error.response?.data?.error;
+            const msg = typeof rawOptMsg === 'string' ? rawOptMsg : "Could not start optimization.";
             setError(msg);
             setStatus('FAILED');
             showToast.error("Optimization Failed", msg);

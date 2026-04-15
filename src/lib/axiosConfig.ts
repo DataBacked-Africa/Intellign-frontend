@@ -49,9 +49,19 @@ axiosInstance.interceptors.response.use(
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
         const message = error.response?.data?.message || error.message || 'Something went wrong';
 
+        // Skip token refresh for auth endpoints — let the caller handle errors directly
+        const isAuthRequest = originalRequest?.url?.includes('/auth/login')
+            || originalRequest?.url?.includes('/auth/register')
+            || originalRequest?.url?.includes('/auth/refresh');
+
         if (error.response) {
             switch (error.response.status) {
                 case 401:
+                    // Don't intercept 401s from auth endpoints
+                    if (isAuthRequest) {
+                        return Promise.reject(error);
+                    }
+
                     // If already retried, prevent infinite loop
                     if (originalRequest._retry) {
                         break;
@@ -87,8 +97,6 @@ axiosInstance.interceptors.response.use(
                             refreshToken
                         });
 
-                        // Assuming response struct: { data: { tokens: { accessToken, ... } } }
-                        // Adjust based on actual API
                         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
 
                         if (typeof window !== 'undefined') {
@@ -96,11 +104,6 @@ axiosInstance.interceptors.response.use(
                             if (newRefreshToken) {
                                 localStorage.setItem('refreshToken', newRefreshToken);
                             }
-                            // Also update Zustand store without causing circular dependency if possible,
-                            // or just rely on localStorage which the store hydrates from on reload, 
-                            // BUT ideally we should sync them.
-                            // Since we can't import the hook directly here easily without circular deps sometimes,
-                            // we rely on the interceptor reading from localStorage next time.
                         }
 
                         // Update queue
@@ -136,9 +139,15 @@ axiosInstance.interceptors.response.use(
                 case 403:
                     showToast.error('Access Denied', 'You do not have permission to perform this action.');
                     break;
-                case 404:
-                    showToast.error('Not Found', 'The requested resource could not be found.');
+                case 404: {
+                    // Agent and smart-ingest 404s are handled in-component — don't spam toasts
+                    const silentPath = originalRequest?.url?.includes('/agent/') ||
+                        originalRequest?.url?.includes('/smart-ingest/');
+                    if (!silentPath) {
+                        showToast.error('Not Found', 'The requested resource could not be found.');
+                    }
                     break;
+                }
                 case 500:
                     showToast.error('Server Error', 'Something went wrong on our end. Please try again.');
                     break;

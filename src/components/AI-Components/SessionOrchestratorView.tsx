@@ -16,45 +16,43 @@ const STEPS = [
 ];
 
 const SessionOrchestratorView = () => {
-    const { sessionStatus, resultData } = useSessionStore();
+    const { sessionStatus, resultData, goals } = useSessionStore();
     const [activeStep, setActiveStep] = useState('uploads');
-    const hasGoals = resultData;
-    const hasOptimization = (resultData as any)?.optimization;
+
+    // Ingestion is done when resultData has a successful ingestion block
+    const hasIngestion = !!(resultData?.ingestion?.status === 'success' || resultData?.ingestion?.resources_metadata);
+    // Optimization has been triggered when there's a run_id or global_score
+    const hasOptimizationRun = !!(
+        (resultData as any)?.run_id ||
+        (resultData as any)?.global_score !== undefined ||
+        (resultData as any)?.optimization
+    );
+    const hasDefinedGoals = Object.keys(goals || {}).length > 0;
 
     // Sync active step with session status
     useEffect(() => {
         if (sessionStatus === 'CONFIGURING') {
             setActiveStep('goals');
         } else if (sessionStatus === 'PROCESSING') {
-            // Distinguish between Ingestion (no goals yet) and Optimization (goals exist)
-            if (hasGoals) {
+            if (hasOptimizationRun) {
                 setActiveStep('optimization');
+            } else if (hasIngestion) {
+                // Ingestion done but no optimization started yet — go to goal planning
+                setActiveStep('goals');
             } else {
                 setActiveStep('uploads');
             }
         } else if (sessionStatus === 'COMPLETED') {
-            // Show optimization results when completed
             setActiveStep('optimization');
         } else if (sessionStatus === 'FAILED') {
-            setActiveStep(hasGoals ? 'optimization' : 'uploads');
+            setActiveStep(hasOptimizationRun ? 'optimization' : 'uploads');
         }
-    }, [sessionStatus, hasGoals]);
+    }, [sessionStatus, hasIngestion, hasOptimizationRun]);
 
     const isStepAccessible = (stepId: string) => {
-        // Always allow seeing uploads if session exists
         if (stepId === 'uploads') return true;
-
-        // Goals accessible if we are configuring or passed it (and ingestion done)
-        const ingestionDone = sessionStatus !== 'IDLE' && !(sessionStatus === 'PROCESSING' && !hasGoals);
-        if (stepId === 'goals') return ingestionDone;
-
-        // Optimization accessible if we reached that stage or have optimization data
-        const passedGoals = ['PROCESSING', 'COMPLETED', 'FAILED'].includes(sessionStatus) && hasGoals;
-        if (stepId === 'optimization') return passedGoals || hasOptimization;
-
-        // Results tab commented out
-        // if (stepId === 'results') return ['COMPLETED'].includes(sessionStatus);
-
+        if (stepId === 'goals') return hasIngestion || sessionStatus === 'CONFIGURING';
+        if (stepId === 'optimization') return hasDefinedGoals || hasOptimizationRun || ['COMPLETED', 'FAILED'].includes(sessionStatus);
         return false;
     };
 
@@ -109,9 +107,7 @@ const SessionOrchestratorView = () => {
                         className="w-full"
                     >
                         {activeStep === 'uploads' && (
-                            sessionStatus === 'PROCESSING' && (
-                                <UploadedFilesStep />
-                            )
+                            <UploadedFilesStep />
                         )}
                         {activeStep === 'goals' && (
                             <div className="w-full">

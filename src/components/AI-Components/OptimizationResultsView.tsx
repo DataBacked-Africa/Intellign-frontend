@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useSessionStore } from '@/store/useSessionStore';
+import { resultsService } from '@/services/resultsService';
+import { showToast } from '@/components/ui/CustomToast';
 import {
     Users, Target, TrendingUp, Layers, CheckCircle2, Clock, XCircle, Edit3,
-    Search, Filter, ChevronLeft, ChevronRight, Check, X, Download, ArrowRight
+    Search, Filter, ChevronLeft, ChevronRight, Check, X, Download, ArrowRight, Loader2
 } from 'lucide-react';
 
 // Types for the optimization data
@@ -206,27 +208,43 @@ const ApprovalStatusPanel = ({ statusCounts }: { statusCounts: { pending: number
 const ModifyAssignmentModal = ({
     isOpen,
     onClose,
-    assignment
+    assignment,
+    jobId,
+    onSuccess
 }: {
     isOpen: boolean;
     onClose: () => void;
     assignment: Assignment | null;
+    jobId: string;
+    onSuccess: () => void;
 }) => {
     const [newTargetId, setNewTargetId] = useState('');
     const [reason, setReason] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     if (!isOpen || !assignment) return null;
 
-    const handleModify = () => {
-        // TODO: Implement API call to modify assignment
-        console.log('Modifying assignment:', {
-            assignment_id: assignment.assignment_id,
-            new_target_id: newTargetId,
-            reason
-        });
-        onClose();
-        setNewTargetId('');
-        setReason('');
+    const handleModify = async () => {
+        if (!newTargetId.trim() || !reason.trim()) return;
+
+        setIsLoading(true);
+        try {
+            await resultsService.modifyAssignment(
+                jobId,
+                assignment.assignment_id,
+                newTargetId,
+                reason
+            );
+            showToast.success('Assignment Modified', `Reassigned to target ${newTargetId}`);
+            onSuccess();
+            onClose();
+            setNewTargetId('');
+            setReason('');
+        } catch (error) {
+            showToast.error('Failed to Modify', 'Could not modify the assignment.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -289,15 +307,17 @@ const ModifyAssignmentModal = ({
                             <div className="flex justify-end gap-3 mt-6">
                                 <button
                                     onClick={onClose}
-                                    className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                                    disabled={isLoading}
+                                    className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleModify}
-                                    disabled={!newTargetId.trim()}
-                                    className="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={!newTargetId.trim() || !reason.trim() || isLoading}
+                                    className="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
+                                    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                                     Modify
                                 </button>
                             </div>
@@ -317,6 +337,53 @@ const OptimizationResultsView = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [modifyModalOpen, setModifyModalOpen] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Local state for optimization data (fetched from API for freshness)
+    const [optimizationData, setOptimizationData] = useState<OptimizationData | null>(null);
+
+    // Get initial jobId from store's resultData
+    const storeOptimization = (resultData as any)?.optimization as OptimizationData | undefined;
+    const jobId = optimizationData?.job_id || storeOptimization?.job_id || '';
+
+    // Fetch fresh data from API
+    const fetchOptimizationData = useCallback(async () => {
+        if (!jobId) return;
+
+        setIsLoading(true);
+        try {
+            const data = await resultsService.getResults(jobId, currentPage, 50, true);
+            console.log('Optimization data:', data);
+            setOptimizationData(data);
+        } catch (error) {
+            console.error('Failed to fetch optimization data:', error);
+            // Fall back to store data if API fails
+            if (storeOptimization) {
+                setOptimizationData(storeOptimization);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }, [jobId, currentPage, storeOptimization]);
+
+    // Initial load: use store data, then fetch fresh data
+    useEffect(() => {
+        if (storeOptimization && !optimizationData) {
+            setOptimizationData(storeOptimization);
+        }
+    }, [storeOptimization, optimizationData]);
+
+    // Fetch fresh data when jobId is available or page changes
+    useEffect(() => {
+        if (jobId) {
+            fetchOptimizationData();
+        }
+    }, [jobId, currentPage]);
+
+    const refreshData = useCallback(() => {
+        fetchOptimizationData();
+    }, [fetchOptimizationData]);
 
     const openModifyModal = (assignment: Assignment) => {
         setSelectedAssignment(assignment);
@@ -328,10 +395,76 @@ const OptimizationResultsView = () => {
         setSelectedAssignment(null);
     };
 
-    // Extract optimization data from resultData
-    const optimization = (resultData as any)?.optimization as OptimizationData | undefined;
+    // Action Handlers
+    const handleApprove = async (assignmentId: string) => {
+        if (!jobId) return;
+        setActionLoading(assignmentId);
+        try {
+            await resultsService.approveAssignment(jobId, assignmentId);
+            showToast.success('Approved', 'Assignment has been approved.');
+            refreshData();
+        } catch (error) {
+            showToast.error('Failed', 'Could not approve assignment.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
-    if (!optimization) {
+    const handleReject = async (assignmentId: string) => {
+        if (!jobId) return;
+        const reason = prompt('Enter rejection reason:');
+        if (!reason) return;
+
+        setActionLoading(assignmentId);
+        try {
+            await resultsService.rejectAssignment(jobId, assignmentId, reason);
+            showToast.success('Rejected', 'Assignment has been rejected.');
+            refreshData();
+        } catch (error) {
+            showToast.error('Failed', 'Could not reject assignment.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleApproveAll = async () => {
+        if (!jobId) return;
+        setActionLoading('approve-all');
+        try {
+            const result = await resultsService.approveAll(jobId);
+            showToast.success('All Approved', `${result.approved_count} assignments approved.`);
+            refreshData();
+        } catch (error) {
+            showToast.error('Failed', 'Could not approve all assignments.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleExport = async () => {
+        if (!jobId) return;
+        setActionLoading('export');
+        try {
+            await resultsService.downloadExportedCSV(jobId);
+            showToast.success('Exported', 'Results downloaded successfully.');
+        } catch (error) {
+            showToast.error('Export Failed', 'Could not export results.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    // Show loading state or empty state
+    if (!optimizationData && isLoading) {
+        return (
+            <div className="w-full flex items-center justify-center p-12 text-gray-400">
+                <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                Loading optimization data...
+            </div>
+        );
+    }
+
+    if (!optimizationData) {
         return (
             <div className="w-full flex items-center justify-center p-12 text-gray-400">
                 No optimization data available.
@@ -339,7 +472,7 @@ const OptimizationResultsView = () => {
         );
     }
 
-    const { metrics, assignments, status_counts, fitness_history, average_history, pagination } = optimization;
+    const { metrics, assignments, status_counts, fitness_history, average_history, pagination } = optimizationData;
 
     // Filter assignments
     const filteredAssignments = assignments?.filter(a => {
@@ -432,11 +565,21 @@ const OptimizationResultsView = () => {
                             <option value="modified">Modified</option>
                         </select>
                         {/* Actions */}
-                        <button className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-2 transition-colors">
-                            <Check className="w-4 h-4" /> Approve All Pending
+                        <button
+                            onClick={handleApproveAll}
+                            disabled={actionLoading === 'approve-all'}
+                            className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+                        >
+                            {actionLoading === 'approve-all' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                            Approve All Pending
                         </button>
-                        <button className="px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors">
-                            <Download className="w-4 h-4" /> Export
+                        <button
+                            onClick={handleExport}
+                            disabled={actionLoading === 'export'}
+                            className="px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+                        >
+                            {actionLoading === 'export' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                            Export
                         </button>
                     </div>
                 </div>
@@ -470,17 +613,28 @@ const OptimizationResultsView = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-1">
-                                            <button className="p-1.5 rounded-lg hover:bg-emerald-100 text-emerald-600 transition-colors" title="Approve">
-                                                <Check className="w-4 h-4" />
+                                            <button
+                                                onClick={() => handleApprove(assignment.assignment_id)}
+                                                disabled={actionLoading === assignment.assignment_id}
+                                                className="p-1.5 rounded-lg hover:bg-emerald-100 text-emerald-600 transition-colors disabled:opacity-50"
+                                                title="Approve"
+                                            >
+                                                {actionLoading === assignment.assignment_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                             </button>
                                             <button
                                                 onClick={() => openModifyModal(assignment)}
-                                                className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 transition-colors"
+                                                disabled={actionLoading === assignment.assignment_id}
+                                                className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 transition-colors disabled:opacity-50"
                                                 title="Modify"
                                             >
                                                 <Edit3 className="w-4 h-4" />
                                             </button>
-                                            <button className="p-1.5 rounded-lg hover:bg-red-100 text-red-600 transition-colors" title="Reject">
+                                            <button
+                                                onClick={() => handleReject(assignment.assignment_id)}
+                                                disabled={actionLoading === assignment.assignment_id}
+                                                className="p-1.5 rounded-lg hover:bg-red-100 text-red-600 transition-colors disabled:opacity-50"
+                                                title="Reject"
+                                            >
                                                 <X className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -525,6 +679,8 @@ const OptimizationResultsView = () => {
                 isOpen={modifyModalOpen}
                 onClose={closeModifyModal}
                 assignment={selectedAssignment}
+                jobId={jobId}
+                onSuccess={refreshData}
             />
         </div>
     );

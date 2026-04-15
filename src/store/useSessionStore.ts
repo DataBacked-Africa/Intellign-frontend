@@ -291,16 +291,39 @@ export const useSessionStore = create<SessionState>()(
                         // If the endpoint returns the standard session object:
                         // { id, status, resources_metadata, targets_metadata, ... }
 
-                        set({
-                            sessionStatus: data.status,
+                        // Build a normalized goals map from the DB array (each item has an id field)
+                        const dbGoals = data.optimizationGoals;
+                        const normalizedGoals: GoalDefinitionPayload = {};
+                        if (Array.isArray(dbGoals) && dbGoals.length > 0) {
+                            dbGoals.forEach((g: any) => {
+                                const id = g.id || crypto.randomUUID();
+                                normalizedGoals[id] = { ...g, id };
+                            });
+                        } else if (dbGoals && typeof dbGoals === 'object' && !Array.isArray(dbGoals) && Object.keys(dbGoals).length > 0) {
+                            Object.assign(normalizedGoals, dbGoals);
+                        }
+
+                        // If DB status is PROCESSING but ingestion is already done,
+                        // treat frontend status as CONFIGURING (goals step).
+                        const ingestionDone =
+                            data.resultData?.ingestion?.status === 'success' ||
+                            !!data.resultData?.ingestion?.resources_metadata;
+                        const frontendStatus =
+                            data.status === 'PROCESSING' && ingestionDone
+                                ? 'CONFIGURING'
+                                : data.status;
+
+                        set((state) => ({
+                            sessionStatus: frontendStatus,
                             sessionId: data.session_id || data.id,
                             resultData: data.resultData,
                             resourcesMetadata: data.resultData?.ingestion?.resources_metadata || data.resultData?.resources_metadata || null,
                             targetsMetadata: data.resultData?.ingestion?.targets_metadata || data.resultData?.targets_metadata || null,
                             sourceFile: data.sourceFile,
                             schemaFile: data.constraintsFile,
-                            goals: data.optimizationGoals || {}
-                        });
+                            // Only overwrite local goals if DB has goals; keep local if DB is empty
+                            goals: Object.keys(normalizedGoals).length > 0 ? normalizedGoals : state.goals,
+                        }));
 
                         // Force progress to 100 if we are in a post-processing state
                         if (['CONFIGURING', 'COMPLETED'].includes(data.status)) {
