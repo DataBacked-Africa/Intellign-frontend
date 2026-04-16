@@ -112,6 +112,19 @@ export interface OptimizationResult {
     anomalies_detected?: string[];
 }
 
+export interface SimpleOptimizationResult extends OptimizationResult {
+    score: number;
+    feedback: string;
+    timestamp: string;
+    optimized_allocation: Array<{ category: string; percentage: number }>;
+}
+
+export interface ComplexOptimizationResult extends OptimizationResult {
+    convergence_score: number;
+    resources_allocated: Array<{ target: string; amount: number; efficiency: number }>;
+    timeline_data: Array<{ gen: number; score: number }>;
+}
+
 interface SessionState {
     sourceFile: FileMetadata | null;
     schemaFile: FileMetadata | null;

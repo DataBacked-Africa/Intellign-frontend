@@ -102,11 +102,11 @@ const ResultsDashboard = () => {
     const {
         status,
         convergence_score,
-        iterations_run,
-        processing_time_ms,
-        resources_allocated,
-        timeline_data,
-        anomalies_detected
+        iterations_run = 0,
+        processing_time_ms = 0,
+        resources_allocated = [],
+        timeline_data = [],
+        anomalies_detected = []
     } = resultData as ComplexOptimizationResult;
 
     const scorePercentage = Math.round(convergence_score * 100);
