@@ -78,7 +78,7 @@ const SuggestionsCard: React.FC<{
 
             {hasGaParams && (
                 <p className="text-xs text-violet-600 mb-2">
-                    + GA parameters: pop={suggestions.ga_params.population_size}, gen={suggestions.ga_params.generations}
+                    + GA parameters: pop={suggestions.ga_params?.population_size}, gen={suggestions.ga_params?.generations}
                 </p>
             )}
 

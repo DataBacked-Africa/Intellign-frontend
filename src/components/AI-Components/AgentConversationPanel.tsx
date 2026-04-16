@@ -87,7 +87,7 @@ const SuggestionsCard: React.FC<{
                 ))}
                 {hasGaParams && suggestions.ga_params && (
                     <p className="text-[10px] text-violet-500 pt-0.5 px-0.5">
-                        + Solver: pop={suggestions.ga_params.population_size}, gen={suggestions.ga_params.generations}
+                        + Solver: pop={suggestions.ga_params?.population_size}, gen={suggestions.ga_params?.generations}
                     </p>
                 )}
             </div>
