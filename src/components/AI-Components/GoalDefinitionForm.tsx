@@ -103,26 +103,13 @@ const GoalItemForm: React.FC<{ id: string; goal: GoalDefinitionPayload[string]; 
     const [currentValues, setCurrentValues] = useState<string[]>([]);
     const [currentScore, setCurrentScore] = useState<number>(10);
 
-    const resourceColumns = resourcesMetadata?.columns.map(c => c.column_name) || MOCK_COLUMNS;
-    const targetColumns = targetsMetadata?.columns.map(c => c.column_name) || MOCK_COLUMNS;
+    // columns is string[] in the real API response
+    const resourceColumns = (resourcesMetadata?.columns as string[] | undefined) ?? MOCK_COLUMNS;
+    const targetColumns = (targetsMetadata?.columns as string[] | undefined) ?? MOCK_COLUMNS;
 
-    const getTargetSamples = () => {
-        if (!targetsMetadata) return [];
-        const relevantCols = targetsMetadata.columns.filter(c => targetLoadCols.includes(c.column_name));
-        const allSamples = relevantCols.flatMap(c => c.sample_values);
-        const mappedKeys = Object.keys(mappingRules);
-        return Array.from(new Set(allSamples)).map(String).filter(s => !mappedKeys.includes(s));
-    };
-
-    const getResourceSamples = () => {
-        if (!resourcesMetadata) return [];
-        const relevantCols = resourcesMetadata.columns.filter(c => resourceLoadCols.includes(c.column_name));
-        const allSamples = relevantCols.flatMap(c => c.sample_values);
-        return Array.from(new Set(allSamples)).map(String);
-    };
-
-    const targetSamples = getTargetSamples();
-    const resourceSamples = getResourceSamples();
+    // Sample values not available in the lightweight metadata from unified chat
+    const targetSamples: string[] = [];
+    const resourceSamples: string[] = [];
 
     useEffect(() => {
         const operatorMap: Record<string, string> = { '<=': 'le', '>=': 'ge', '==': 'eq', '<': 'lt', '>': 'gt' };
@@ -350,7 +337,7 @@ const GoalItemForm: React.FC<{ id: string; goal: GoalDefinitionPayload[string]; 
 };
 
 const GoalDefinitionForm: React.FC<any> = ({ onNext }) => {
-    const { goals, addGoal, clearSession } = useSessionStore();
+    const { goals, addGoal, clearSession, sessionId } = useSessionStore();
     const { startOptimization } = useSessionOrchestrator();
 
     // Add a blank goal only on first mount if there are none — not on every change
@@ -399,8 +386,8 @@ const GoalDefinitionForm: React.FC<any> = ({ onNext }) => {
                     </button>
                     <div className="flex-1" />
                     <button
-                        onClick={startOptimization}
-                        disabled={Object.keys(goals).length === 0}
+                        onClick={() => sessionId && startOptimization(sessionId)}
+                        disabled={Object.keys(goals).length === 0 || !sessionId}
                         className="bg-black text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-black/5 hover:bg-gray-900 hover:shadow-2xl hover:-translate-y-0.5 transition-all flex items-center gap-3 disabled:opacity-50 disabled:pointer-events-none"
                     >
                         Run Optimization <Play className="w-4 h-4 fill-white" />

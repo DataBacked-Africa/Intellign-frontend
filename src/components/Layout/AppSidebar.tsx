@@ -15,11 +15,7 @@ interface AppSidebarProps {
 
 const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
     const { logout, user } = useUserStore();
-    const { clearSession, sessions, loadSession, sessionId, fetchHistory } = useSessionStore();
-
-    React.useEffect(() => {
-        fetchHistory();
-    }, [fetchHistory]);
+    const { clearSession, sessions, sessionId } = useSessionStore();
 
     return (
         <motion.div

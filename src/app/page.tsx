@@ -1,29 +1,27 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useSessionStore } from "@/store/useSessionStore";
 import AppShell from "@/components/Layout/AppShell";
 import MainWorkspace from "@/components/AI-Components/MainWorkspace";
-import { useUserStore } from "@/store/useUserStore";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useUserStore();
-  const router = useRouter();
+    const router = useRouter();
+    const { clearSession, setSessionId } = useSessionStore();
+    const initialized = useRef(false);
 
-  // Basic route protection
-  // Note: Middleware is usually better for this, but keeping it client-side for consistency with current patterns
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-        // Optional: Redirect to login if explicit auth is required for landing
-        // router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
+    useEffect(() => {
+        if (initialized.current) return;
+        initialized.current = true;
 
+        // Generate a new session ID and navigate to the session page
+        const newSessionId = crypto.randomUUID();
+        clearSession();
+        setSessionId(newSessionId);
+        router.replace(`/sessions/${newSessionId}`);
+    }, [router, clearSession, setSessionId]);
 
-  return (
-    <AppShell>
-       <MainWorkspace />
-    </AppShell>
-  );
+    // Show nothing while redirecting
+    return null;
 }

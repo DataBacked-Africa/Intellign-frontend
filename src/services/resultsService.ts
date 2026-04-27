@@ -86,7 +86,7 @@ export const resultsService = {
         const response = await axiosInstance.get(`/results/${jobId}`, {
             params: { page, page_size: pageSize, include_enriched: includeEnriched }
         });
-
+        // ML API returns the object directly (no .data wrapper)
         return response.data;
     },
 
@@ -102,7 +102,7 @@ export const resultsService = {
         const response = await axiosInstance.get(`/results/${jobId}/review`, {
             params: { status_filter: statusFilter, page, page_size: pageSize }
         });
-        return response.data.data;
+        return response.data;
     },
 
     /**
@@ -110,7 +110,7 @@ export const resultsService = {
      */
     getSummary: async (jobId: string): Promise<SummaryResponse> => {
         const response = await axiosInstance.get(`/results/${jobId}/summary`);
-        return response.data.data;
+        return response.data;
     },
 
     /**
@@ -125,7 +125,7 @@ export const resultsService = {
         const response = await axiosInstance.get(`/results/${jobId}/final`, {
             params: { include_rejected: includeRejected, page, page_size: pageSize }
         });
-        return response.data.data;
+        return response.data;
     },
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -145,7 +145,7 @@ export const resultsService = {
             null,
             { params: notes ? { notes } : undefined }
         );
-        return response.data.data;
+        return response.data;
     },
 
     /**
@@ -161,7 +161,7 @@ export const resultsService = {
             null,
             { params: { reason } }
         );
-        return response.data.data;
+        return response.data;
     },
 
     /**
@@ -178,7 +178,7 @@ export const resultsService = {
             null,
             { params: { new_target_id: newTargetId, reason } }
         );
-        return response.data.data;
+        return response.data;
     },
 
     /**
@@ -186,7 +186,7 @@ export const resultsService = {
      */
     approveAll: async (jobId: string): Promise<{ approved_count: number }> => {
         const response = await axiosInstance.post(`/results/${jobId}/approve-all`);
-        return response.data.data;
+        return response.data;
     },
 
     /**
@@ -197,7 +197,7 @@ export const resultsService = {
         actions: BulkReviewAction[]
     ): Promise<{ processed: number; errors: any[] }> => {
         const response = await axiosInstance.post(`/results/${jobId}/bulk-review`, actions);
-        return response.data.data;
+        return response.data;
     },
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -214,7 +214,7 @@ export const resultsService = {
         const response = await axiosInstance.post(`/results/${jobId}/finalize`, null, {
             params: { include_rejected: includeRejected }
         });
-        return response.data.data;
+        return response.data;
     },
 
     /**

@@ -331,7 +331,7 @@ const ModifyAssignmentModal = ({
 
 // Main Component
 const OptimizationResultsView = () => {
-    const { resultData } = useSessionStore();
+    const { resultData, jobId: storeJobId } = useSessionStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [currentPage, setCurrentPage] = useState(1);
@@ -343,9 +343,9 @@ const OptimizationResultsView = () => {
     // Local state for optimization data (fetched from API for freshness)
     const [optimizationData, setOptimizationData] = useState<OptimizationData | null>(null);
 
-    // Get initial jobId from store's resultData
+    // Prefer jobId from the store (set when optimization run returns job_id)
     const storeOptimization = (resultData as any)?.optimization as OptimizationData | undefined;
-    const jobId = optimizationData?.job_id || storeOptimization?.job_id || '';
+    const jobId = storeJobId || optimizationData?.job_id || storeOptimization?.job_id || '';
 
     // Fetch fresh data from API
     const fetchOptimizationData = useCallback(async () => {

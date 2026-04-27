@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSessionStore, OptimizationResult, ComplexOptimizationResult, SimpleOptimizationResult } from '@/store/useSessionStore';
+import { useSessionStore } from '@/store/useSessionStore';
 import {
     LineChart,
     Line,
@@ -22,13 +22,13 @@ const ResultsDashboard = () => {
     if (!resultData) return null;
 
     // Type Guard for Complex Result
-    const isComplex = (data: OptimizationResult): data is ComplexOptimizationResult => {
+    const isComplex = (data: any): boolean => {
         return 'convergence_score' in data;
     };
 
     if (!isComplex(resultData)) {
         // Render Simple Dashboard
-        const { score, feedback, timestamp, optimized_allocation } = resultData as SimpleOptimizationResult;
+        const { score, feedback, timestamp, optimized_allocation } = resultData as any;
 
         return (
             <motion.div
@@ -78,7 +78,7 @@ const ResultsDashboard = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-lg font-semibold text-gray-800 mb-6">Optimized Allocation</h3>
                     <div className="space-y-4">
-                        {optimized_allocation?.map((alloc, idx) => (
+                        {optimized_allocation?.map((alloc: any, idx: number) => (
                             <div key={idx} className="space-y-1">
                                 <div className="flex justify-between text-sm">
                                     <span className="font-medium text-gray-700">{alloc.category}</span>
@@ -107,7 +107,7 @@ const ResultsDashboard = () => {
         resources_allocated = [],
         timeline_data = [],
         anomalies_detected = []
-    } = resultData as ComplexOptimizationResult;
+    } = resultData as any;
 
     const scorePercentage = Math.round(convergence_score * 100);
     const isOptimal = status === 'OPTIMAL';
@@ -301,7 +301,7 @@ const ResultsDashboard = () => {
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                 />
                                 <Bar dataKey="amount" radius={[0, 4, 4, 0]} barSize={24}>
-                                    {resources_allocated.map((entry, index) => (
+                                    {resources_allocated.map((entry: any, index: number) => (
                                         <Cell key={`cell-${index}`} fill={entry.efficiency > 0.9 ? "#22c55e" : "#5c1427"} />
                                     ))}
                                 </Bar>
@@ -323,7 +323,7 @@ const ResultsDashboard = () => {
                         <AlertTriangle className="w-5 h-5" /> Data Quality Alerts
                     </h3>
                     <ul className="space-y-2">
-                        {anomalies_detected.map((alert, idx) => (
+                        {anomalies_detected.map((alert: any, idx: number) => (
                             <li key={idx} className="flex items-center gap-3 text-amber-800 bg-white/50 p-2 rounded-lg">
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                                 {alert}

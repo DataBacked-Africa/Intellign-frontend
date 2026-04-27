@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSessionStore, FileMetadata, DatasetMetadata, ColumnMetadata } from '@/store/useSessionStore';
+import { useSessionStore, FileMetadata, DatasetMetadata } from '@/store/useSessionStore';
 import { Database, FileJson, CheckCircle2, Clock, ChevronDown, ChevronUp, Hash, Type, ToggleLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -15,49 +15,13 @@ const TypeIcon: React.FC<{ type: string }> = ({ type }) => {
 };
 
 // ─── Column table ─────────────────────────────────────────────────────────────
-const ColumnTable: React.FC<{ columns: ColumnMetadata[] }> = ({ columns }) => (
-    <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-            <thead>
-                <tr className="border-b border-gray-100">
-                    <th className="text-left py-2 px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Column</th>
-                    <th className="text-left py-2 px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Type</th>
-                    <th className="text-left py-2 px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">Sample Values</th>
-                    <th className="text-right py-2 px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden lg:table-cell">Unique</th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-                {columns.map((col) => (
-                    <tr key={col.column_name} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="py-2 px-3 font-medium text-gray-900 font-mono">{col.column_name}</td>
-                        <td className="py-2 px-3">
-                            <div className="flex items-center gap-1.5">
-                                <TypeIcon type={col.data_type} />
-                                <span className="text-gray-500 font-mono text-[10px]">{col.data_type}</span>
-                            </div>
-                        </td>
-                        <td className="py-2 px-3 hidden md:table-cell">
-                            <div className="flex flex-wrap gap-1">
-                                {(col.sample_values ?? []).slice(0, 4).map((v, i) => (
-                                    <span key={i} className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] text-gray-600 font-mono max-w-[100px] truncate">
-                                        {String(v ?? '—')}
-                                    </span>
-                                ))}
-                                {(col.sample_values?.length ?? 0) === 0 && (
-                                    <span className="text-gray-300 text-[10px]">—</span>
-                                )}
-                            </div>
-                        </td>
-                        <td className="py-2 px-3 text-right hidden lg:table-cell">
-                            {col.unique_values_count != null
-                                ? <span className="text-gray-500">{col.unique_values_count.toLocaleString()}</span>
-                                : <span className="text-gray-300">—</span>
-                            }
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+const ColumnTable: React.FC<{ columns: string[] }> = ({ columns }) => (
+    <div className="flex flex-wrap gap-2">
+        {columns.map((col) => (
+            <span key={col} className="px-2.5 py-1 bg-gray-100 rounded-lg text-xs font-mono text-gray-700">
+                {col}
+            </span>
+        ))}
     </div>
 );
 
@@ -71,11 +35,9 @@ const DatasetCard: React.FC<{
 }> = ({ label, file, metadata, icon, accent }) => {
     const [expanded, setExpanded] = useState(false);
 
-    const fileSize = file?.meta?.size
-        ? (file.meta.size / 1024 / 1024).toFixed(2) + ' MB'
-        : file?.size
-            ? ((file.size as number) / 1024 / 1024).toFixed(2) + ' MB'
-            : null;
+    const fileSize = file?.size
+        ? ((file.size as number) / 1024 / 1024).toFixed(2) + ' MB'
+        : null;
 
     const hasData = metadata && metadata.columns && metadata.columns.length > 0;
 
