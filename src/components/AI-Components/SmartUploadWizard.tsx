@@ -8,7 +8,7 @@ import {
     AlertCircle, BarChart2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUnifiedChat, ChatMessage, GoalDefinition, DataContext } from '@/hooks/useUnifiedChat';
+import { useUnifiedChat, ChatMessage, GoalDefinition, DataContext, Artifact, AttachedFileInfo } from '@/hooks/useUnifiedChat';
 import { useSessionOrchestrator } from '@/hooks/useSessionOrchestrator';
 import { useSessionStore } from '@/store/useSessionStore';
 import { showToast } from '@/components/ui/CustomToast';
@@ -20,6 +20,27 @@ const TypingIndicator = () => (
             <motion.div key={i} className="w-1.5 h-1.5 bg-gray-400 rounded-full"
                 animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
                 transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15 }} />
+        ))}
+    </div>
+);
+
+// ─── File attachment chips ────────────────────────────────────────────────────
+const fmt = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+};
+
+const FileChips: React.FC<{ files: AttachedFileInfo[] }> = ({ files }) => (
+    <div className="flex flex-wrap gap-1.5 mb-2">
+        {files.map((f, i) => (
+            <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/10 rounded-lg border border-white/20">
+                <FileSpreadsheet className="w-3 h-3 text-white/70 shrink-0" />
+                <div className="leading-none">
+                    <p className="text-[11px] font-medium text-white truncate max-w-[140px]">{f.name}</p>
+                    <p className="text-[10px] text-white/50 mt-0.5">{fmt(f.size)}</p>
+                </div>
+            </div>
         ))}
     </div>
 );
@@ -186,6 +207,75 @@ const GoalsPanel: React.FC<{ goals: GoalDefinition[] }> = ({ goals }) => {
     );
 };
 
+// ─── Artifact renderer ───────────────────────────────────────────────────────
+const ArtifactTable: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
+    const headers = artifact.headers ?? [];
+    const rows = artifact.rows ?? [];
+    if (!headers.length && !rows.length) return null;
+
+    return (
+        <div className="mt-3 rounded-xl border border-gray-200 overflow-hidden text-xs">
+            {artifact.title && (
+                <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                    {artifact.title}
+                </div>
+            )}
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    {headers.length > 0 && (
+                        <thead>
+                            <tr className="bg-gray-50 border-b border-gray-200">
+                                {headers.map((h, i) => (
+                                    <th key={i} className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                                        {h}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                    )}
+                    <tbody className="divide-y divide-gray-100">
+                        {rows.map((row, ri) => (
+                            <tr key={ri} className="hover:bg-gray-50/50 transition-colors">
+                                {row.map((cell, ci) => {
+                                    // Colour-code Reward / Penalty badges
+                                    const isReward = cell === 'Reward';
+                                    const isPenalty = cell === 'Penalty';
+                                    return (
+                                        <td key={ci} className="px-3 py-2 text-gray-700 whitespace-nowrap">
+                                            {(isReward || isPenalty) ? (
+                                                <span className={cn(
+                                                    'px-2 py-0.5 rounded-full text-[10px] font-bold',
+                                                    isReward ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                )}>
+                                                    {cell}
+                                                </span>
+                                            ) : (
+                                                cell
+                                            )}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+const ArtifactRenderer: React.FC<{ artifacts: Artifact[] }> = ({ artifacts }) => {
+    if (!artifacts?.length) return null;
+    return (
+        <>
+            {artifacts.map((a, i) => {
+                if (a.type === 'table') return <ArtifactTable key={i} artifact={a} />;
+                return null; // future: code, chart, etc.
+            })}
+        </>
+    );
+};
+
 // ─── Dataset download buttons (shown when data_context has metadata) ──────────
 const DatasetDownloadBar: React.FC<{ context: DataContext; onDownload: (t: 'resources' | 'targets') => void }> = ({ context, onDownload }) => {
     if (context.status === 'none') return null;
@@ -214,6 +304,11 @@ const MessageBubble: React.FC<{
     isLoading?: boolean;
     onDownload: (t: 'resources' | 'targets') => void;
 }> = ({ msg, isLoading, onDownload }) => {
+    // Strip inline markdown tables from the message when we have structured artifacts —
+    // avoids showing the same table twice (once as raw markdown, once as a rendered table).
+    const messageText = (msg.artifacts?.some(a => a.type === 'table'))
+        ? msg.content.replace(/\|.+\|[\s\S]*?(?=\n\n|\n[^|]|$)/g, '').trim()
+        : msg.content;
     const isUser = msg.role === 'user';
     return (
         <motion.div
@@ -232,7 +327,12 @@ const MessageBubble: React.FC<{
                     isUser ? 'bg-gray-900 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                 )}>
                     {isLoading ? <TypingIndicator /> : (
-                        <div className="whitespace-pre-wrap break-words">{renderMarkdown(msg.content)}</div>
+                        <>
+                            {isUser && msg.attachedFiles && msg.attachedFiles.length > 0 && (
+                                <FileChips files={msg.attachedFiles} />
+                            )}
+                            <div className="whitespace-pre-wrap break-words">{renderMarkdown(messageText)}</div>
+                        </>
                     )}
                     {!isLoading && msg.actionTaken && (
                         <div className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md w-fit">
@@ -246,6 +346,10 @@ const MessageBubble: React.FC<{
                         </div>
                     )}
                 </div>
+                {/* Structured artifacts (tables, etc.) */}
+                {!isLoading && msg.artifacts && msg.artifacts.length > 0 && (
+                    <ArtifactRenderer artifacts={msg.artifacts} />
+                )}
                 {/* Data preview below the bubble */}
                 {!isLoading && msg.actionTaken && msg.dataPreview && (
                     <DataPreviewCard
@@ -438,7 +542,7 @@ const SmartUploadWizard: React.FC<{ initialSessionId?: string }> = ({ initialSes
 
             {/* ── Messages ─────────────────────────────────────────────────── */}
             {!isIdle && (
-                <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+                <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-4">
                     {messages.map((msg, i) => {
                         const isLastAssistant = msg.role === 'assistant';
                         const showLoading = isLastAssistant && isSending && i === messages.length - 1 && msg.content === '';

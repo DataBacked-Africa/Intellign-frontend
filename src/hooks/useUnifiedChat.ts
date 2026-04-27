@@ -2,7 +2,9 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { API_URL } from '@/lib/axiosConfig';
+import axiosInstance from '@/lib/axiosConfig';
 import { showToast } from '@/components/ui/CustomToast';
+import { useSessionStore } from '@/store/useSessionStore';
 
 // ── Response types (aligned to FRONTEND_INTEGRATION.md) ──────────────────────
 
@@ -45,6 +47,14 @@ export interface DataContext {
     synthetic_flags: Record<string, any>;
 }
 
+export interface Artifact {
+    type: 'table' | string;
+    content: string;
+    headers?: string[];
+    rows?: string[][];
+    title?: string;
+}
+
 export interface ChatResponse {
     session_id: string;
     message: string;
@@ -56,6 +66,14 @@ export interface ChatResponse {
     data_context: DataContext | null;
     goals: GoalDefinition[] | null;
     ga_params: GAParams | null;
+    artifacts?: Artifact[] | null;
+    goal_summary?: string | null;
+}
+
+export interface AttachedFileInfo {
+    name: string;
+    size: number;
+    type: string;
 }
 
 export interface ChatMessage {
@@ -63,9 +81,11 @@ export interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
+    attachedFiles?: AttachedFileInfo[];
     actionTaken?: string | null;
     dataPreview?: any | null;
     goals?: GoalDefinition[] | null;
+    artifacts?: Artifact[] | null;
 }
 
 interface UnifiedChatState {
@@ -98,9 +118,25 @@ export const useUnifiedChat = (initialSessionId?: string) => {
     }));
 
     const abortRef = useRef<AbortController | null>(null);
+    // Track whether this session has already been registered in the backend DB
+    const registeredRef = useRef(false);
 
     const update = (partial: Partial<UnifiedChatState>) =>
         setState(prev => ({ ...prev, ...partial }));
+
+    // ── Register session in the backend DB (fire-and-forget, auth optional) ──
+    const registerSession = useCallback((sessionId: string) => {
+        if (registeredRef.current) return;
+        registeredRef.current = true;
+        axiosInstance.post('/sessions/register', { sessionId })
+            .then(() => {
+                // Refresh the sidebar so the new session appears immediately
+                useSessionStore.getState().fetchHistory();
+            })
+            .catch(() => {
+                registeredRef.current = false;
+            });
+    }, []);
 
     // ── Send a message (with optional file attachments) ───────────────────────
     const sendMessage = useCallback(async (text: string, files: File[] = []) => {
@@ -111,6 +147,9 @@ export const useUnifiedChat = (initialSessionId?: string) => {
             role: 'user',
             content: text,
             timestamp: new Date(),
+            attachedFiles: files.length > 0
+                ? files.map(f => ({ name: f.name, size: f.size, type: f.type }))
+                : undefined,
         };
 
         const loadingId = crypto.randomUUID();
@@ -127,6 +166,9 @@ export const useUnifiedChat = (initialSessionId?: string) => {
             error: null,
             messages: [...prev.messages, userMsg, loadingMsg],
         }));
+
+        // Register in backend DB on first send so the session appears in the sidebar
+        registerSession(sessionId);
 
         try {
             const form = new FormData();
@@ -158,6 +200,7 @@ export const useUnifiedChat = (initialSessionId?: string) => {
                 actionTaken: data.action_taken,
                 dataPreview: data.data_preview,
                 goals: data.goals,
+                artifacts: data.artifacts ?? null,
             };
 
             setState(prev => ({
@@ -234,6 +277,7 @@ export const useUnifiedChat = (initialSessionId?: string) => {
     // ── Reset (start new session) ─────────────────────────────────────────────
     const reset = useCallback(() => {
         abortRef.current?.abort();
+        registeredRef.current = false;
         setState({
             sessionId: generateSessionId(),
             messages: [],

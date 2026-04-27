@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import axiosInstance from '@/lib/axiosConfig';
 
 // ── Shared types ──────────────────────────────────────────────────────────────
 
@@ -155,7 +156,7 @@ interface SessionState {
     setUploading: (isUploading: boolean) => void;
     clearSession: () => void;
     // Kept for sidebar history UI (in-memory only)
-    sessions: { sessionId: string; createdAt: string }[];
+    sessions: { sessionId: string; createdAt: string; name?: string }[];
     // Stubs kept so existing components don't break at import time
     saveSession: () => void;
     loadSession: (sessionId: string) => void;
@@ -250,10 +251,24 @@ export const useSessionStore = create<SessionState>()(
                     isUploadingRequest: false,
                 }),
 
-            // Stubs — no longer backed by a real API endpoint
             saveSession: () => {},
             loadSession: (_sessionId: string) => {},
-            fetchHistory: async () => {},
+
+            fetchHistory: async () => {
+                try {
+                    const response = await axiosInstance.get('/sessions');
+                    const raw = response.data?.data ?? response.data ?? [];
+                    const history = (Array.isArray(raw) ? raw : []).map((item: any) => ({
+                        sessionId: item.id ?? item.sessionId,
+                        createdAt: item.createdAt ?? item.created_at ?? new Date().toISOString(),
+                        name: item.name ?? undefined,
+                    })).filter((s: any) => !!s.sessionId);
+                    set({ sessions: history });
+                } catch {
+                    // silently ignore — unauthenticated users just see an empty sidebar
+                }
+            },
+
             fetchSessionStatus: async (_sessionId: string) => {},
         }),
         {

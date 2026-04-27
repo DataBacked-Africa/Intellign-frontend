@@ -10,6 +10,15 @@ const axiosInstance = axios.create({
     },
 });
 
+// Attach stored JWT to every request (required for protected backend routes like /sessions)
+axiosInstance.interceptors.request.use((config) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 // Paths where 404s are expected and should be swallowed silently
 const SILENT_404_PATTERNS = ['/ingest/', '/results/'];
 

@@ -3,11 +3,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface User {
     id: string;
-    email: string;
     name: string;
+    email: string;
     role?: string;
+    organizationId?: string;
     organizationName?: string;
-    // Add other user properties as needed
 }
 
 interface UserState {
