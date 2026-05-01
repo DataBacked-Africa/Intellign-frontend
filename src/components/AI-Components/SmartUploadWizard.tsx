@@ -637,15 +637,8 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                                 >
                                     <Plus className="w-5 h-5" />
                                 </button>
-                                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors">
-                                    <Database className="w-4 h-4" />
-                                    Data sources
-                                </button>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <button className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors">
-                                    Smart <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-                                </button>
                                 {isSpeechSupported && (
                                     <button
                                         type="button"

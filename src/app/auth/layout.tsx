@@ -25,10 +25,7 @@ export default function AuthLayout({
                 <div className="relative z-10">
                     <Link href="/">
                         <div className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                            {/* Replace with actual logo or text */}
-                            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center border border-white/20">
-                                <span className="font-bold text-lg">D</span>
-                            </div>
+                            <img src="/logo.png" alt="Logo" className="h-8 object-contain brightness-0 invert" />
                             <span className="font-medium text-lg tracking-tight">DataBackedAfrica</span>
                         </div>
                     </Link>
@@ -57,7 +54,7 @@ export default function AuthLayout({
                 {/* Mobile Logo (visible only on small screens) */}
                 <div className="md:hidden absolute top-6 left-6">
                     <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-                        <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center">D</div>
+                        <img src="/logo.png" alt="Logo" className="h-8 object-contain brightness-0 invert" />
                     </Link>
                 </div>
 

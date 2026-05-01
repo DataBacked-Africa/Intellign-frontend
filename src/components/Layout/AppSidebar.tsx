@@ -4,17 +4,15 @@ import React, { useEffect, useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-    SquarePen,
-    Search,
-    LogOut,
-    Loader2,
-    PanelLeftClose
+    SquarePen, Search, LogOut, Loader2,
+    PanelLeftClose, Link2, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserStore } from '@/store/useUserStore';
 import { useSessionStore } from '@/store/useSessionStore';
 import { motion } from 'framer-motion';
 import axiosInstance from '@/lib/axiosConfig';
+import { showToast } from '@/components/ui/CustomToast';
 
 interface AppSidebarProps {
     isOpen: boolean;
@@ -24,17 +22,17 @@ interface AppSidebarProps {
 const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
     const { logout, user } = useUserStore();
     const router = useRouter();
-    const { clearSession, sessions, sessionId, fetchHistory } = useSessionStore();
+    const { clearSession, sessions, sessionId, fetchHistory, removeSession } = useSessionStore();
 
-    // Local map of sessionId → generated name (fills in async)
     const [generatingFor, setGeneratingFor] = useState<Set<string>>(new Set());
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetchHistory();
     }, [fetchHistory]);
 
-    // For each session without a name, call the backend once to generate + persist it
+    // ── Grok name generation ──────────────────────────────────────────────────
     const requestName = useCallback(async (sid: string) => {
         if (generatingFor.has(sid)) return;
         setGeneratingFor(prev => new Set(prev).add(sid));
@@ -43,15 +41,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
             const res = await axiosInstance.post(`/sessions/${sid}/name`);
             const name: string = res.data?.data?.name ?? res.data?.name ?? '';
             if (!name) return;
-
-            // Patch the sessions list in the store with the returned name
             useSessionStore.setState(state => ({
-                sessions: state.sessions.map(s =>
-                    s.sessionId === sid ? { ...s, name } : s
-                ),
+                sessions: state.sessions.map(s => s.sessionId === sid ? { ...s, name } : s),
             }));
         } catch {
-            // silently ignore — name stays as fallback
+            // silently ignore
         } finally {
             setGeneratingFor(prev => {
                 const next = new Set(prev);
@@ -61,18 +55,41 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
         }
     }, [generatingFor]);
 
-    // Fire generation for unnamed sessions whenever the list changes
     useEffect(() => {
-        sessions
-            .filter(s => !s.name)
-            .forEach(s => requestName(s.sessionId));
+        sessions.filter(s => !s.name).forEach(s => requestName(s.sessionId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessions]);
 
-    const filteredSessions = sessions.filter(session => {
+    // ── Share ─────────────────────────────────────────────────────────────────
+    const handleShare = useCallback((sid: string) => {
+        const url = `${window.location.origin}/sessions/${sid}`;
+        navigator.clipboard.writeText(url).then(() => {
+            showToast.success('Link copied', 'Session link copied to clipboard.');
+        }).catch(() => {
+            showToast.error('Failed', 'Could not copy link.');
+        });
+    }, []);
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+    const handleDelete = useCallback(async (sid: string) => {
+        setDeletingId(sid);
+        try {
+            await axiosInstance.delete(`/sessions/${sid}`);
+            removeSession(sid);
+            if (sid === sessionId) {
+                router.push('/');
+            }
+        } catch {
+            showToast.error('Delete failed', 'Could not delete this chat.');
+        } finally {
+            setDeletingId(null);
+        }
+    }, [sessionId, removeSession, router]);
+
+    // ── Filtered list ─────────────────────────────────────────────────────────
+    const filteredSessions = sessions.filter(s => {
         if (!searchQuery) return true;
-        const isGenerating = generatingFor.has(session.sessionId);
-        const label = session.name || (isGenerating ? '' : `Session ${session.sessionId.substring(0, 8)}`);
+        const label = s.name ?? `Session ${s.sessionId.substring(0, 8)}`;
         return label.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
@@ -86,7 +103,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                 !isOpen && 'hidden md:flex md:w-0 overflow-hidden'
             )}
         >
-            {/* Top Header */}
+            {/* Header */}
             <div className="p-3 pt-4 flex items-center justify-between">
                 {isOpen && (
                     <div className="flex items-center gap-2 px-2">
@@ -94,7 +111,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                     </div>
                 )}
                 {isOpen && (
-                    <button 
+                    <button
                         onClick={() => setIsOpen(false)}
                         className="p-1.5 rounded-md hover:bg-gray-200 text-gray-500 transition-colors"
                         title="Close sidebar"
@@ -104,17 +121,18 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                 )}
             </div>
 
-            {/* Main Links */}
+            {/* New chat + Search */}
             <div className="px-3 pb-2 space-y-0.5">
                 <Link
                     href="/"
                     onClick={clearSession}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-200 transition-colors text-sm text-gray-900 group"
+                    className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-200 transition-colors text-sm text-gray-900"
                 >
                     <SquarePen className="w-4 h-4 text-gray-700" />
                     {isOpen && <span>New chat</span>}
                 </Link>
-                <div className="flex items-center gap-3 w-full p-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 focus-within:ring-2 focus-within:ring-gray-300 transition-colors text-sm text-gray-900 group">
+
+                <div className="flex items-center gap-3 w-full p-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 focus-within:ring-2 focus-within:ring-gray-300 transition-colors text-sm text-gray-900">
                     <Search className="w-4 h-4 text-gray-700 shrink-0" />
                     {isOpen && (
                         <input
@@ -122,14 +140,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                             placeholder="Search chats"
                             className="flex-1 bg-transparent outline-none text-sm text-gray-900 placeholder:text-gray-500 min-w-0"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={e => setSearchQuery(e.target.value)}
                         />
                     )}
                 </div>
             </div>
 
             {/* Session list */}
-            <div className="flex-1 overflow-y-auto py-2 px-3">
+            <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-3">
                 {sessions.length > 0 && isOpen && (
                     <p className="mb-2 px-2 text-xs font-semibold text-gray-900 mt-2">Recents</p>
                 )}
@@ -140,31 +158,63 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                     ) : filteredSessions.map(session => {
                         const isActive = session.sessionId === sessionId;
                         const isGenerating = generatingFor.has(session.sessionId);
+                        const isDeleting = deletingId === session.sessionId;
                         const label = session.name
-                            || (isGenerating ? null : `Session ${session.sessionId.substring(0, 8)}`);
+                            ?? (isGenerating ? null : `Session ${session.sessionId.substring(0, 8)}`);
 
                         return (
-                            <Link
+                            <div
                                 key={session.sessionId}
-                                href={`/sessions/${session.sessionId}`}
                                 className={cn(
-                                    'flex items-center w-full p-2.5 rounded-lg text-sm text-gray-800 hover:bg-gray-200 transition-colors group',
-                                    isActive && 'bg-[#E5E5E5] font-medium'
+                                    'group relative flex items-center rounded-lg transition-colors',
+                                    isActive ? 'bg-[#E5E5E5]' : 'hover:bg-gray-200',
+                                    isDeleting && 'opacity-50 pointer-events-none'
                                 )}
                             >
-                                {isOpen && (
-                                    <span className="truncate flex-1 text-left">
-                                        {isGenerating && !session.name ? (
-                                            <span className="flex items-center gap-1.5 text-gray-500">
-                                                <Loader2 className="w-3 h-3 animate-spin" />
-                                                <span className="text-xs">Naming…</span>
-                                            </span>
-                                        ) : (
-                                            label
-                                        )}
-                                    </span>
+                                {/* Main link area */}
+                                <Link
+                                    href={`/sessions/${session.sessionId}`}
+                                    className="flex-1 flex items-center p-2.5 min-w-0"
+                                >
+                                    {isOpen && (
+                                        <span className="truncate text-sm text-gray-800">
+                                            {isGenerating && !session.name ? (
+                                                <span className="flex items-center gap-1.5 text-gray-500">
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                    <span className="text-xs">Naming…</span>
+                                                </span>
+                                            ) : isDeleting ? (
+                                                <span className="flex items-center gap-1.5 text-gray-400">
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                    <span className="text-xs">Deleting…</span>
+                                                </span>
+                                            ) : (
+                                                label
+                                            )}
+                                        </span>
+                                    )}
+                                </Link>
+
+                                {/* Hover actions */}
+                                {isOpen && !isDeleting && (
+                                    <div className="flex items-center gap-0.5 pr-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            title="Copy link"
+                                            onClick={e => { e.preventDefault(); handleShare(session.sessionId); }}
+                                            className="p-1.5 rounded-md hover:bg-gray-300 text-gray-400 hover:text-gray-700 transition-colors"
+                                        >
+                                            <Link2 className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                            title="Delete chat"
+                                            onClick={e => { e.preventDefault(); handleDelete(session.sessionId); }}
+                                            className="p-1.5 rounded-md hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 )}
-                            </Link>
+                            </div>
                         );
                     })}
                 </div>
@@ -183,10 +233,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                         </div>
                     )}
                     <button
-                        onClick={async () => {
-                            await logout();
-                            router.push('/auth/login');
-                        }}
+                        onClick={async () => { await logout(); router.push('/auth/login'); }}
                         title="Sign out"
                         className="p-1 hover:text-gray-900 text-gray-500 transition-colors shrink-0"
                     >

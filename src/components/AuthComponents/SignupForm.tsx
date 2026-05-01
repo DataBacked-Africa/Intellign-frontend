@@ -17,7 +17,8 @@ const SignupForm = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [formData, setFormData] = useState({
-        name: '',
+        firstName: '',
+        lastName: '',
         email: '',
         organizationName: '',
         password: '',
@@ -32,7 +33,8 @@ const SignupForm = () => {
 
     const validate = (): boolean => {
         const next: Record<string, string> = {};
-        if (!formData.name.trim()) next.name = 'Full name is required.';
+        if (!formData.firstName.trim()) next.firstName = 'First name is required.';
+        if (!formData.lastName.trim()) next.lastName = 'Last name is required.';
         if (!formData.email.trim()) next.email = 'Email is required.';
         if (!formData.organizationName.trim()) next.organizationName = 'Organization name is required.';
         if (formData.password.length < 8) next.password = 'Password must be at least 8 characters.';
@@ -47,7 +49,8 @@ const SignupForm = () => {
 
         setIsLoading(true);
         try {
-            const { confirmPassword: _, ...payload } = formData;
+            const { confirmPassword: _, firstName, lastName, ...rest } = formData;
+            const payload = { ...rest, name: `${firstName} ${lastName}`.trim() };
             const response = await axiosInstance.post('/auth/register', payload);
 
             if (response.data.status === 'success') {
@@ -80,16 +83,32 @@ const SignupForm = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                <AuthInput
-                    label="Full Name"
-                    name="name"
-                    type="text"
-                    placeholder="Ada Lovelace"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    error={errors.name}
-                />
+                <div className="flex gap-4">
+                    <div className="flex-1">
+                        <AuthInput
+                            label="First Name"
+                            name="firstName"
+                            type="text"
+                            placeholder="Ada"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            required
+                            error={errors.firstName}
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <AuthInput
+                            label="Last Name"
+                            name="lastName"
+                            type="text"
+                            placeholder="Lovelace"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            required
+                            error={errors.lastName}
+                        />
+                    </div>
+                </div>
 
                 <AuthInput
                     label="Email"

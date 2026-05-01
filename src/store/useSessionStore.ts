@@ -155,8 +155,8 @@ interface SessionState {
     setSchemaPreview: (preview: { columns: string[] } | null) => void;
     setUploading: (isUploading: boolean) => void;
     clearSession: () => void;
-    // Kept for sidebar history UI (in-memory only)
     sessions: { sessionId: string; createdAt: string; name?: string }[];
+    removeSession: (sessionId: string) => void;
     // Stubs kept so existing components don't break at import time
     saveSession: () => void;
     loadSession: (sessionId: string) => void;
@@ -250,6 +250,11 @@ export const useSessionStore = create<SessionState>()(
                     schemaPreview: null,
                     isUploadingRequest: false,
                 }),
+
+            removeSession: (sessionId) =>
+                set((state) => ({
+                    sessions: state.sessions.filter(s => s.sessionId !== sessionId),
+                })),
 
             saveSession: () => {},
             loadSession: (_sessionId: string) => {},
