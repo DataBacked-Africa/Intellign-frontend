@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { API_URL } from '@/lib/axiosConfig';
 import axiosInstance from '@/lib/axiosConfig';
 import { showToast } from '@/components/ui/CustomToast';
@@ -94,6 +94,7 @@ interface UnifiedChatState {
     phase: 'ingestion' | 'goal_definition';
     isComplete: boolean;
     isSending: boolean;
+    isLoadingHistory: boolean;
     goalModel: GoalModel | null;
     dataContext: DataContext | null;
     goals: GoalDefinition[];
@@ -110,6 +111,7 @@ export const useUnifiedChat = (initialSessionId?: string) => {
         phase: 'ingestion',
         isComplete: false,
         isSending: false,
+        isLoadingHistory: !!initialSessionId, // start loading immediately if resuming
         goalModel: null,
         dataContext: null,
         goals: [],
@@ -118,8 +120,50 @@ export const useUnifiedChat = (initialSessionId?: string) => {
     }));
 
     const abortRef = useRef<AbortController | null>(null);
-    // Track whether this session has already been registered in the backend DB
     const registeredRef = useRef(false);
+
+    // ── Auto-load history when resuming an existing session ───────────────────
+    useEffect(() => {
+        if (!initialSessionId) return;
+
+        let cancelled = false;
+
+        fetch(`${API_URL}/ingest/chat/${initialSessionId}/history`)
+            .then(res => (res.ok ? res.json() : null))
+            .then(data => {
+                if (cancelled) return;
+
+                const raw: any[] = data?.messages ?? [];
+
+                if (raw.length > 0) {
+                    const loaded: ChatMessage[] = raw.map((m: any, i: number) => ({
+                        id: m.id ?? `hist-${i}`,
+                        role: m.role === 'user' ? 'user' : 'assistant',
+                        content: m.content ?? m.message ?? '',
+                        timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+                        actionTaken: m.action_taken ?? null,
+                        artifacts: m.artifacts ?? null,
+                    }));
+
+                    // Session already in DB if it has history
+                    registeredRef.current = true;
+
+                    setState(prev => ({
+                        ...prev,
+                        messages: loaded,
+                        isLoadingHistory: false,
+                    }));
+                } else {
+                    setState(prev => ({ ...prev, isLoadingHistory: false }));
+                }
+            })
+            .catch(() => {
+                if (!cancelled) setState(prev => ({ ...prev, isLoadingHistory: false }));
+            });
+
+        return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // intentionally runs once on mount only
 
     const update = (partial: Partial<UnifiedChatState>) =>
         setState(prev => ({ ...prev, ...partial }));
@@ -130,7 +174,6 @@ export const useUnifiedChat = (initialSessionId?: string) => {
         registeredRef.current = true;
         axiosInstance.post('/sessions/register', { sessionId })
             .then(() => {
-                // Refresh the sidebar so the new session appears immediately
                 useSessionStore.getState().fetchHistory();
             })
             .catch(() => {
@@ -167,7 +210,6 @@ export const useUnifiedChat = (initialSessionId?: string) => {
             messages: [...prev.messages, userMsg, loadingMsg],
         }));
 
-        // Register in backend DB on first send so the session appears in the sidebar
         registerSession(sessionId);
 
         try {
@@ -229,29 +271,7 @@ export const useUnifiedChat = (initialSessionId?: string) => {
                 ),
             }));
         }
-    }, [state]);
-
-    // ── Load chat history (on resume) ─────────────────────────────────────────
-    const loadHistory = useCallback(async (sessionId?: string) => {
-        const sid = sessionId ?? state.sessionId;
-        try {
-            const res = await fetch(`${API_URL}/ingest/chat/${sid}/history`);
-            if (!res.ok) return;
-            const data = await res.json();
-            const raw: any[] = data.messages ?? [];
-            if (!raw.length) return;
-
-            const loaded: ChatMessage[] = raw.map((m: any, i: number) => ({
-                id: m.id ?? `hist-${i}`,
-                role: (m.role === 'user') ? 'user' : 'assistant',
-                content: m.content ?? m.message ?? '',
-                timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
-                actionTaken: m.action_taken ?? null,
-            }));
-
-            update({ messages: loaded });
-        } catch { /* silently ignore */ }
-    }, [state.sessionId]);
+    }, [state, registerSession]);
 
     // ── Dataset download URL helpers ──────────────────────────────────────────
     const getDatasetUrl = useCallback((table: 'resources' | 'targets', format: 'csv' | 'xlsx' = 'csv') => {
@@ -284,6 +304,7 @@ export const useUnifiedChat = (initialSessionId?: string) => {
             phase: 'ingestion',
             isComplete: false,
             isSending: false,
+            isLoadingHistory: false,
             goalModel: null,
             dataContext: null,
             goals: [],
@@ -295,7 +316,6 @@ export const useUnifiedChat = (initialSessionId?: string) => {
     return {
         ...state,
         sendMessage,
-        loadHistory,
         downloadDataset,
         getDatasetUrl,
         reset,

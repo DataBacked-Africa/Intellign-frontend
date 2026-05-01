@@ -5,13 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Upload, Sparkles, Loader2, CheckCircle2, FileSpreadsheet, X, Send,
     Bot, User, Trash2, Download, Zap, ChevronRight, Target, Database,
-    AlertCircle, BarChart2,
+    AlertCircle, BarChart2, Plus, ChevronDown, Mic, Lightbulb
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUnifiedChat, ChatMessage, GoalDefinition, DataContext, Artifact, AttachedFileInfo } from '@/hooks/useUnifiedChat';
 import { useSessionOrchestrator } from '@/hooks/useSessionOrchestrator';
 import { useSessionStore } from '@/store/useSessionStore';
 import { showToast } from '@/components/ui/CustomToast';
+import { useUserStore } from '@/store/useUserStore';
+import { useSpeechInput } from '@/hooks/useSpeechInput';
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────
 const TypingIndicator = () => (
@@ -20,6 +22,32 @@ const TypingIndicator = () => (
             <motion.div key={i} className="w-1.5 h-1.5 bg-gray-400 rounded-full"
                 animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
                 transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15 }} />
+        ))}
+    </div>
+);
+
+// ─── History loading skeleton ─────────────────────────────────────────────────
+const HistorySkeleton: React.FC = () => (
+    <div className="flex-1 space-y-5 overflow-hidden pb-4" aria-label="Loading history">
+        {[
+            { user: true, lines: 1, width: 'w-48' },
+            { user: false, lines: 3, width: 'w-64' },
+            { user: true, lines: 2, width: 'w-56' },
+            { user: false, lines: 2, width: 'w-72' },
+        ].map((item, i) => (
+            <div key={i} className={`flex gap-2.5 items-start ${item.user ? 'flex-row-reverse' : ''}`}>
+                <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse shrink-0 mt-0.5" />
+                <div className={`flex flex-col gap-1.5 max-w-[70%] ${item.user ? 'items-end' : 'items-start'}`}>
+                    {Array.from({ length: item.lines }).map((_, li) => (
+                        <div
+                            key={li}
+                            className={`h-3.5 rounded-full bg-gray-200 animate-pulse ${
+                                li === item.lines - 1 ? item.width : 'w-full'
+                            } ${item.user ? 'bg-gray-300' : 'bg-gray-200'}`}
+                        />
+                    ))}
+                </div>
+            </div>
         ))}
     </div>
 );
@@ -34,11 +62,11 @@ const fmt = (bytes: number): string => {
 const FileChips: React.FC<{ files: AttachedFileInfo[] }> = ({ files }) => (
     <div className="flex flex-wrap gap-1.5 mb-2">
         {files.map((f, i) => (
-            <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/10 rounded-lg border border-white/20">
-                <FileSpreadsheet className="w-3 h-3 text-white/70 shrink-0" />
+            <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-gray-200 shadow-sm">
+                <FileSpreadsheet className="w-3 h-3 text-[#5C1427] shrink-0" />
                 <div className="leading-none">
-                    <p className="text-[11px] font-medium text-white truncate max-w-[140px]">{f.name}</p>
-                    <p className="text-[10px] text-white/50 mt-0.5">{fmt(f.size)}</p>
+                    <p className="text-[11px] font-medium text-gray-800 truncate max-w-[140px]">{f.name}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{fmt(f.size)}</p>
                 </div>
             </div>
         ))}
@@ -317,14 +345,14 @@ const MessageBubble: React.FC<{
         >
             <div className={cn(
                 'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm',
-                isUser ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                isUser ? 'bg-[#F9F9F9] border border-gray-200/60' : 'bg-gradient-to-br from-[#5C1427] to-[#8A1E3A]'
             )}>
-                {isUser ? <User className="w-3.5 h-3.5 text-white" /> : <Bot className="w-3.5 h-3.5 text-white" />}
+                {isUser ? <User className="w-3.5 h-3.5 text-gray-500" /> : <Bot className="w-3.5 h-3.5 text-white" />}
             </div>
             <div className={cn('max-w-[82%] flex flex-col', isUser ? 'items-end' : 'items-start')}>
                 <div className={cn(
-                    'rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed',
-                    isUser ? 'bg-gray-900 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-800 rounded-tl-sm'
+                    'text-sm leading-relaxed',
+                    isUser ? 'bg-[#F9F9F9] text-gray-800 rounded-2xl rounded-tr-sm border border-gray-200/60 shadow-sm px-4 py-2.5' : 'text-gray-800 pt-1'
                 )}>
                     {isLoading ? <TypingIndicator /> : (
                         <>
@@ -373,7 +401,7 @@ const ConfidenceBar: React.FC<{ confidence: number }> = ({ confidence }) => (
         <BarChart2 className="w-3 h-3" />
         <span>Goal confidence</span>
         <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[120px]">
-            <div className="h-full bg-blue-500 rounded-full transition-all duration-500"
+            <div className="h-full bg-[#5C1427] rounded-full transition-all duration-500"
                 style={{ width: `${Math.round(confidence * 100)}%` }} />
         </div>
         <span className="font-medium text-gray-600">{Math.round(confidence * 100)}%</span>
@@ -382,30 +410,32 @@ const ConfidenceBar: React.FC<{ confidence: number }> = ({ confidence }) => (
 
 // ─── Quick prompts ────────────────────────────────────────────────────────────
 const INGESTION_PROMPTS = [
-    'What tables did you find?',
-    'Use the AI recommendations and proceed.',
-    'Generate sample data for me.',
-    'The mapping looks good, go ahead.',
-    'Finalize the data.',
+    'What tables did you identify?',
+    'Accept the recommendations and proceed.',
+    'Generate realistic sample data for me.',
+    'The column mapping looks correct — continue.',
+    'Finalize and lock the dataset.',
 ];
 
 const GOAL_PROMPTS = [
-    'Minimize cost while maximizing coverage.',
-    'Prioritize skill matching above all.',
-    'Add a geographic proximity constraint.',
-    'Increase weight of first goal to 80%.',
+    'Prioritize underserved or high-need areas.',
+    'Match staff qualifications to facility requirements.',
+    'Minimize total travel or deployment distance.',
+    'Ensure equitable workload distribution across teams.',
+    'Add a capacity constraint so no site is overloaded.',
 ];
 
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 const SmartUploadWizard: React.FC<{ initialSessionId?: string }> = ({ initialSessionId }) => {
     const {
-        sessionId, messages, phase, isComplete, isSending,
+        sessionId, messages, phase, isComplete, isSending, isLoadingHistory,
         goalModel, dataContext, goals, gaParams, error,
         sendMessage, downloadDataset, reset,
     } = useUnifiedChat(initialSessionId);
 
     const { startOptimization } = useSessionOrchestrator();
     const { setSessionId, sessionStatus } = useSessionStore();
+    const { user } = useUserStore();
 
     const [input, setInput] = useState('');
     const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -414,6 +444,40 @@ const SmartUploadWizard: React.FC<{ initialSessionId?: string }> = ({ initialSes
     const endRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    // Stores the text already in the box when recording starts, so interim
+    // speech is appended rather than replacing what the user typed.
+    const speechBaseRef = useRef('');
+
+    // ── Speech input ──────────────────────────────────────────────────────────
+    const { isListening, isSupported: isSpeechSupported, toggle: toggleSpeech } =
+        useSpeechInput({
+            onTranscript: (text, isFinal) => {
+                const base = speechBaseRef.current;
+                const sep = base && !base.endsWith(' ') ? ' ' : '';
+                const next = (base + sep + text).trimStart();
+                setInput(next);
+                // Resize textarea to fit
+                requestAnimationFrame(() => {
+                    if (inputRef.current) {
+                        inputRef.current.style.height = 'auto';
+                        inputRef.current.style.height =
+                            Math.min(inputRef.current.scrollHeight, 150) + 'px';
+                    }
+                });
+                // After a final result, advance the base so the next utterance appends
+                if (isFinal) {
+                    speechBaseRef.current = next.trimEnd();
+                }
+            },
+        });
+
+    const handleMicToggle = useCallback(() => {
+        if (!isListening) {
+            // Snapshot current input so speech is appended, not overwritten
+            speechBaseRef.current = input.trimEnd();
+        }
+        toggleSpeech(input);
+    }, [isListening, input, toggleSpeech]);
 
     // Sync sessionId to global store so pages can read it
     useEffect(() => {
@@ -446,58 +510,13 @@ const SmartUploadWizard: React.FC<{ initialSessionId?: string }> = ({ initialSes
     const isIdle = messages.length === 0;
 
     return (
-        <div className="flex flex-col h-full w-full max-w-2xl mx-auto">
+        <div className="flex flex-col h-full w-full max-w-4xl mx-auto px-4 pb-2">
 
-            {/* ── Header ─────────────────────────────────────────────────── */}
-            <div className="flex items-center justify-between px-1 pb-3 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
-                        <Bot className="w-4.5 h-4.5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold text-gray-900">Intellign AI</p>
-                        <div className="flex items-center gap-2">
-                            <span className={cn(
-                                'text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                                phase === 'goal_definition'
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : dataContext?.status === 'complete'
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-blue-100 text-blue-700'
-                            )}>
-                                {phase === 'goal_definition' ? 'Goal Definition' : 'Data Ingestion'}
-                            </span>
-                            {goalModel && goalModel.confidence > 0 && (
-                                <ConfidenceBar confidence={goalModel.confidence} />
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {/* Run Optimization — shown when is_complete */}
-                    {isComplete && (
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            onClick={handleRunOptimization}
-                            disabled={isRunningOptimization || sessionStatus === 'PROCESSING'}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-60 shadow-lg shadow-black/10"
-                        >
-                            {isRunningOptimization || sessionStatus === 'PROCESSING'
-                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Running...</>
-                                : <><Zap className="w-4 h-4" /> Run Optimization</>}
-                        </motion.button>
-                    )}
-                    <button onClick={reset} title="Start over"
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
+            {/* ── Header (Only show when not idle to match Gemini's immersive welcome) ───────────────────────── */}
+         
 
             {/* ── Dataset download bar ────────────────────────────────────── */}
-            {dataContext && (dataContext.status === 'partial' || dataContext.status === 'complete') && (
+            {!isIdle && dataContext && (dataContext.status === 'partial' || dataContext.status === 'complete') && (
                 <DatasetDownloadBar context={dataContext} onDownload={downloadDataset} />
             )}
 
@@ -509,39 +528,11 @@ const SmartUploadWizard: React.FC<{ initialSessionId?: string }> = ({ initialSes
                 </div>
             )}
 
-            {/* ── Empty state ──────────────────────────────────────────────── */}
-            {isIdle && (
-                <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-12"
-                >
-                    <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
-                        <Sparkles className="w-7 h-7 text-gray-400" />
-                    </div>
-                    <div>
-                        <p className="font-semibold text-gray-900">Start by describing your problem</p>
-                        <p className="text-sm text-gray-400 mt-1 max-w-xs">
-                            Tell me what you want to optimize — or upload your data files to get started.
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                        {[
-                            'I need to assign nurses to clinics',
-                            'Match teachers to schools by subject',
-                            'Allocate delivery drivers to zones',
-                        ].map(p => (
-                            <button key={p} onClick={() => sendMessage(p)}
-                                className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full text-xs text-gray-600 hover:text-gray-900 transition-colors">
-                                {p}
-                            </button>
-                        ))}
-                    </div>
-                </motion.div>
-            )}
+            {/* ── History loading skeleton ────────────────────────────────── */}
+            {isLoadingHistory && <HistorySkeleton />}
 
-            {/* ── Messages ─────────────────────────────────────────────────── */}
-            {!isIdle && (
+            {/* ── Messages area (only when not idle) ─────────────────────── */}
+            {!isLoadingHistory && !isIdle && (
                 <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-4">
                     {messages.map((msg, i) => {
                         const isLastAssistant = msg.role === 'assistant';
@@ -579,80 +570,249 @@ const SmartUploadWizard: React.FC<{ initialSessionId?: string }> = ({ initialSes
                 </div>
             )}
 
-            {/* ── Input area ───────────────────────────────────────────────── */}
-            <div className="flex-shrink-0 pt-3 border-t border-gray-100">
-                {/* Attached files */}
-                {attachedFiles.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {attachedFiles.map((f, i) => (
-                            <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg text-xs text-gray-700">
-                                <FileSpreadsheet className="w-3 h-3 text-gray-400" />
-                                <span className="max-w-[140px] truncate">{f.name}</span>
-                                <button onClick={() => setAttachedFiles(prev => prev.filter((_, j) => j !== i))}
-                                    className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors">
-                                    <X className="w-3 h-3" />
+            {/* ── Empty State / Idle View ──────────────────────────────────── */}
+            {!isLoadingHistory && isIdle && (
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex-1 flex flex-col justify-center w-full max-w-3xl mx-auto"
+                >
+                    <div className=" mt-10 md:mt-0 text-left px-2">
+                        <h1 className="text-4xl md:text-[56px] leading-tight font-semibold mb-2 tracking-tight">
+                            <span className="bg-gradient-to-r from-[#5C1427] via-[#731931] to-[#8A1E3A] bg-clip-text text-transparent">
+                                Hi {user?.name?.split(' ')[0] || 'there'}
+                            </span>
+                        </h1>
+                        <h2 className="text-4xl md:text-[56px] leading-tight font-semibold text-gray-300 tracking-tight">
+                            Where should we start?
+                        </h2>
+                    </div>
+
+                    <div className="w-full relative bg-[#F9F9F9] rounded-[28px] p-2 shadow-sm focus-within:bg-white focus-within:ring-1 focus-within:ring-gray-300 transition-all border border-gray-200/60 mt-4">
+                        {/* Attached files */}
+                        {attachedFiles.length > 0 && (
+                            <div className="flex flex-wrap gap-2 px-3 pt-2">
+                                {attachedFiles.map((f, i) => (
+                                    <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-xs text-gray-700 shadow-sm">
+                                        <FileSpreadsheet className="w-3 h-3 text-[#5C1427]" />
+                                        <span className="max-w-[140px] truncate font-medium">{f.name}</span>
+                                        <button onClick={() => setAttachedFiles(prev => prev.filter((_, j) => j !== i))}
+                                            className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors">
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <textarea
+                            ref={inputRef}
+                            value={input}
+                            onChange={e => { setInput(e.target.value); speechBaseRef.current = e.target.value; }}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                            disabled={isSending}
+                            placeholder={isListening ? 'Listening…' : 'Ask Intellign AI or describe your problem...'}
+                            rows={1}
+                            className="w-full bg-transparent resize-none outline-none px-4 pt-4 pb-2 text-gray-900 placeholder:text-gray-500 text-base max-h-[150px] disabled:opacity-50 font-medium"
+                            style={{ minHeight: '52px' }}
+                            onInput={e => {
+                                const el = e.target as HTMLTextAreaElement;
+                                el.style.height = '52px';
+                                el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+                            }}
+                        />
+
+                        <div className="flex items-center justify-between px-2 pb-1 mt-1">
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    title="Attach files"
+                                    className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                </button>
+                                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors">
+                                    <Database className="w-4 h-4" />
+                                    Data sources
                                 </button>
                             </div>
+                            <div className="flex items-center gap-1.5">
+                                <button className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors">
+                                    Smart <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                                </button>
+                                {isSpeechSupported && (
+                                    <button
+                                        type="button"
+                                        onClick={handleMicToggle}
+                                        title={isListening ? 'Stop recording' : 'Voice input'}
+                                        className={cn(
+                                            'relative p-2 rounded-full transition-colors hidden sm:flex items-center justify-center',
+                                            isListening
+                                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                                                : 'hover:bg-gray-200 text-gray-600'
+                                        )}
+                                    >
+                                        <Mic className="w-5 h-5" />
+                                        {isListening && (
+                                            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                        )}
+                                    </button>
+                                )}
+
+                                {(input.trim() || attachedFiles.length > 0) && (
+                                    <button
+                                        onClick={handleSend}
+                                        disabled={isSending}
+                                        className="w-10 h-10 rounded-full bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center transition-all disabled:opacity-50 ml-1"
+                                    >
+                                        {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 ml-0.5" />}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            className="hidden"
+                            accept=".csv,.xlsx,.xls,.json,.geojson,.parquet,.ods,.feather,.html,.gpkg,.shp,.kml,.tsv"
+                            onChange={e => e.target.files && addFiles(Array.from(e.target.files))}
+                        />
+                    </div>
+
+                    <div className="flex flex-wrap justify-center gap-3 mt-6">
+                        {[
+                            {
+                                icon: <Database className="w-4 h-4 text-[#5C1427]" />,
+                                text: "Deploy health workers to facilities",
+                                prompt: "I need to assign healthcare workers to clinics and hospitals based on qualifications, availability, and facility needs."
+                            },
+                            {
+                                icon: <Target className="w-4 h-4 text-[#731931]" />,
+                                text: "Match field officers to communities",
+                                prompt: "I want to assign field officers to communities, matching their expertise to the population's needs and minimising travel distance."
+                            },
+                            {
+                                icon: <Zap className="w-4 h-4 text-[#8A1E3A]" />,
+                                text: "Allocate teachers to schools",
+                                prompt: "I need to allocate teachers to schools, matching subject specialisations to school requirements and respecting capacity limits."
+                            },
+                            {
+                                icon: <FileSpreadsheet className="w-4 h-4 text-green-600" />,
+                                text: "Schedule aid distribution routes",
+                                prompt: "I want to optimise the distribution of aid supplies to beneficiary communities, minimising logistics cost and ensuring equitable coverage."
+                            },
+                        ].map((p, i) => (
+                            <button key={i} onClick={() => sendMessage(p.prompt)}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-[#F9F9F9] hover:bg-gray-100 border border-transparent hover:border-gray-200 rounded-full text-sm font-medium text-gray-800 transition-all">
+                                {p.icon}
+                                {p.text}
+                            </button>
                         ))}
                     </div>
-                )}
+                </motion.div>
+            )}
 
-                <div className="flex items-end gap-2">
-                    {/* File attach button */}
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        title="Attach files"
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0"
-                    >
-                        <Upload className="w-4 h-4" />
-                    </button>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        className="hidden"
-                        accept=".csv,.xlsx,.xls,.json,.geojson,.parquet,.ods,.feather,.html,.gpkg,.shp,.kml,.tsv"
-                        onChange={e => e.target.files && addFiles(Array.from(e.target.files))}
-                    />
-
-                    <textarea
-                        ref={inputRef}
-                        value={input}
-                        onChange={e => setInput(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        disabled={isSending}
-                        placeholder={
-                            phase === 'goal_definition'
-                                ? 'Describe your optimization goals...'
-                                : attachedFiles.length > 0
-                                    ? 'Add a message or just hit send...'
-                                    : 'Describe your problem or attach data files...'
-                        }
-                        rows={1}
-                        className="flex-1 resize-none bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 focus:bg-white transition-all max-h-[120px] disabled:opacity-50"
-                        style={{ minHeight: '42px' }}
-                        onInput={e => {
-                            const el = e.target as HTMLTextAreaElement;
-                            el.style.height = '42px';
-                            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-                        }}
-                    />
-
-                    <button
-                        onClick={handleSend}
-                        disabled={(!input.trim() && attachedFiles.length === 0) || isSending}
-                        className={cn(
-                            'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all',
-                            (input.trim() || attachedFiles.length > 0) && !isSending
-                                ? 'bg-gray-900 hover:bg-gray-700 text-white shadow-sm'
-                                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+            {/* ── Input Area (when NOT idle, docked to bottom) ─────────────────────────────── */}
+            {!isLoadingHistory && !isIdle && (
+                <div className="flex-shrink-0 pt-2 border-t border-transparent bg-white/80 backdrop-blur-sm relative z-10 w-full max-w-3xl mx-auto">
+                    <div className="w-full relative bg-[#F9F9F9] rounded-[24px] p-1 shadow-sm focus-within:bg-white focus-within:ring-1 focus-within:ring-gray-300 transition-all border border-gray-200/60">
+                        {/* Attached files */}
+                        {attachedFiles.length > 0 && (
+                            <div className="flex flex-wrap gap-2 px-3 pt-2">
+                                {attachedFiles.map((f, i) => (
+                                    <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-xs text-gray-700 shadow-sm">
+                                        <FileSpreadsheet className="w-3 h-3 text-[#5C1427]" />
+                                        <span className="max-w-[140px] truncate font-medium">{f.name}</span>
+                                        <button onClick={() => setAttachedFiles(prev => prev.filter((_, j) => j !== i))}
+                                            className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors">
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         )}
-                    >
-                        {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    </button>
+
+                        <textarea
+                            ref={inputRef}
+                            value={input}
+                            onChange={e => { setInput(e.target.value); speechBaseRef.current = e.target.value; }}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                            disabled={isSending}
+                            placeholder={
+                                isListening
+                                    ? 'Listening…'
+                                    : phase === 'goal_definition'
+                                        ? 'Describe your optimization goals...'
+                                        : 'Ask Intellign AI or describe your problem...'
+                            }
+                            rows={1}
+                            className="w-full bg-transparent resize-none outline-none px-4 pt-3 pb-1 text-gray-900 placeholder:text-gray-500 text-sm max-h-[120px] disabled:opacity-50 font-medium"
+                            style={{ minHeight: '44px' }}
+                            onInput={e => {
+                                const el = e.target as HTMLTextAreaElement;
+                                el.style.height = '44px';
+                                el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+                            }}
+                        />
+
+                        <div className="flex items-center justify-between px-2 pb-1">
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    title="Attach files"
+                                    className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                                {isSpeechSupported && (
+                                    <button
+                                        type="button"
+                                        onClick={handleMicToggle}
+                                        title={isListening ? 'Stop recording' : 'Voice input'}
+                                        className={cn(
+                                            'relative p-2 rounded-full transition-colors',
+                                            isListening
+                                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                                                : 'hover:bg-gray-200 text-gray-600'
+                                        )}
+                                    >
+                                        <Mic className="w-4 h-4" />
+                                        {isListening && (
+                                            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={handleSend}
+                                    disabled={(!input.trim() && attachedFiles.length === 0) || isSending}
+                                    className={cn(
+                                        'w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ml-1',
+                                        (input.trim() || attachedFiles.length > 0) && !isSending
+                                            ? 'bg-gray-900 hover:bg-gray-800 text-white shadow-sm'
+                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    )}
+                                >
+                                    {isSending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3 ml-0.5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            className="hidden"
+                            accept=".csv,.xlsx,.xls,.json,.geojson,.parquet,.ods,.feather,.html,.gpkg,.shp,.kml,.tsv"
+                            onChange={e => e.target.files && addFiles(Array.from(e.target.files))}
+                        />
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-2 text-center">Intellign AI can make mistakes. Consider verifying important information.</p>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-1.5 text-center">Enter to send · Shift+Enter for new line · Attach files any time</p>
-            </div>
+            )}
         </div>
     );
 };

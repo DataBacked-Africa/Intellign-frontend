@@ -19,10 +19,10 @@ export default function SessionPage() {
 
     const showResults = sessionStatus === 'COMPLETED' && !!jobId;
     const showProgress = sessionStatus === 'PROCESSING';
-    const chatHeight = showResults || showProgress ? '420px' : '80vh';
+    const chatHeight = showResults || showProgress ? '420px' : '90vh';
 
     return (
-        <div className="w-full h-full overflow-y-auto flex flex-col items-center pt-8 pb-16 px-4 gap-6">
+        <div className="w-full h-full overflow-y-auto flex flex-col items-center pt-8 pb-8 px-4 gap-6">
             {/* Unified chat — handles ingestion + goal definition + triggers optimization */}
             <div className="w-full max-w-2xl" style={{ height: chatHeight, minHeight: '420px' }}>
                 <SmartUploadWizard initialSessionId={sessionId} />
