@@ -104,7 +104,16 @@ interface UnifiedChatState {
 
 const generateSessionId = (): string => crypto.randomUUID();
 
-export const useUnifiedChat = (initialSessionId?: string) => {
+interface UseUnifiedChatOptions {
+    initialSessionId?: string;
+    /** Called once, after the session is first registered in the backend. */
+    onSessionCreated?: (sessionId: string) => void;
+}
+
+export const useUnifiedChat = ({
+    initialSessionId,
+    onSessionCreated,
+}: UseUnifiedChatOptions = {}) => {
     const [state, setState] = useState<UnifiedChatState>(() => ({
         sessionId: initialSessionId ?? generateSessionId(),
         messages: [],
@@ -175,6 +184,7 @@ export const useUnifiedChat = (initialSessionId?: string) => {
         axiosInstance.post('/sessions/register', { sessionId })
             .then(() => {
                 useSessionStore.getState().fetchHistory();
+                onSessionCreated?.(sessionId);
             })
             .catch(() => {
                 registeredRef.current = false;

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useCallback, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     SquarePen,
     Search,
@@ -22,6 +23,7 @@ interface AppSidebarProps {
 
 const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
     const { logout, user } = useUserStore();
+    const router = useRouter();
     const { clearSession, sessions, sessionId, fetchHistory } = useSessionStore();
 
     // Local map of sessionId → generated name (fills in async)
@@ -181,7 +183,10 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                         </div>
                     )}
                     <button
-                        onClick={logout}
+                        onClick={async () => {
+                            await logout();
+                            router.push('/auth/login');
+                        }}
                         title="Sign out"
                         className="p-1 hover:text-gray-900 text-gray-500 transition-colors shrink-0"
                     >

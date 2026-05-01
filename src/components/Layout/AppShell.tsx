@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useState, useRef, useEffect } from 'react';
 import AppSidebar from './AppSidebar';
 import { Menu, PanelLeftOpen, ChevronDown, Share, Check } from 'lucide-react';
+import { useSessionStore } from '@/store/useSessionStore';
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -13,11 +13,20 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [selectedMode, setSelectedMode] = useState<'smart' | 'manual'>('smart');
+    const [selectedMethod, setSelectedMethod] = useState<'Smart Chat' | 'Manual Method'>('Smart Chat');
+    const { sessionId } = useSessionStore();
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const pathname = usePathname();
-    // Assuming '/' is the new session page where the user can switch modes
-    const isSessionOngoing = pathname !== '/';
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
         <div className="flex h-screen w-full bg-white overflow-hidden text-gray-900">
@@ -62,35 +71,39 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         )}
 
                         {/* Title Dropdown */}
-                        <div className="relative">
+                        <div className="relative ml-1 md:ml-0" ref={dropdownRef}>
                             <button 
-                                onClick={() => !isSessionOngoing && setIsDropdownOpen(!isDropdownOpen)}
-                                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-gray-700 font-semibold text-[15px] ml-1 md:ml-0 ${!isSessionOngoing ? 'hover:bg-gray-100 cursor-pointer' : 'cursor-default'}`}
+                                onClick={() => !sessionId && setIsDropdownOpen(!isDropdownOpen)}
+                                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-gray-700 font-semibold text-[15px] ${!sessionId ? 'hover:bg-gray-100 cursor-pointer' : 'cursor-default'}`}
                             >
-                                Intellign AI {selectedMode === 'manual' ? 'Manual' : ''}
-                                {!isSessionOngoing && <ChevronDown className="w-4 h-4 text-gray-400" />}
+                                Intellign AI
+                                {!sessionId && <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />}
                             </button>
 
-                            {isDropdownOpen && !isSessionOngoing && (
-                                <>
-                                    <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
-                                    <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
-                                        <button 
-                                            onClick={() => { setSelectedMode('smart'); setIsDropdownOpen(false); }}
-                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-between"
-                                        >
-                                            Smart Chat
-                                            {selectedMode === 'smart' && <Check className="w-4 h-4 text-[#5C1427]" />}
-                                        </button>
-                                        <button 
-                                            onClick={() => { setSelectedMode('manual'); setIsDropdownOpen(false); }}
-                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-between"
-                                        >
-                                            Manual Method
-                                            {selectedMode === 'manual' && <Check className="w-4 h-4 text-[#5C1427]" />}
-                                        </button>
-                                    </div>
-                                </>
+                            {/* Dropdown Menu */}
+                            {isDropdownOpen && !sessionId && (
+                                <div className="absolute top-full left-0 mt-1 w-60 bg-white border border-gray-200 shadow-xl rounded-xl p-1 z-50">
+                                    <button 
+                                        onClick={() => { setSelectedMethod('Smart Chat'); setIsDropdownOpen(false); }}
+                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                                    >
+                                        <div>
+                                            <div className="text-sm font-medium text-gray-900">Smart Chat</div>
+                                            <div className="text-xs text-gray-500">AI-assisted optimization</div>
+                                        </div>
+                                        {selectedMethod === 'Smart Chat' && <Check className="w-4 h-4 text-[#5C1427]" />}
+                                    </button>
+                                    <button 
+                                        onClick={() => { setSelectedMethod('Manual Method'); setIsDropdownOpen(false); }}
+                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors"
+                                    >
+                                        <div>
+                                            <div className="text-sm font-medium text-gray-900">Manual Method</div>
+                                            <div className="text-xs text-gray-500">Traditional configuration</div>
+                                        </div>
+                                        {selectedMethod === 'Manual Method' && <Check className="w-4 h-4 text-[#5C1427]" />}
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>

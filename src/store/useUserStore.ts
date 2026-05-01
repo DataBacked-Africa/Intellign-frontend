@@ -20,13 +20,20 @@ interface UserState {
     // Actions
     login: (user: User, token: string, refreshToken: string) => void;
     logout: () => void;
+    setTokens: (token: string, refreshToken: string) => void;
     setLoading: (loading: boolean) => void;
-    updateUser: (start: Partial<User>) => void;
+    updateUser: (updates: Partial<User>) => void;
 }
+
+const clearLocalAuth = () => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+};
 
 export const useUserStore = create<UserState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             user: null,
             isAuthenticated: false,
             token: null,
@@ -34,7 +41,6 @@ export const useUserStore = create<UserState>()(
             isLoading: false,
 
             login: (user, token, refreshToken) => {
-                // Ensure token is saved to localStorage for Axios interceptor
                 if (typeof window !== 'undefined') {
                     localStorage.setItem('token', token);
                     localStorage.setItem('refreshToken', refreshToken);
@@ -42,30 +48,53 @@ export const useUserStore = create<UserState>()(
                 set({ user, isAuthenticated: true, token, refreshToken });
             },
 
-            logout: () => {
-                if (typeof window !== 'undefined') {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('refreshToken');
+            /**
+             * Calls the backend to invalidate the refresh token, then clears local state.
+             * Safe to call even if the server is unreachable — always clears locally.
+             */
+            logout: async () => {
+                const token = get().token;
+                if (token) {
+                    try {
+                        // Import lazily to avoid circular dep with axiosConfig
+                        const { default: axiosInstance } = await import('@/lib/axiosConfig');
+                        await axiosInstance.post('/auth/logout');
+                    } catch {
+                        // If the request fails (expired, network issue) we still clear locally
+                    }
                 }
+                clearLocalAuth();
                 set({ user: null, isAuthenticated: false, token: null, refreshToken: null });
+            },
+
+            /**
+             * Updates stored tokens without re-fetching the user object.
+             * Used by the axios interceptor after a silent refresh.
+             */
+            setTokens: (token, refreshToken) => {
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('refreshToken', refreshToken);
+                }
+                set({ token, refreshToken });
             },
 
             setLoading: (isLoading) => set({ isLoading }),
 
             updateUser: (updates) =>
                 set((state) => ({
-                    user: state.user ? { ...state.user, ...updates } : null
+                    user: state.user ? { ...state.user, ...updates } : null,
                 })),
         }),
         {
-            name: 'user-storage', // name of the item in the storage (must be unique)
-            storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+            name: 'user-storage',
+            storage: createJSONStorage(() => localStorage),
             partialize: (state) => ({
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
                 token: state.token,
-                refreshToken: state.refreshToken
-            }), // Select fields to persist
+                refreshToken: state.refreshToken,
+            }),
         }
     )
 );

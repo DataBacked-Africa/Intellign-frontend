@@ -1,27 +1,28 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect } from "react";
 import { useSessionStore } from "@/store/useSessionStore";
 import AppShell from "@/components/Layout/AppShell";
-import MainWorkspace from "@/components/AI-Components/MainWorkspace";
+import SmartUploadWizard from "@/components/AI-Components/SmartUploadWizard";
 
 export default function Home() {
-    const router = useRouter();
-    const { clearSession, setSessionId } = useSessionStore();
-    const initialized = useRef(false);
+    const { clearSession } = useSessionStore();
 
+    // Always start with a clean slate on the home page
     useEffect(() => {
-        if (initialized.current) return;
-        initialized.current = true;
-
-        // Generate a new session ID and navigate to the session page
-        const newSessionId = crypto.randomUUID();
         clearSession();
-        setSessionId(newSessionId);
-        router.replace(`/sessions/${newSessionId}`);
-    }, [router, clearSession, setSessionId]);
+    }, [clearSession]);
 
-    // Show nothing while redirecting
-    return null;
+    // Silently update the URL after the first message — no navigation, no re-render
+    const handleSessionCreated = useCallback((sessionId: string) => {
+        window.history.replaceState(null, '', `/sessions/${sessionId}`);
+    }, []);
+
+    return (
+        <AppShell>
+            <div className="w-full h-full">
+                <SmartUploadWizard onSessionCreated={handleSessionCreated} />
+            </div>
+        </AppShell>
+    );
 }

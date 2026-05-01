@@ -426,12 +426,18 @@ const GOAL_PROMPTS = [
 ];
 
 // ─── Main wizard ──────────────────────────────────────────────────────────────
-const SmartUploadWizard: React.FC<{ initialSessionId?: string }> = ({ initialSessionId }) => {
+interface SmartUploadWizardProps {
+    initialSessionId?: string;
+    /** Called once after the first message is sent and the session is registered. */
+    onSessionCreated?: (sessionId: string) => void;
+}
+
+const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId, onSessionCreated }) => {
     const {
         sessionId, messages, phase, isComplete, isSending, isLoadingHistory,
         goalModel, dataContext, goals, gaParams, error,
         sendMessage, downloadDataset, reset,
-    } = useUnifiedChat(initialSessionId);
+    } = useUnifiedChat({ initialSessionId, onSessionCreated });
 
     const { startOptimization } = useSessionOrchestrator();
     const { setSessionId, sessionStatus } = useSessionStore();
