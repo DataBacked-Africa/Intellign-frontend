@@ -117,6 +117,8 @@ interface SessionState {
     // ── Core identifiers ──────────────────────────────────────────────────────
     sessionId: string | null;
     jobId: string | null;
+    /** Incremented on every clearSession — used as a React key to force wizard remount */
+    newChatKey: number;
 
     // ── Status ────────────────────────────────────────────────────────────────
     sessionStatus: 'IDLE' | 'CONFIGURING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
@@ -169,6 +171,7 @@ export const useSessionStore = create<SessionState>()(
         (set) => ({
             sessionId: null,
             jobId: null,
+            newChatKey: 0,
             sessions: [],
             sessionStatus: 'IDLE',
             progress: 0,
@@ -233,10 +236,11 @@ export const useSessionStore = create<SessionState>()(
             setUploading: (isUploading) => set({ isUploadingRequest: isUploading }),
 
             clearSession: () =>
-                set({
+                set((state) => ({
                     sessionId: null,
                     jobId: null,
-                    sessions: [],
+                    newChatKey: state.newChatKey + 1,
+                    // sessions list is intentionally preserved — it belongs to the sidebar, not the active session
                     sessionStatus: 'IDLE',
                     progress: 0,
                     logs: [],
@@ -249,7 +253,7 @@ export const useSessionStore = create<SessionState>()(
                     schemaFile: null,
                     schemaPreview: null,
                     isUploadingRequest: false,
-                }),
+                })),
 
             removeSession: (sessionId) =>
                 set((state) => ({
