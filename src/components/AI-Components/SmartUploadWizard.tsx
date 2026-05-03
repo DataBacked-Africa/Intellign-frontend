@@ -9,11 +9,11 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUnifiedChat, ChatMessage, GoalDefinition, DataContext, Artifact, AttachedFileInfo } from '@/hooks/useUnifiedChat';
-import { useSessionOrchestrator } from '@/hooks/useSessionOrchestrator';
 import { useSessionStore } from '@/store/useSessionStore';
 import { showToast } from '@/components/ui/CustomToast';
 import { useUserStore } from '@/store/useUserStore';
 import { useSpeechInput } from '@/hooks/useSpeechInput';
+import OptimizationModal from '@/components/AI-Components/OptimizationModal';
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────
 const TypingIndicator = () => (
@@ -435,17 +435,18 @@ interface SmartUploadWizardProps {
 const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId, onSessionCreated }) => {
     const {
         sessionId, messages, phase, isComplete, isSending, isLoadingHistory,
-        goalModel, dataContext, goals, gaParams, error,
+        goalModel, dataContext, goals, gaParams, error, latestJobId,
         sendMessage, downloadDataset, reset,
     } = useUnifiedChat({ initialSessionId, onSessionCreated });
 
-    const { startOptimization } = useSessionOrchestrator();
-    const { setSessionId, sessionStatus } = useSessionStore();
+    // OptimizationModal uses its own useSessionOrchestrator instance
+    const { setSessionId } = useSessionStore();
     const { user } = useUserStore();
 
     const [input, setInput] = useState('');
     const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-    const [isRunningOptimization, setIsRunningOptimization] = useState(false);
+    const [isOptimizationModalOpen, setIsOptimizationModalOpen] = useState(false);
+    const [preexistingJobId, setPreexistingJobId] = useState<string | null>(null);
 
     const endRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -494,6 +495,14 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
         endRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isSending]);
 
+    // Auto-open optimization modal when ML API starts a job via the chat flow
+    useEffect(() => {
+        if (latestJobId) {
+            setPreexistingJobId(latestJobId);
+            setIsOptimizationModalOpen(true);
+        }
+    }, [latestJobId]);
+
     const handleSend = useCallback(() => {
         const trimmed = input.trim();
         if ((!trimmed && attachedFiles.length === 0) || isSending) return;
@@ -503,10 +512,9 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
         sendMessage(trimmed || 'Here are my files.', attachedFiles);
     }, [input, attachedFiles, isSending, sendMessage]);
 
-    const handleRunOptimization = async () => {
-        setIsRunningOptimization(true);
-        await startOptimization(sessionId);
-        setIsRunningOptimization(false);
+    const handleRunOptimization = () => {
+        setPreexistingJobId(null);
+        setIsOptimizationModalOpen(true);
     };
 
     const addFiles = (incoming: File[]) =>
@@ -565,12 +573,6 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                         </div>
                     )}
 
-                    {/* Goals summary at bottom of goal_definition phase */}
-                    {phase === 'goal_definition' && goals.length > 0 && (
-                        <div className="pt-2">
-                            <GoalsPanel goals={goals} />
-                        </div>
-                    )}
 
                     <div ref={endRef} />
                 </div>
@@ -713,6 +715,21 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                 </motion.div>
             )}
 
+            {/* ── Run Optimization CTA (appears when goals are ready) ────────── */}
+            {!isLoadingHistory && !isIdle && (phase === 'goal_definition' || isComplete) && !isSending && (
+                <div className="flex-shrink-0 flex justify-center pb-2 pt-1">
+                    <motion.button
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        onClick={handleRunOptimization}
+                        className="flex items-center gap-2 px-5 py-2 bg-[#5C1427] hover:bg-[#7a1b35] text-white rounded-full text-sm font-medium shadow-sm transition-colors"
+                    >
+                        <Zap className="w-4 h-4" />
+                        Run Optimization
+                    </motion.button>
+                </div>
+            )}
+
             {/* ── Input Area (when NOT idle, docked to bottom) ─────────────────────────────── */}
             {!isLoadingHistory && !isIdle && (
                 <div className="flex-shrink-0 pt-2 border-t border-transparent bg-white/80 backdrop-blur-sm relative z-10 w-full max-w-3xl mx-auto">
@@ -812,6 +829,16 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                     <p className="text-[10px] text-gray-400 mt-2 text-center">Intellign AI can make mistakes. Consider verifying important information.</p>
                 </div>
             )}
+
+            {/* ── Optimization Modal ───────────────────────────────────────── */}
+            <OptimizationModal
+                isOpen={isOptimizationModalOpen}
+                onClose={() => setIsOptimizationModalOpen(false)}
+                sessionId={sessionId}
+                preexistingJobId={preexistingJobId}
+                goals={goals}
+                gaParams={gaParams}
+            />
         </div>
     );
 };

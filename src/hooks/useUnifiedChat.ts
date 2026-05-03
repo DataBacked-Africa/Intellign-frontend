@@ -68,6 +68,8 @@ export interface ChatResponse {
     ga_params: GAParams | null;
     artifacts?: Artifact[] | null;
     goal_summary?: string | null;
+    /** Populated by the ML API when action_taken === 'optimization_started'. */
+    job_id?: string | null;
 }
 
 export interface AttachedFileInfo {
@@ -100,6 +102,8 @@ interface UnifiedChatState {
     goals: GoalDefinition[];
     gaParams: GAParams | null;
     error: string | null;
+    /** Job ID returned by the ML API when it auto-starts optimization. */
+    latestJobId: string | null;
 }
 
 const generateSessionId = (): string => crypto.randomUUID();
@@ -120,12 +124,13 @@ export const useUnifiedChat = ({
         phase: 'ingestion',
         isComplete: false,
         isSending: false,
-        isLoadingHistory: !!initialSessionId, // start loading immediately if resuming
+        isLoadingHistory: !!initialSessionId,
         goalModel: null,
         dataContext: null,
         goals: [],
         gaParams: null,
         error: null,
+        latestJobId: null,
     }));
 
     const abortRef = useRef<AbortController | null>(null);
@@ -264,6 +269,7 @@ export const useUnifiedChat = ({
                 dataContext: data.data_context ?? prev.dataContext,
                 gaParams: data.ga_params ?? prev.gaParams,
                 goals: data.goals ? [...prev.goals, ...data.goals] : prev.goals,
+                latestJobId: data.job_id ?? prev.latestJobId,
                 messages: prev.messages.map(m => m.id === loadingId ? assistantMsg : m),
             }));
 
@@ -320,6 +326,7 @@ export const useUnifiedChat = ({
             goals: [],
             gaParams: null,
             error: null,
+            latestJobId: null,
         });
     }, []);
 

@@ -8,6 +8,10 @@ import { showToast } from '@/components/ui/CustomToast';
 interface RunOptimizationOptions {
     autoApprove?: boolean;
     progressInterval?: number;
+    configOverride?: {
+        goals?: any[];
+        ga_params?: Record<string, any> | null;
+    } | null;
 }
 
 export const useSessionOrchestrator = () => {
@@ -81,10 +85,13 @@ export const useSessionOrchestrator = () => {
         addLog('Submitting optimization job...');
 
         try {
-            const payload = {
+            const payload: Record<string, any> = {
                 auto_approve: options.autoApprove ?? false,
                 progress_interval: options.progressInterval ?? 20,
             };
+            if (options.configOverride) {
+                payload.config_override = options.configOverride;
+            }
 
             const response = await axiosInstance.post(
                 `/optimizations/run/${sessionId}`,
@@ -136,10 +143,16 @@ export const useSessionOrchestrator = () => {
         }
     }, [setResult, setError]);
 
+    const disconnect = useCallback(() => {
+        eventSourceRef.current?.close();
+        eventSourceRef.current = null;
+    }, []);
+
     return {
         startOptimization,
         cancelOptimization,
         fetchResults,
         connectToProgress,
+        disconnect,
     };
 };
