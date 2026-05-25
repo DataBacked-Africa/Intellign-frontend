@@ -124,7 +124,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
             {/* New chat + Search */}
             <div className="px-3 pb-2 space-y-0.5">
                 <Link
-                    href="/"
+                    href="/workspace"
                     onClick={clearSession}
                     className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-200 transition-colors text-sm text-gray-900"
                 >

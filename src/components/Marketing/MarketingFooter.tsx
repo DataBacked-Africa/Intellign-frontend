@@ -23,7 +23,7 @@ export default function MarketingFooter() {
         <a href="#how">How it works</a>
         <a href="#uses">Use cases</a>
         <a href="#pricing">Pricing</a>
-        <Link href="/auth/signup">Launch app</Link>
+        <Link href="/workspace">Launch app</Link>
       </div>
       <div className="mk-footer__col">
         <h5>Developers</h5>

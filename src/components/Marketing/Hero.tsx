@@ -24,7 +24,7 @@ export default function Hero() {
         </p>
 
         <div className="hero__cta">
-          <Link href="/auth/signup" className="btn btn-primary btn-lg">
+          <Link href="/workspace" className="btn btn-primary btn-lg">
             Launch app
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" />
