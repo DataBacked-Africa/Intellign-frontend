@@ -6,6 +6,11 @@ import axiosInstance from '@/lib/axiosConfig';
 import { showToast } from '@/components/ui/CustomToast';
 import { useSessionStore } from '@/store/useSessionStore';
 
+const authHeaders = (): Record<string, string> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 // ── Response types (aligned to FRONTEND_INTEGRATION.md) ──────────────────────
 
 export interface GoalDefinition {
@@ -142,7 +147,7 @@ export const useUnifiedChat = ({
 
         let cancelled = false;
 
-        fetch(`${API_URL}/ingest/chat/${initialSessionId}/history`)
+        fetch(`${API_URL}/ingest/chat/${initialSessionId}/history`, { headers: authHeaders() })
             .then(res => (res.ok ? res.json() : null))
             .then(data => {
                 if (cancelled) return;
@@ -186,7 +191,7 @@ export const useUnifiedChat = ({
     const registerSession = useCallback((sessionId: string) => {
         if (registeredRef.current) return;
         registeredRef.current = true;
-        axiosInstance.post('/sessions/register', { sessionId })
+        axiosInstance.post('/api/v1/me/sessions/register', { session_id: sessionId })
             .then(() => {
                 useSessionStore.getState().fetchHistory();
                 onSessionCreated?.(sessionId);
@@ -238,6 +243,7 @@ export const useUnifiedChat = ({
 
             const res = await fetch(`${API_URL}/ingest/chat/${sessionId}`, {
                 method: 'POST',
+                headers: authHeaders(),
                 body: form,
                 signal: abortRef.current.signal,
             });
@@ -296,7 +302,7 @@ export const useUnifiedChat = ({
 
     const downloadDataset = useCallback(async (table: 'resources' | 'targets', format: 'csv' | 'xlsx' = 'csv') => {
         try {
-            const res = await fetch(getDatasetUrl(table, format));
+            const res = await fetch(getDatasetUrl(table, format), { headers: authHeaders() });
             if (!res.ok) throw new Error('Dataset not available yet.');
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);

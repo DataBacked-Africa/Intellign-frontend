@@ -265,7 +265,7 @@ export const useSessionStore = create<SessionState>()(
 
             fetchHistory: async () => {
                 try {
-                    const response = await axiosInstance.get('/sessions');
+                    const response = await axiosInstance.get('/api/v1/me/sessions');
                     const raw = response.data?.data ?? response.data ?? [];
                     const history = (Array.isArray(raw) ? raw : []).map((item: any) => ({
                         sessionId: item.id ?? item.sessionId,

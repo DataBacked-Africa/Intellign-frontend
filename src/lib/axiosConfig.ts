@@ -20,7 +20,7 @@ const drainQueue = (error: any, token: string | null = null) => {
 };
 
 // AUTH-ONLY paths — never apply the refresh interceptor to these
-const AUTH_PATHS = ['/auth/refresh', '/auth/login', '/auth/register'];
+const AUTH_PATHS = ['/api/v1/auth/refresh', '/api/v1/auth/login', '/api/v1/auth/register'];
 
 // ── Request: attach current access token ──────────────────────────────────────
 axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
@@ -92,12 +92,16 @@ axiosInstance.interceptors.response.use(
 
             try {
                 // Use a plain axios call (not the intercepted instance) to avoid loops
-                const refreshResponse = await axios.post(`${API_URL}/auth/refresh`, {
-                    refreshToken: storedRefreshToken,
+                const refreshResponse = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
+                    refresh_token: storedRefreshToken,
                 });
 
-                const { accessToken, refreshToken: newRefreshToken, user } =
-                    refreshResponse.data.data;
+                const { tokens, user: rawUser } = refreshResponse.data;
+                const accessToken: string = tokens.access_token;
+                const newRefreshToken: string | undefined = tokens.refresh_token;
+                const user = rawUser
+                    ? { ...rawUser, organizationId: rawUser.organization_id }
+                    : null;
 
                 // Persist new tokens
                 localStorage.setItem('token', accessToken);

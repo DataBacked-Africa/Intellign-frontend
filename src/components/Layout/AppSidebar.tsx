@@ -38,7 +38,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
         setGeneratingFor(prev => new Set(prev).add(sid));
 
         try {
-            const res = await axiosInstance.post(`/sessions/${sid}/name`);
+            const res = await axiosInstance.post(`/api/v1/me/sessions/${sid}/name`);
             const name: string = res.data?.data?.name ?? res.data?.name ?? '';
             if (!name) return;
             useSessionStore.setState(state => ({
@@ -74,7 +74,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
     const handleDelete = useCallback(async (sid: string) => {
         setDeletingId(sid);
         try {
-            await axiosInstance.delete(`/sessions/${sid}`);
+            await axiosInstance.delete(`/api/v1/me/sessions/${sid}`);
             removeSession(sid);
             if (sid === sessionId) {
                 router.push('/');

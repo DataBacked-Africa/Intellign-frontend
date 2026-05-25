@@ -1,67 +1,104 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import React from 'react';
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
-export default function AuthLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    return (
-    
-        <div className="flex h-screen w-full bg-white overflow-hidden text-gray-900">
-            {/* Left Side - Visual Feature */}
-            <div className="hidden md:flex flex-col justify-between w-1/2 lg:w-[45%] bg-[#171717] text-white p-12 relative overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 pointer-events-none opacity-20"
-                    style={{
-                        backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
-                        backgroundSize: '32px 32px'
-                    }}
-                />
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-900/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", height: "100vh", width: "100%", overflow: "hidden", fontFamily: "var(--font-sans)" }}>
+      {/* Left panel — brand */}
+      <div
+        style={{
+          background: "var(--brand-maroon-deep)",
+          color: "var(--brand-bone)",
+          padding: "48px",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          width: "42%",
+          flexShrink: 0,
+          position: "relative",
+          overflow: "hidden",
+        }}
+        className="auth-panel"
+      >
+        {/* Radial glow */}
+        <div style={{
+          position: "absolute", top: "-20%", right: "-10%",
+          width: "70%", aspectRatio: "1",
+          background: "radial-gradient(circle, rgba(138,30,58,0.55), transparent 65%)",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "-10%", left: "-5%",
+          width: "50%", aspectRatio: "1",
+          background: "radial-gradient(circle, rgba(92,20,39,0.35), transparent 65%)",
+          pointerEvents: "none",
+        }} />
 
-                {/* Logo Area */}
-                <div className="relative z-10">
-                    <Link href="/">
-                        <div className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                            <img src="/logo.png" alt="Logo" className="h-8 object-contain brightness-0 invert" />
-                            <span className="font-medium text-lg tracking-tight">DataBackedAfrica</span>
-                        </div>
-                    </Link>
-                </div>
-
-                {/* Hero Content */}
-                <div className="relative z-10 max-w-lg">
-                    <h2 className="text-3xl font-light mb-6 leading-tight">
-                        Transform your data ingestion into a <span className="text-white font-medium">strategic advantage</span>.
-                    </h2>
-                    <div className="flex gap-4">
-                        <div className="h-1 w-12 bg-white/20 rounded-full" />
-                        <div className="h-1 w-2 bg-white/10 rounded-full" />
-                        <div className="h-1 w-2 bg-white/10 rounded-full" />
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="relative z-10 text-xs text-white/40">
-                    &copy; {new Date().getFullYear()} DataBackedAfrica.
-                </div>
-            </div>
-
-            {/* Right Side - Form */}
-            <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 relative">
-                {/* Mobile Logo (visible only on small screens) */}
-                <div className="md:hidden absolute top-6 left-6">
-                    <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-                        <img src="/logo.png" alt="Logo" className="h-8 object-contain brightness-0 invert" />
-                    </Link>
-                </div>
-
-                <div className="w-full max-w-[420px]">
-                    {children}
-                </div>
-            </div>
+        {/* Brand */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            <Image src="/intellign-logo.png" alt="Intellign" width={28} height={28} style={{ height: 28, width: "auto", filter: "brightness(0) invert(1)" }} />
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--brand-bone)", letterSpacing: "-0.5px" }}>
+              Intellign
+            </span>
+          </Link>
         </div>
-    );
+
+        {/* Tagline */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <p style={{
+            fontFamily: "var(--font-display)", fontStyle: "italic",
+            fontSize: 36, lineHeight: 1.1, letterSpacing: "-0.02em",
+            color: "var(--brand-bone)", margin: "0 0 24px", fontWeight: 400,
+          }}>
+            The math layer within <em style={{ color: "var(--brand-maroon-bright)" }}>AI</em>.
+          </p>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(244,239,231,0.65)", margin: 0 }}>
+            Describe the goal. Intellign formalises it, runs the solve, and
+            hands back an assignment your team can defend.
+          </p>
+          <div style={{ display: "flex", gap: 16, marginTop: 28, flexWrap: "wrap" }}>
+            {["Genetic algorithm solver", "Plain-language goals", "Explainable assignments"].map((f) => (
+              <span key={f} style={{
+                fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.1em",
+                textTransform: "uppercase", color: "rgba(244,239,231,0.5)",
+                padding: "4px 10px", borderRadius: 4,
+                border: "1px solid rgba(244,239,231,0.12)",
+              }}>
+                {f}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", color: "rgba(244,239,231,0.35)", margin: 0 }}>
+            © {new Date().getFullYear()} DataBacked Africa
+          </p>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div style={{
+        flex: 1, display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: "24px", background: "var(--brand-bone)",
+        position: "relative",
+      }}>
+        {/* Mobile logo */}
+        <div style={{ position: "absolute", top: 24, left: 24 }} className="auth-mobile-logo">
+          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+            <Image src="/intellign-logo.png" alt="Intellign" width={24} height={24} style={{ height: 24, width: "auto" }} />
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 18, color: "var(--brand-maroon-deep)" }}>Intellign</span>
+          </Link>
+        </div>
+
+        <div style={{ width: "100%", maxWidth: 420 }}>
+          {children}
+        </div>
+      </div>
+
+    </div>
+  );
 }

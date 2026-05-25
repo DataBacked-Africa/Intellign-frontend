@@ -58,7 +58,7 @@ export const useUserStore = create<UserState>()(
                     try {
                         // Import lazily to avoid circular dep with axiosConfig
                         const { default: axiosInstance } = await import('@/lib/axiosConfig');
-                        await axiosInstance.post('/auth/logout');
+                        await axiosInstance.post('/api/v1/auth/logout');
                     } catch {
                         // If the request fails (expired, network issue) we still clear locally
                     }

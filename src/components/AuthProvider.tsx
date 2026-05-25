@@ -25,12 +25,16 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
     const attemptRefresh = async (storedRefreshToken: string): Promise<boolean> => {
         try {
-            const response = await axios.post(`${API_URL}/auth/refresh`, {
-                refreshToken: storedRefreshToken,
+            const response = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
+                refresh_token: storedRefreshToken,
             });
 
-            const { accessToken, refreshToken: newRefreshToken, user: freshUser } =
-                response.data.data;
+            const { tokens, user: rawUser } = response.data;
+            const accessToken: string = tokens.access_token;
+            const newRefreshToken: string | undefined = tokens.refresh_token;
+            const freshUser = rawUser
+                ? { ...rawUser, organizationId: rawUser.organization_id }
+                : null;
 
             localStorage.setItem('token', accessToken);
             if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);

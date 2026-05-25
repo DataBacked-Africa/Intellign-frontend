@@ -1,114 +1,105 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { AuthInput } from './AuthInput';
-import { ArrowRight, Loader2, LogIn } from 'lucide-react';
-import axiosInstance from '@/lib/axiosConfig';
-import { useUserStore } from '@/store/useUserStore';
-import { showToast } from '@/components/ui/CustomToast';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import Link from "next/link";
+import { AuthInput } from "./AuthInput";
+import { Loader2 } from "lucide-react";
+import axiosInstance from "@/lib/axiosConfig";
+import { useUserStore } from "@/store/useUserStore";
+import { showToast } from "@/components/ui/CustomToast";
+import { useRouter } from "next/navigation";
 
 const LoginForm = () => {
-    const router = useRouter();
-    const login = useUserStore(state => state.login);
-    const [isLoading, setIsLoading] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+  const router = useRouter();
+  const login = useUserStore((state) => state.login);
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.post("/api/v1/auth/login", { email, password });
+      const { user: rawUser, tokens } = response.data;
+      const user = { ...rawUser, organizationId: rawUser.organization_id };
+      login(user, tokens.access_token, tokens.refresh_token);
+      showToast.success("Welcome back!", "You have successfully logged in.");
+      router.push("/workspace");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err.response?.data?.message || "Login failed. Please try again.";
+      showToast.error("Login Failed", msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        try {
-            const response = await axiosInstance.post('/auth/login', { email, password });
+  return (
+    <div style={{ width: "100%" }}>
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--brand-maroon)", marginBottom: 10 }}>
+          Sign in
+        </div>
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 36, lineHeight: 1.1, letterSpacing: "-0.025em", color: "var(--brand-maroon-deep)", margin: "0 0 8px" }}>
+          Welcome back.
+        </h1>
+        <p style={{ fontSize: 15, color: "var(--fg-secondary)", margin: 0, lineHeight: 1.5 }}>
+          Enter your details to continue.
+        </p>
+      </div>
 
-            if (response.data.status === 'success') {
-                const { user, tokens } = response.data.data;
-                login(user, tokens.accessToken, tokens.refreshToken);
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" as const, gap: 16 }}>
+        <AuthInput
+          label="Email"
+          type="email"
+          placeholder="name@company.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <div>
+          <AuthInput
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+            <Link href="/auth/forgot-password" style={{ fontSize: 13, color: "var(--fg-secondary)", textDecoration: "none", transition: "color 140ms" }}
+              onMouseOver={(e) => (e.currentTarget.style.color = "var(--brand-maroon)")}
+              onMouseOut={(e) => (e.currentTarget.style.color = "var(--fg-secondary)")}>
+              Forgot password?
+            </Link>
+          </div>
+        </div>
 
-                showToast.success('Welcome back!', 'You have successfully logged in.');
-                router.push('/'); // Redirect to dashboard
-            }
-        } catch (error: any) {
-            const msg = error.response?.data?.message || 'Login failed. Please try again.';
-            showToast.error('Login Failed', msg);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-   
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full space-y-8"
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="btn btn-primary"
+          style={{ width: "100%", justifyContent: "center", height: 48, fontSize: 15, marginTop: 8, borderRadius: 8, opacity: isLoading ? 0.7 : 1 }}
         >
-            <div className="text-left space-y-2">
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
-                <p className="text-gray-500">Please enter your details to sign in.</p>
-            </div>
+          {isLoading ? (
+            <Loader2 style={{ width: 18, height: 18, animation: "spin 1s linear infinite" }} />
+          ) : (
+            "Sign in"
+          )}
+        </button>
+      </form>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <AuthInput
-                    label="Email"
-                    type="email"
-                    placeholder="name@company.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-
-                <div className="space-y-1">
-                    <AuthInput
-                        label="Password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                    <div className="flex justify-end pt-1">
-                        <Link
-                            href="/auth/forgot-password"
-                            className="text-sm font-medium text-gray-500 hover:text-black transition-colors"
-                        >
-                            Forgot password?
-                        </Link>
-                    </div>
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-[#171717] hover:bg-black text-white h-12 rounded-xl font-medium shadow-xl shadow-black/5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group text-[15px]"
-                >
-                    {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                        <>
-                            Sign In
-                            <ArrowRight className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
-                        </>
-                    )}
-                </button>
-            </form>
-
-            <div className="pt-6 border-t border-gray-100 text-center">
-                <p className="text-gray-500 text-sm">
-                    Don't have an account?{' '}
-                    <Link
-                        href="/auth/signup"
-                        className="font-semibold text-black hover:underline underline-offset-4 transition-all"
-                    >
-                        Create account
-                    </Link>
-                </p>
-            </div>
-        </motion.div>
-    );
+      <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--brand-bone-deep)", textAlign: "center" as const }}>
+        <p style={{ fontSize: 13.5, color: "var(--fg-secondary)", margin: 0 }}>
+          Don&apos;t have an account?{" "}
+          <Link href="/auth/signup" style={{ color: "var(--brand-maroon)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 2 }}>
+            Create account
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default LoginForm;
