@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { showToast } from '@/components/ui/CustomToast';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://intellign.up.railway.app';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://intellign.up.railway.app').replace(/\/$/, '');
 
 const axiosInstance = axios.create({
     baseURL: API_URL,

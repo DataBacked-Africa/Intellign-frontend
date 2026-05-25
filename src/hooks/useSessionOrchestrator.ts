@@ -30,7 +30,9 @@ export const useSessionOrchestrator = () => {
     const connectToProgress = useCallback((jobId: string) => {
         eventSourceRef.current?.close();
 
-        const evtSource = new EventSource(`${API_URL}/optimizations/progress/${jobId}`);
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const url = `${API_URL}/optimizations/progress/${jobId}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+        const evtSource = new EventSource(url);
         eventSourceRef.current = evtSource;
 
         evtSource.onmessage = (event) => {

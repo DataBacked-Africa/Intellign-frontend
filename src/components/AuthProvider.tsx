@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useUserStore } from '@/store/useUserStore';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 
 // Proactive refresh: refresh the access token this many ms before it expires.
 // With a 2h access token this fires ~10 min before expiry.
