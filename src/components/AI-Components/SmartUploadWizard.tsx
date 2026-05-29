@@ -8,12 +8,13 @@ import {
     AlertCircle, BarChart2, Plus, ChevronDown, Mic, Lightbulb
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUnifiedChat, ChatMessage, GoalDefinition, DataContext, Artifact, AttachedFileInfo } from '@/hooks/useUnifiedChat';
+import { useUnifiedChat, ChatMessage, GoalDefinition, GoalModel, DataContext, Artifact, AttachedFileInfo } from '@/hooks/useUnifiedChat';
 import { useSessionStore } from '@/store/useSessionStore';
 import { showToast } from '@/components/ui/CustomToast';
 import { useUserStore } from '@/store/useUserStore';
 import { useSpeechInput } from '@/hooks/useSpeechInput';
-import OptimizationModal from '@/components/AI-Components/OptimizationModal';
+import GoalDetailPanel from '@/components/AI-Components/GoalDetailPanel';
+import { useCanvas } from '@/contexts/CanvasContext';
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────
 const TypingIndicator = () => (
@@ -73,32 +74,101 @@ const FileChips: React.FC<{ files: AttachedFileInfo[] }> = ({ files }) => (
     </div>
 );
 
-// ─── Inline markdown ──────────────────────────────────────────────────────────
-const renderMarkdown = (text: string): React.ReactNode[] =>
-    text.split('\n').map((line, idx, arr) => {
+// ─── Inline markdown (bold + code) ───────────────────────────────────────────
+const renderInline = (content: string): React.ReactNode[] => {
+    const parts: React.ReactNode[] = [];
+    const regex = /\*\*(.+?)\*\*|`(.+?)`/g;
+    let last = 0; let m: RegExpExecArray | null;
+    while ((m = regex.exec(content)) !== null) {
+        if (m.index > last) parts.push(content.slice(last, m.index));
+        if (m[1]) parts.push(<strong key={m.index}>{m[1]}</strong>);
+        else if (m[2]) parts.push(<code key={m.index} className="px-1 py-0.5 bg-black/10 rounded text-[11px] font-mono">{m[2]}</code>);
+        last = m.index + m[0].length;
+    }
+    if (last < content.length) parts.push(content.slice(last));
+    return parts.length ? parts : [content];
+};
+
+// ─── Full markdown renderer (supports tables) ─────────────────────────────────
+const renderMarkdown = (text: string): React.ReactNode[] => {
+    const lines = text.split('\n');
+    const result: React.ReactNode[] = [];
+    let i = 0;
+
+    while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Detect table: current line has pipes AND next line is a separator row
+        const isTableHeader =
+            trimmed.startsWith('|') && trimmed.endsWith('|') &&
+            i + 1 < lines.length &&
+            /^\|[\s|:-]+\|/.test(lines[i + 1].trim());
+
+        if (isTableHeader) {
+            const tableLines: string[] = [];
+            while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+                tableLines.push(lines[i]);
+                i++;
+            }
+
+            if (tableLines.length >= 2) {
+                const parseRow = (l: string) =>
+                    l.split('|').slice(1, -1).map(c => c.trim());
+
+                const isSep = (l: string) => /^[\s|:-]+$/.test(l.replace(/\|/g, ''));
+                const headers = parseRow(tableLines[0]);
+                const bodyRows = tableLines.slice(2).filter(l => !isSep(l)).map(parseRow);
+
+                result.push(
+                    <div key={`tbl-${i}`} className="overflow-x-auto my-2 rounded-lg border border-gray-200 text-xs">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    {headers.map((h, hi) => (
+                                        <th key={hi} className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                            {renderInline(h)}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {bodyRows.map((row, ri) => (
+                                    <tr key={ri} className="border-t border-gray-100 even:bg-gray-50/40">
+                                        {row.map((cell, ci) => (
+                                            <td key={ci} className="px-3 py-2 text-gray-700">
+                                                {renderInline(cell)}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            }
+            continue;
+        }
+
+        // Normal line: bullets and inline formatting
         const isBullet = /^[-*]\s+/.test(line);
         const content = isBullet ? line.replace(/^[-*]\s+/, '') : line;
-        const parts: React.ReactNode[] = [];
-        const regex = /\*\*(.+?)\*\*|`(.+?)`/g;
-        let last = 0;
-        let m: RegExpExecArray | null;
-        while ((m = regex.exec(content)) !== null) {
-            if (m.index > last) parts.push(content.slice(last, m.index));
-            if (m[1]) parts.push(<strong key={m.index}>{m[1]}</strong>);
-            else if (m[2]) parts.push(<code key={m.index} className="px-1 py-0.5 bg-black/10 rounded text-[11px] font-mono">{m[2]}</code>);
-            last = m.index + m[0].length;
-        }
-        if (last < content.length) parts.push(content.slice(last));
-        const rendered = parts.length ? parts : [content];
-        return (
-            <React.Fragment key={idx}>
+        const rendered = renderInline(content);
+        const isLast = i === lines.length - 1;
+
+        result.push(
+            <React.Fragment key={i}>
                 {isBullet
                     ? <div className="flex items-start gap-1.5 my-0.5"><span className="mt-2 w-1 h-1 rounded-full bg-current flex-shrink-0 opacity-40" /><span>{rendered}</span></div>
                     : <span>{rendered}</span>}
-                {idx < arr.length - 1 && !isBullet && <br />}
+                {!isLast && !isBullet && <br />}
             </React.Fragment>
         );
-    });
+        i++;
+    }
+
+    return result;
+};
 
 // ─── Data preview card ────────────────────────────────────────────────────────
 const DataPreviewCard: React.FC<{ actionTaken: string; preview: any; onDownload?: (table: 'resources' | 'targets') => void }> = ({ actionTaken, preview, onDownload }) => {
@@ -207,26 +277,51 @@ const DataPreviewCard: React.FC<{ actionTaken: string; preview: any; onDownload?
 };
 
 // ─── Goals panel (shown when goals come in during goal_definition phase) ──────
-const GoalsPanel: React.FC<{ goals: GoalDefinition[] }> = ({ goals }) => {
+const GoalsPanel: React.FC<{ goals: GoalDefinition[]; onViewGoal: (goal: GoalDefinition, idx: number) => void }> = ({ goals, onViewGoal }) => {
     if (!goals.length) return null;
+    const total = goals.reduce((s, g) => s + (g.weight ?? 0), 0);
     return (
-        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/60 overflow-hidden text-xs">
-            <div className="flex items-center gap-2 px-3 py-2 bg-amber-100 border-b border-amber-200">
-                <Target className="w-3 h-3 text-amber-600" />
-                <span className="font-bold text-amber-800 uppercase tracking-wide">
-                    {goals.length} Optimization Goal{goals.length !== 1 ? 's' : ''} Defined
+        <div className="mt-3 rounded-xl border border-[#5C1427]/20 bg-[#5C1427]/5 overflow-hidden text-xs">
+            <div className="flex items-center justify-between px-3 py-2 bg-[#5C1427]/10 border-b border-[#5C1427]/20">
+                <div className="flex items-center gap-2">
+                    <Target className="w-3 h-3 text-[#5C1427]" />
+                    <span className="font-bold text-[#5C1427] uppercase tracking-wide">
+                        {goals.length} Goal{goals.length !== 1 ? 's' : ''} Defined
+                    </span>
+                </div>
+                <span className={cn(
+                    'font-mono font-bold text-[10px]',
+                    total === 100 ? 'text-emerald-600' : 'text-amber-600'
+                )}>
+                    {total}% total
                 </span>
             </div>
             <div className="p-3 space-y-2">
                 {goals.map((g, i) => (
-                    <div key={i} className="flex items-start gap-2 bg-white/80 rounded-lg px-2.5 py-2 border border-amber-100">
-                        <span className={cn(
-                            "mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold",
-                            g.award_type === 'Reward' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        )}>{g.award_type}</span>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900">{g.description}</p>
-                            <p className="text-gray-500">Weight: {g.weight}% · {g.logic_config?.logic_type}</p>
+                    <div key={i} className="bg-white rounded-lg px-2.5 py-2 border border-[#5C1427]/10 space-y-1.5">
+                        <div className="flex items-start gap-2">
+                            <span className={cn(
+                                'mt-0.5 shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold',
+                                g.award_type === 'Reward' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            )}>{g.award_type}</span>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 leading-snug">{g.description}</p>
+                                <p className="text-gray-400 text-[10px] mt-0.5">{g.logic_config?.logic_type?.replace(/_/g, ' ')}</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[#5C1427] font-bold tabular-nums">{g.weight}%</span>
+                                <button
+                                    onClick={() => onViewGoal(g, i)}
+                                    className="text-[10px] text-gray-400 hover:text-[#5C1427] underline underline-offset-2 transition-colors"
+                                >view</button>
+                            </div>
+                        </div>
+                        {/* Weight bar */}
+                        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-[#5C1427] rounded-full transition-all duration-500"
+                                style={{ width: `${g.weight ?? 0}%` }}
+                            />
                         </div>
                     </div>
                 ))}
@@ -308,7 +403,7 @@ const ArtifactRenderer: React.FC<{ artifacts: Artifact[] }> = ({ artifacts }) =>
 const DatasetDownloadBar: React.FC<{ context: DataContext; onDownload: (t: 'resources' | 'targets') => void }> = ({ context, onDownload }) => {
     if (context.status === 'none') return null;
     return (
-        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100 text-xs flex-shrink-0">
+        <div className="flex items-center gap-2 px-3 py-2 border-b text-xs flex-shrink-0" style={{ background: 'var(--brand-bone-deep)', borderColor: 'var(--border-subtle)' }}>
             <span className="text-gray-400 font-medium">Download:</span>
             {context.resources_metadata && (
                 <button onClick={() => onDownload('resources')}
@@ -331,7 +426,8 @@ const MessageBubble: React.FC<{
     msg: ChatMessage;
     isLoading?: boolean;
     onDownload: (t: 'resources' | 'targets') => void;
-}> = ({ msg, isLoading, onDownload }) => {
+    onViewGoal: (goal: GoalDefinition, idx: number) => void;
+}> = ({ msg, isLoading, onDownload, onViewGoal }) => {
     // Strip inline markdown tables from the message when we have structured artifacts —
     // avoids showing the same table twice (once as raw markdown, once as a rendered table).
     const messageText = (msg.artifacts?.some(a => a.type === 'table'))
@@ -343,17 +439,17 @@ const MessageBubble: React.FC<{
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
             className={cn('flex gap-2.5 items-start', isUser && 'flex-row-reverse')}
         >
-            <div className={cn(
-                'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm',
-                isUser ? 'bg-[#F9F9F9] border border-gray-200/60' : 'bg-gradient-to-br from-[#5C1427] to-[#8A1E3A]'
-            )}>
-                {isUser ? <User className="w-3.5 h-3.5 text-gray-500" /> : <Bot className="w-3.5 h-3.5 text-white" />}
+            <div
+                className={cn('w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm', isUser ? '' : 'bg-gradient-to-br from-[#5C1427] to-[#8A1E3A]')}
+                style={isUser ? { background: 'var(--product-panel)', border: '1px solid var(--border-subtle)', color: 'var(--fg-tertiary)' } : {}}
+            >
+                {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5 text-white" />}
             </div>
             <div className={cn('max-w-[82%] flex flex-col', isUser ? 'items-end' : 'items-start')}>
-                <div className={cn(
-                    'text-sm leading-relaxed',
-                    isUser ? 'bg-[#F9F9F9] text-gray-800 rounded-2xl rounded-tr-sm border border-gray-200/60 shadow-sm px-4 py-2.5' : 'text-gray-800 pt-1'
-                )}>
+                <div
+                    className={cn('text-sm leading-relaxed', isUser ? 'rounded-2xl rounded-tr-sm shadow-sm px-4 py-2.5' : 'pt-1')}
+                    style={isUser ? { background: 'var(--product-panel)', color: 'var(--fg-primary)', border: '1px solid rgba(0,0,0,0.05)' } : { color: 'var(--fg-primary)' }}
+                >
                     {isLoading ? <TypingIndicator /> : (
                         <>
                             {isUser && msg.attachedFiles && msg.attachedFiles.length > 0 && (
@@ -363,7 +459,7 @@ const MessageBubble: React.FC<{
                         </>
                     )}
                     {!isLoading && msg.actionTaken && (
-                        <div className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md w-fit">
+                        <div className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded-md w-fit" style={{ background: 'var(--brand-maroon-50)', color: 'var(--brand-maroon-deep)' }}>
                             <CheckCircle2 className="w-3 h-3" />
                             {msg.actionTaken}
                         </div>
@@ -388,10 +484,116 @@ const MessageBubble: React.FC<{
                 )}
                 {/* Goals panel */}
                 {!isLoading && msg.goals && msg.goals.length > 0 && (
-                    <GoalsPanel goals={msg.goals} />
+                    <GoalsPanel goals={msg.goals} onViewGoal={onViewGoal} />
                 )}
             </div>
         </motion.div>
+    );
+};
+
+// ─── Context bar ──────────────────────────────────────────────────────────────
+const ContextBar: React.FC<{
+    goalModel: GoalModel | null;
+    dataContext: DataContext | null;
+    phase: string;
+    isComplete: boolean;
+    goalsCount: number;
+    onRun: () => void;
+}> = ({ goalModel, dataContext, phase, isComplete, goalsCount, onRun }) => {
+    // Show even with null dataContext (resumed sessions) — hide only if nothing meaningful to show
+    if (!goalModel && !dataContext) return null;
+    const resCount = dataContext?.resources_metadata?.count;
+    const tgtCount = dataContext?.targets_metadata?.count;
+    const problemName =
+        goalModel?.description ||
+        (goalModel?.entities?.resources?.name && goalModel?.entities?.targets?.name
+            ? `${goalModel.entities.resources.name} → ${goalModel.entities.targets.name}`
+            : goalModel?.problem_type?.replace(/_/g, ' ') ?? 'Optimization');
+    const statusLabel = isComplete ? 'Ready' : phase === 'goal_definition' ? 'Defining goals' : 'Ingesting';
+    const statusColor = isComplete
+        ? 'bg-emerald-100 text-emerald-700'
+        : phase === 'goal_definition'
+        ? 'bg-[#5C1427]/10 text-[#5C1427]'
+        : 'bg-amber-100 text-amber-700';
+    return (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-[16px] text-xs mb-1.5 flex-shrink-0 flex-wrap shadow-sm" style={{ background: 'var(--brand-bone)', border: '1px solid var(--brand-bone-deep)' }}>
+            <span className="font-semibold text-gray-900 truncate max-w-[220px]">{problemName}</span>
+            <span className="text-gray-200 select-none">·</span>
+            {(resCount != null || tgtCount != null) && (
+                <>
+                    <span className="flex items-center gap-1 text-gray-500">
+                        <Database className="w-3 h-3 shrink-0" />
+                        {resCount != null && <span><b className="text-gray-800 tabular-nums">{resCount}</b> resources</span>}
+                        {resCount != null && tgtCount != null && <span className="text-gray-300 mx-0.5">·</span>}
+                        {tgtCount != null && <span><b className="text-gray-800 tabular-nums">{tgtCount}</b> targets</span>}
+                    </span>
+                    <span className="text-gray-200 select-none">·</span>
+                </>
+            )}
+            {goalsCount > 0 && (
+                <>
+                    <span className="flex items-center gap-1 text-gray-500">
+                        <Target className="w-3 h-3 shrink-0" />
+                        <b className="text-gray-800 tabular-nums">{goalsCount}</b> goals
+                    </span>
+                    <span className="text-gray-200 select-none">·</span>
+                </>
+            )}
+            <span className={cn('px-2 py-0.5 rounded-full font-semibold', statusColor)}>{statusLabel}</span>
+            {isComplete && (
+                <button
+                    onClick={onRun}
+                    className="ml-auto flex items-center gap-1 px-3 py-1 bg-[#5C1427] hover:bg-[#7a1b35] text-white rounded-full font-semibold transition-colors"
+                >
+                    <Zap className="w-3 h-3" /> Run
+                </button>
+            )}
+        </div>
+    );
+};
+
+// ─── Readiness strip ──────────────────────────────────────────────────────────
+const ReadinessStrip: React.FC<{
+    dataContext: DataContext | null;
+    goalsCount: number;
+    isComplete: boolean;
+    phase: string;
+    onOpenCanvas: (tab: 'datasets' | 'goals' | 'results') => void;
+}> = ({ dataContext, goalsCount, isComplete, phase, onOpenCanvas }) => {
+    // Infer state from phase when dataContext is null (resumed sessions don't restore state client-side)
+    // goal_definition phase → data is already finalized
+    const phaseIsPostIngestion = phase === 'goal_definition';
+    const dataReady = dataContext
+        ? (dataContext.status === 'partial' || dataContext.status === 'complete')
+        : phaseIsPostIngestion || isComplete;
+    const goalsReady = goalsCount > 0 || isComplete;
+    const items = [
+        { label: 'Data ready', done: dataReady, tab: 'datasets' as const },
+        { label: 'Goals defined', done: goalsReady, tab: 'goals' as const },
+        { label: 'Ready to optimize', done: isComplete, tab: 'results' as const },
+    ];
+    return (
+        <div className="flex items-center gap-1 mb-2 flex-shrink-0">
+            {items.map((item, i) => (
+                <React.Fragment key={item.label}>
+                    <button
+                        onClick={() => onOpenCanvas(item.tab)}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all"
+                        style={item.done
+                            ? { background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', cursor: 'pointer' }
+                            : { background: 'var(--product-panel)', color: 'var(--fg-tertiary)', border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
+                    >
+                        {item.done
+                            ? <CheckCircle2 className="w-2.5 h-2.5 shrink-0" />
+                            : <span className="w-2.5 h-2.5 flex items-center justify-center opacity-50">○</span>}
+                        {item.label}
+                    </button>
+                    {i < items.length - 1 && (
+                        <ChevronRight className="w-3 h-3 text-gray-300 shrink-0" />
+                    )}
+                </React.Fragment>
+            ))}
+        </div>
     );
 };
 
@@ -400,7 +602,7 @@ const ConfidenceBar: React.FC<{ confidence: number }> = ({ confidence }) => (
     <div className="flex items-center gap-2 text-xs text-gray-400">
         <BarChart2 className="w-3 h-3" />
         <span>Goal confidence</span>
-        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[120px]">
+        <div className="flex-1 h-1.5 rounded-full overflow-hidden max-w-[120px]" style={{ background: 'var(--brand-bone-deep)' }}>
             <div className="h-full bg-[#5C1427] rounded-full transition-all duration-500"
                 style={{ width: `${Math.round(confidence * 100)}%` }} />
         </div>
@@ -439,14 +641,18 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
         sendMessage, downloadDataset, reset,
     } = useUnifiedChat({ initialSessionId, onSessionCreated });
 
-    // OptimizationModal uses its own useSessionOrchestrator instance
     const { setSessionId } = useSessionStore();
     const { user } = useUserStore();
+    const canvas = useCanvas();
 
     const [input, setInput] = useState('');
     const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+    // Keep modal as fallback when canvas context is unavailable
     const [isOptimizationModalOpen, setIsOptimizationModalOpen] = useState(false);
     const [preexistingJobId, setPreexistingJobId] = useState<string | null>(null);
+    const [goalDetailOpen, setGoalDetailOpen] = useState(false);
+    const [goalDetailIndex, setGoalDetailIndex] = useState(0);
+    const [goalDetailTarget, setGoalDetailTarget] = useState<GoalDefinition | null>(null);
 
     const endRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -491,17 +697,41 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
         setSessionId(sessionId);
     }, [sessionId, setSessionId]);
 
+    // Keep canvas context synced on every state change — so Datasets tab always
+    // has current dataContext even when canvas was opened before data arrived.
+    useEffect(() => {
+        canvas.sync({
+            sessionId,
+            goals,
+            dataContext,
+            problemName: goalModel
+                ? (goalModel.description
+                    || (goalModel.entities?.resources?.name && goalModel.entities?.targets?.name
+                        ? `${goalModel.entities.resources.name} → ${goalModel.entities.targets.name}`
+                        : goalModel.problem_type?.replace(/_/g, ' ') ?? null))
+                : null,
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dataContext, goals, sessionId, goalModel]);
+
     useEffect(() => {
         endRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isSending]);
 
-    // Auto-open optimization modal when ML API starts a job via the chat flow
+    const deriveProblemName = () => {
+        if (goalModel?.description) return goalModel.description;
+        if (goalModel?.entities?.resources?.name && goalModel?.entities?.targets?.name)
+            return `${goalModel.entities.resources.name} → ${goalModel.entities.targets.name}`;
+        return goalModel?.problem_type?.replace(/_/g, ' ') ?? null;
+    };
+
+    // Auto-open canvas when ML API starts a job via the chat flow
     useEffect(() => {
         if (latestJobId) {
             setPreexistingJobId(latestJobId);
-            setIsOptimizationModalOpen(true);
+            canvas.open('monitor', { sessionId, goals, gaParams, preexistingJobId: latestJobId, dataContext, problemName: deriveProblemName() });
         }
-    }, [latestJobId]);
+    }, [latestJobId]); // eslint-disable-line
 
     const handleSend = useCallback(() => {
         const trimmed = input.trim();
@@ -513,9 +743,14 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
     }, [input, attachedFiles, isSending, sendMessage]);
 
     const handleRunOptimization = () => {
-        setPreexistingJobId(null);
-        setIsOptimizationModalOpen(true);
+        canvas.open('monitor', { sessionId, goals, gaParams, preexistingJobId: null, dataContext, problemName: deriveProblemName() });
     };
+
+    const handleViewGoal = useCallback((goal: GoalDefinition, idx: number) => {
+        setGoalDetailTarget(goal);
+        setGoalDetailIndex(idx);
+        setGoalDetailOpen(true);
+    }, []);
 
     const addFiles = (incoming: File[]) =>
         setAttachedFiles(prev => [...prev, ...incoming.filter(f => !prev.find(p => p.name === f.name))]);
@@ -532,6 +767,27 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
             {/* ── Dataset download bar ────────────────────────────────────── */}
             {!isIdle && dataContext && (dataContext.status === 'partial' || dataContext.status === 'complete') && (
                 <DatasetDownloadBar context={dataContext} onDownload={downloadDataset} />
+            )}
+
+            {/* ── Context bar + readiness strip ───────────────────────────── */}
+            {!isIdle && !isLoadingHistory && (
+                <>
+                    <ContextBar
+                        goalModel={goalModel}
+                        dataContext={dataContext}
+                        phase={phase}
+                        isComplete={isComplete}
+                        goalsCount={goals.length}
+                        onRun={handleRunOptimization}
+                    />
+                    <ReadinessStrip
+                        dataContext={dataContext}
+                        goalsCount={goals.length}
+                        isComplete={isComplete}
+                        phase={phase}
+                        onOpenCanvas={(tab) => canvas.open(tab, { sessionId, goals, gaParams })}
+                    />
+                </>
             )}
 
             {/* ── Error banner ────────────────────────────────────────────── */}
@@ -557,6 +813,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                                 msg={msg}
                                 isLoading={showLoading}
                                 onDownload={downloadDataset}
+                                onViewGoal={handleViewGoal}
                             />
                         );
                     })}
@@ -566,7 +823,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                         <div className="flex flex-wrap gap-2 pt-1">
                             {promptsForPhase.map(p => (
                                 <button key={p} onClick={() => sendMessage(p)}
-                                    className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full text-xs text-gray-600 hover:text-gray-900 transition-colors">
+                                    className="px-3 py-1.5 border rounded-full text-xs transition-colors" style={{ background: 'var(--product-panel)', borderColor: 'var(--border-subtle)', color: 'var(--fg-secondary)' }} onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--neutral-100)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--fg-primary)'; }} onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--product-panel)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--fg-secondary)'; }}>
                                     {p}
                                 </button>
                             ))}
@@ -596,7 +853,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                         </h2>
                     </div>
 
-                    <div className="w-full relative bg-[#F9F9F9] rounded-[28px] p-2 shadow-sm focus-within:bg-white focus-within:ring-1 focus-within:ring-gray-300 transition-all border border-gray-200/60 mt-4">
+                    <div className="w-full relative rounded-[28px] p-2 shadow-sm transition-all mt-4" style={{ background: 'var(--product-panel)', border: '1px solid var(--border-subtle)' }}>
                         {/* Attached files */}
                         {attachedFiles.length > 0 && (
                             <div className="flex flex-wrap gap-2 px-3 pt-2">
@@ -706,7 +963,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                             },
                         ].map((p, i) => (
                             <button key={i} onClick={() => sendMessage(p.prompt)}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-[#F9F9F9] hover:bg-gray-100 border border-transparent hover:border-gray-200 rounded-full text-sm font-medium text-gray-800 transition-all">
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all" style={{ background: 'var(--brand-bone-deep)', color: 'var(--fg-primary)', border: '1px solid transparent' }} onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor = 'var(--border-default)'; el.style.background = '#E2D8CB'; }} onMouseLeave={e => { const el = e.currentTarget; el.style.borderColor = 'transparent'; el.style.background = 'var(--brand-bone-deep)'; }}>
                                 {p.icon}
                                 {p.text}
                             </button>
@@ -732,8 +989,8 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
 
             {/* ── Input Area (when NOT idle, docked to bottom) ─────────────────────────────── */}
             {!isLoadingHistory && !isIdle && (
-                <div className="flex-shrink-0 pt-2 border-t border-transparent bg-white/80 backdrop-blur-sm relative z-10 w-full max-w-3xl mx-auto">
-                    <div className="w-full relative bg-[#F9F9F9] rounded-[24px] p-1 shadow-sm focus-within:bg-white focus-within:ring-1 focus-within:ring-gray-300 transition-all border border-gray-200/60">
+                <div className="flex-shrink-0 pt-2 border-t border-transparent relative z-10 w-full max-w-3xl mx-auto" style={{ background: 'rgba(249,249,249,0.92)', backdropFilter: 'blur(12px)' }}>
+                    <div className="w-full relative rounded-[24px] p-1 shadow-sm transition-all" style={{ background: 'var(--product-panel)', border: '1px solid var(--border-subtle)' }}>
                         {/* Attached files */}
                         {attachedFiles.length > 0 && (
                             <div className="flex flex-wrap gap-2 px-3 pt-2">
@@ -830,14 +1087,12 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                 </div>
             )}
 
-            {/* ── Optimization Modal ───────────────────────────────────────── */}
-            <OptimizationModal
-                isOpen={isOptimizationModalOpen}
-                onClose={() => setIsOptimizationModalOpen(false)}
-                sessionId={sessionId}
-                preexistingJobId={preexistingJobId}
-                goals={goals}
-                gaParams={gaParams}
+            {/* ── Goal Detail Panel ────────────────────────────────────────── */}
+            <GoalDetailPanel
+                isOpen={goalDetailOpen}
+                onClose={() => setGoalDetailOpen(false)}
+                goal={goalDetailTarget}
+                goalIndex={goalDetailIndex}
             />
         </div>
     );

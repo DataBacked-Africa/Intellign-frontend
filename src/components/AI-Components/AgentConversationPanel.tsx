@@ -17,33 +17,80 @@ const MODELS = [
 ];
 
 // ─── Inline markdown renderer ─────────────────────────────────────────────────
-const renderMarkdown = (text: string): React.ReactNode[] =>
-    text.split('\n').map((line, lineIdx, arr) => {
-        const isBullet = /^[\-\*]\s+/.test(line);
-        const content = isBullet ? line.replace(/^[\-\*]\s+/, '') : line;
-        const parts: React.ReactNode[] = [];
-        const regex = /\*\*(.+?)\*\*|`(.+?)`/g;
-        let lastIdx = 0;
-        let m: RegExpExecArray | null;
-        while ((m = regex.exec(content)) !== null) {
-            if (m.index > lastIdx) parts.push(content.slice(lastIdx, m.index));
-            if (m[1] !== undefined) parts.push(<strong key={m.index}>{m[1]}</strong>);
-            else if (m[2] !== undefined)
-                parts.push(<code key={m.index} className="px-1 py-0.5 bg-black/10 rounded text-[11px] font-mono">{m[2]}</code>);
-            lastIdx = m.index + m[0].length;
+const renderInline = (content: string): React.ReactNode[] => {
+    const parts: React.ReactNode[] = [];
+    const regex = /\*\*(.+?)\*\*|`(.+?)`/g;
+    let lastIdx = 0; let m: RegExpExecArray | null;
+    while ((m = regex.exec(content)) !== null) {
+        if (m.index > lastIdx) parts.push(content.slice(lastIdx, m.index));
+        if (m[1] !== undefined) parts.push(<strong key={m.index}>{m[1]}</strong>);
+        else if (m[2] !== undefined)
+            parts.push(<code key={m.index} className="px-1 py-0.5 bg-black/10 rounded text-[11px] font-mono">{m[2]}</code>);
+        lastIdx = m.index + m[0].length;
+    }
+    if (lastIdx < content.length) parts.push(content.slice(lastIdx));
+    return parts.length > 0 ? parts : [content];
+};
+
+const renderMarkdown = (text: string): React.ReactNode[] => {
+    const lines = text.split('\n');
+    const result: React.ReactNode[] = [];
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        const isTableHeader =
+            trimmed.startsWith('|') && trimmed.endsWith('|') &&
+            i + 1 < lines.length &&
+            /^\|[\s|:-]+\|/.test(lines[i + 1].trim());
+        if (isTableHeader) {
+            const tableLines: string[] = [];
+            while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+                tableLines.push(lines[i]);
+                i++;
+            }
+            if (tableLines.length >= 2) {
+                const parseRow = (l: string) => l.split('|').slice(1, -1).map(c => c.trim());
+                const isSep = (l: string) => /^[\s|:-]+$/.test(l.replace(/\|/g, ''));
+                const headers = parseRow(tableLines[0]);
+                const bodyRows = tableLines.slice(2).filter(l => !isSep(l)).map(parseRow);
+                result.push(
+                    <div key={`tbl-${i}`} className="overflow-x-auto my-2 rounded-lg border border-gray-200 text-xs">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    {headers.map((h, hi) => <th key={hi} className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">{renderInline(h)}</th>)}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {bodyRows.map((row, ri) => (
+                                    <tr key={ri} className="border-t border-gray-100 even:bg-gray-50/40">
+                                        {row.map((cell, ci) => <td key={ci} className="px-3 py-2 text-gray-700">{renderInline(cell)}</td>)}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            }
+            continue;
         }
-        if (lastIdx < content.length) parts.push(content.slice(lastIdx));
-        const rendered = parts.length > 0 ? parts : [content];
-        return (
-            <React.Fragment key={lineIdx}>
+        const isBullet = /^[-*]\s+/.test(line);
+        const content = isBullet ? line.replace(/^[-*]\s+/, '') : line;
+        const rendered = renderInline(content);
+        const isLast = i === lines.length - 1;
+        result.push(
+            <React.Fragment key={i}>
                 {isBullet
                     ? <div className="flex items-start gap-1.5 my-0.5"><span className="mt-2 w-1 h-1 rounded-full bg-current flex-shrink-0 opacity-40" /><span>{rendered}</span></div>
-                    : <span>{rendered}</span>
-                }
-                {lineIdx < arr.length - 1 && !isBullet && <br />}
+                    : <span>{rendered}</span>}
+                {!isLast && !isBullet && <br />}
             </React.Fragment>
         );
-    });
+        i++;
+    }
+    return result;
+};
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────
 const TypingIndicator = () => (

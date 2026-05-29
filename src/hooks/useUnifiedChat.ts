@@ -141,6 +141,31 @@ export const useUnifiedChat = ({
     const abortRef = useRef<AbortController | null>(null);
     const registeredRef = useRef(false);
 
+    // ── Load session state on mount (readiness, goals, phase) ────────────────
+    // Called BEFORE the first message so ContextBar + ReadinessStrip render
+    // correctly on page load without needing a chat turn.
+    useEffect(() => {
+        if (!initialSessionId) return;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+        fetch(`${API_URL}/ingest/chat/${initialSessionId}/state`, { headers })
+            .then(r => (r.ok ? r.json() : null))
+            .then(data => {
+                if (!data) return;
+                setState(prev => ({
+                    ...prev,
+                    phase: (data.phase as 'ingestion' | 'goal_definition') ?? prev.phase,
+                    isComplete: data.is_complete ?? prev.isComplete,
+                    goalModel: data.goal_model ?? prev.goalModel,
+                    dataContext: data.data_context ?? prev.dataContext,
+                    goals: Array.isArray(data.goals) ? data.goals : prev.goals,
+                    latestJobId: data.job_id ?? prev.latestJobId,
+                }));
+            })
+            .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // ── Auto-load history when resuming an existing session ───────────────────
     useEffect(() => {
         if (!initialSessionId) return;

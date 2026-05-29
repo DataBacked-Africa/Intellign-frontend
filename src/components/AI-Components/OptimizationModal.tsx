@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, Loader2, CheckCircle2, XCircle, Zap, RefreshCcw,
-    Search, ChevronLeft, ChevronRight, Check, Edit3, Download, ArrowRight,
+    Search, ChevronLeft, ChevronRight, ChevronDown, Check, Edit3, Download, ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSessionStore } from '@/store/useSessionStore';
@@ -187,6 +187,7 @@ const ResultsPanel = ({ jobId }: { jobId: string }) => {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [modifyOpen, setModifyOpen] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+    const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
     const loadData = async (p = page) => {
         setIsLoading(true);
@@ -335,38 +336,81 @@ const ResultsPanel = ({ jobId }: { jobId: string }) => {
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
+                                <th className="w-8 px-3 py-3"></th>
                                 {['Resource ID', 'Target ID', 'Score', 'Status', 'Actions'].map(h => (
                                     <th key={h} className="text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">{h}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {paginated.map(a => (
-                                <tr key={a.assignment_id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{a.resource.id}</td>
-                                    <td className="px-4 py-2.5 text-sm text-gray-600">{a.target.id}</td>
-                                    <td className="px-4 py-2.5 text-sm font-semibold text-emerald-600">{a.score}</td>
-                                    <td className="px-4 py-2.5"><StatusBadge status={a.approval_status} /></td>
-                                    <td className="px-4 py-2.5">
-                                        <div className="flex items-center gap-1">
-                                            <button onClick={() => handleApprove(a.assignment_id)} disabled={!!actionLoading}
-                                                className="p-1.5 rounded-lg hover:bg-emerald-100 text-emerald-600 disabled:opacity-40" title="Approve">
-                                                {actionLoading === a.assignment_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                                            </button>
-                                            <button onClick={() => { setSelectedAssignment(a); setModifyOpen(true); }} disabled={!!actionLoading}
-                                                className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 disabled:opacity-40" title="Modify">
-                                                <Edit3 className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button onClick={() => handleReject(a.assignment_id)} disabled={!!actionLoading}
-                                                className="p-1.5 rounded-lg hover:bg-red-100 text-red-600 disabled:opacity-40" title="Reject">
-                                                <X className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {paginated.map(a => {
+                                const isExpanded = expandedRow === a.assignment_id;
+                                return (
+                                    <React.Fragment key={a.assignment_id}>
+                                        <tr className={cn('transition-colors', isExpanded ? 'bg-gray-50/80' : 'hover:bg-gray-50/50')}>
+                                            <td className="px-3 py-2.5 w-8">
+                                                <button
+                                                    onClick={() => setExpandedRow(isExpanded ? null : a.assignment_id)}
+                                                    title={isExpanded ? 'Hide rationale' : 'Show rationale'}
+                                                    className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                                                >
+                                                    <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', isExpanded && 'rotate-180')} />
+                                                </button>
+                                            </td>
+                                            <td className="px-4 py-2.5 text-sm font-medium text-[#2E2D2A] font-mono">{a.resource.id}</td>
+                                            <td className="px-4 py-2.5 text-sm text-[#4A4945]">{a.target.id}</td>
+                                            <td className="px-4 py-2.5 text-sm font-semibold text-emerald-700">{typeof a.score === 'number' ? a.score.toFixed(3) : a.score}</td>
+                                            <td className="px-4 py-2.5"><StatusBadge status={a.approval_status} /></td>
+                                            <td className="px-4 py-2.5">
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => handleApprove(a.assignment_id)} disabled={!!actionLoading}
+                                                        className="p-1.5 rounded-lg hover:bg-emerald-100 text-emerald-600 disabled:opacity-40" title="Approve">
+                                                        {actionLoading === a.assignment_id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                                    </button>
+                                                    <button onClick={() => { setSelectedAssignment(a); setModifyOpen(true); }} disabled={!!actionLoading}
+                                                        className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 disabled:opacity-40" title="Modify">
+                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button onClick={() => handleReject(a.assignment_id)} disabled={!!actionLoading}
+                                                        className="p-1.5 rounded-lg hover:bg-red-100 text-red-600 disabled:opacity-40" title="Reject">
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {isExpanded && (
+                                            <tr>
+                                                <td colSpan={6} className="px-6 pb-4 pt-2 bg-gray-50/60 border-b border-gray-100">
+                                                    <div className="space-y-3">
+                                                        <div>
+                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Why this pairing</p>
+                                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                                {a.notes ?? `Resource ${a.resource.id} assigned to Target ${a.target.id}. Score reflects weighted objective function across all defined goals.`}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Match score</p>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-xs">
+                                                                    <div
+                                                                        className="h-full bg-emerald-500 rounded-full transition-all duration-700"
+                                                                        style={{ width: `${Math.round((typeof a.score === 'number' ? a.score : 0) * 100)}%` }}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-sm font-bold text-emerald-700 tabular-nums">
+                                                                    {typeof a.score === 'number' ? a.score.toFixed(3) : a.score}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })}
                             {paginated.length === 0 && (
-                                <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">No assignments match your filter.</td></tr>
+                                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">No assignments match your filter.</td></tr>
                             )}
                         </tbody>
                     </table>

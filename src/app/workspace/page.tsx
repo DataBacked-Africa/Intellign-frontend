@@ -13,9 +13,10 @@ export default function WorkspacePage() {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
 
-  // Wait one tick for Zustand persist to rehydrate from localStorage
+  // Wait for Zustand persist to rehydrate (two ticks: one for mount, one for persist)
   useEffect(() => {
-    setHydrated(true);
+    const t = setTimeout(() => setHydrated(true), 50);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -23,8 +24,10 @@ export default function WorkspacePage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (hydrated && !isAuthenticated) {
-      router.push("/auth/login");
+    if (!hydrated) return;
+    const devBypass = process.env.NEXT_PUBLIC_DEV_BYPASS === 'true';
+    if (!isAuthenticated) {
+      router.push(devBypass ? "/dev-login" : "/auth/login");
     }
   }, [hydrated, isAuthenticated, router]);
 
@@ -32,7 +35,8 @@ export default function WorkspacePage() {
     window.history.replaceState(null, "", `/sessions/${sessionId}`);
   }, []);
 
-  if (!hydrated || !isAuthenticated) return null;
+  if (!hydrated) return null;
+  if (!isAuthenticated) return null;
 
   return (
     <AppShell>

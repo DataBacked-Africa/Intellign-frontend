@@ -99,9 +99,10 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
             animate={{ width: isOpen ? 260 : 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className={cn(
-                'h-screen bg-[#F9F9F9] flex flex-col shrink-0 z-40 relative',
+                'h-screen flex flex-col shrink-0 z-40 relative border-r',
                 !isOpen && 'hidden md:flex md:w-0 overflow-hidden'
             )}
+            style={{ background: 'var(--brand-bone)', borderColor: 'var(--brand-bone-deep)' }}
         >
             {/* Header */}
             <div className="p-3 pt-4 flex items-center justify-between">
@@ -113,7 +114,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                 {isOpen && (
                     <button
                         onClick={() => setIsOpen(false)}
-                        className="p-1.5 rounded-md hover:bg-gray-200 text-gray-500 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-[#E8E0D2] text-[#6F6E66] transition-colors"
                         title="Close sidebar"
                     >
                         <PanelLeftClose className="w-5 h-5" />
@@ -126,19 +127,19 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                 <Link
                     href="/workspace"
                     onClick={clearSession}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-gray-200 transition-colors text-sm text-gray-900"
+                    className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-[#E8E0D2] transition-colors text-sm text-[#1C1B18]"
                 >
-                    <SquarePen className="w-4 h-4 text-gray-700" />
+                    <SquarePen className="w-4 h-4 text-[#4A4945]" />
                     {isOpen && <span>New chat</span>}
                 </Link>
 
-                <div className="flex items-center gap-3 w-full p-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 focus-within:ring-2 focus-within:ring-gray-300 transition-colors text-sm text-gray-900">
-                    <Search className="w-4 h-4 text-gray-700 shrink-0" />
+                <div className="flex items-center gap-3 w-full p-2.5 rounded-lg bg-[#E8E0D2] hover:bg-[#DDD5C5] focus-within:ring-2 focus-within:ring-gray-300 transition-colors text-sm text-[#1C1B18]">
+                    <Search className="w-4 h-4 text-[#4A4945] shrink-0" />
                     {isOpen && (
                         <input
                             type="text"
                             placeholder="Search chats"
-                            className="flex-1 bg-transparent outline-none text-sm text-gray-900 placeholder:text-gray-500 min-w-0"
+                            className="flex-1 bg-transparent outline-none text-sm text-[#1C1B18] placeholder:text-[#6F6E66] min-w-0"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                         />
@@ -149,12 +150,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
             {/* Session list */}
             <div className="flex-1 overflow-y-auto no-scrollbar py-2 px-3">
                 {sessions.length > 0 && isOpen && (
-                    <p className="mb-2 px-2 text-xs font-semibold text-gray-900 mt-2">Recents</p>
+                    <p className="mb-2 px-2 text-xs font-semibold text-[#1C1B18] mt-2">Recents</p>
                 )}
 
                 <div className="space-y-0.5">
                     {filteredSessions.length === 0 && searchQuery && isOpen ? (
-                        <p className="px-2 text-sm text-gray-500 py-4 text-center">No chats found.</p>
+                        <p className="px-2 text-sm text-[#6F6E66] py-4 text-center">No chats found.</p>
                     ) : filteredSessions.map(session => {
                         const isActive = session.sessionId === sessionId;
                         const isGenerating = generatingFor.has(session.sessionId);
@@ -167,7 +168,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                                 key={session.sessionId}
                                 className={cn(
                                     'group relative flex items-center rounded-lg transition-colors',
-                                    isActive ? 'bg-[#E5E5E5]' : 'hover:bg-gray-200',
+                                    isActive ? 'bg-[#E8E0D2]' : 'hover:bg-[#E8E0D2]',
                                     isDeleting && 'opacity-50 pointer-events-none'
                                 )}
                             >
@@ -177,14 +178,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                                     className="flex-1 flex items-center p-2.5 min-w-0"
                                 >
                                     {isOpen && (
-                                        <span className="truncate text-sm text-gray-800">
+                                        <span className="truncate text-sm text-[#2E2D2A]">
                                             {isGenerating && !session.name ? (
-                                                <span className="flex items-center gap-1.5 text-gray-500">
+                                                <span className="flex items-center gap-1.5 text-[#6F6E66]">
                                                     <Loader2 className="w-3 h-3 animate-spin" />
                                                     <span className="text-xs">Naming…</span>
                                                 </span>
                                             ) : isDeleting ? (
-                                                <span className="flex items-center gap-1.5 text-gray-400">
+                                                <span className="flex items-center gap-1.5 text-[#9E9C92]">
                                                     <Loader2 className="w-3 h-3 animate-spin" />
                                                     <span className="text-xs">Deleting…</span>
                                                 </span>
@@ -201,14 +202,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                                         <button
                                             title="Copy link"
                                             onClick={e => { e.preventDefault(); handleShare(session.sessionId); }}
-                                            className="p-1.5 rounded-md hover:bg-gray-300 text-gray-400 hover:text-gray-700 transition-colors"
+                                            className="p-1.5 rounded-md hover:bg-[#DDD5C5] text-[#9E9C92] hover:text-[#4A4945] transition-colors"
                                         >
                                             <Link2 className="w-3.5 h-3.5" />
                                         </button>
                                         <button
                                             title="Delete chat"
                                             onClick={e => { e.preventDefault(); handleDelete(session.sessionId); }}
-                                            className="p-1.5 rounded-md hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
+                                            className="p-1.5 rounded-md hover:bg-red-100 text-[#9E9C92] hover:text-red-600 transition-colors"
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -222,20 +223,20 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
 
             {/* User profile */}
             <div className="p-3">
-                <div className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-gray-200 transition-colors text-gray-800">
+                <div className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-[#E8E0D2] transition-colors text-[#2E2D2A]">
                     <div className="w-8 h-8 rounded-full bg-[#5C1427]/10 flex items-center justify-center text-[#5C1427] font-medium shrink-0">
                         {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
                     </div>
                     {isOpen && (
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">{user?.name ?? 'User'}</p>
-                            <p className="text-xs text-gray-500 truncate">{user?.email ?? ''}</p>
+                            <p className="text-sm font-medium text-[#1C1B18] truncate">{user?.name ?? 'User'}</p>
+                            <p className="text-xs text-[#6F6E66] truncate">{user?.email ?? ''}</p>
                         </div>
                     )}
                     <button
                         onClick={async () => { await logout(); router.push('/auth/login'); }}
                         title="Sign out"
-                        className="p-1 hover:text-gray-900 text-gray-500 transition-colors shrink-0"
+                        className="p-1 hover:text-[#1C1B18] text-[#6F6E66] transition-colors shrink-0"
                     >
                         <LogOut className="w-4 h-4" />
                     </button>
