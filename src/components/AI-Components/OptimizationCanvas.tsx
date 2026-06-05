@@ -931,7 +931,7 @@ const OptimizationCanvas: React.FC = () => {
                                   />
                                 : <DatasetsTab sessionId={sessionId} dataContext={dataContext} />
                         )}
-                        {tab === 'insights' && <InsightsTab messages={messages} jobId={effectiveJobId || undefined} onCountChange={setReportedInsights} />}
+                        {tab === 'insights' && <InsightsTab messages={messages} jobId={effectiveJobId || undefined} sessionId={sessionId} onCountChange={setReportedInsights} />}
                     </motion.div>
                 </AnimatePresence>
             </div>

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, BarChart2, Target, Zap, FileText, AlertTriangle } from "lucide-react";
+import { ChevronDown, BarChart2, Target, Zap, FileText, AlertTriangle, Sparkles, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface Artifact {
@@ -28,6 +28,21 @@ export interface Artifact {
   targets?: { count: number; source?: string };
   goals?: string[];
   ready?: boolean;
+  // Results context (post-optimization summary)
+  coverage?: number;
+  assigned?: number;
+  best_fitness?: number;
+  quality_mode?: string;
+  elapsed_seconds?: number;
+  // Data generated / augmented cards
+  generated_role?: string;
+  generated_name?: string;
+  generated_rows?: number;
+  source_name?: string;
+  resource_name?: string;
+  resource_rows?: number;
+  target_name?: string;
+  target_rows?: number;
 }
 
 const ARTIFACT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
@@ -35,6 +50,8 @@ const ARTIFACT_META: Record<string, { icon: React.ReactNode; label: string; colo
   coverage_estimate:      { icon: <Target className="w-3.5 h-3.5" />,   label: "Coverage",       color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
   problem_complexity_card:{ icon: <Zap className="w-3.5 h-3.5" />,      label: "Complexity",     color: "text-amber-600 bg-amber-50 border-amber-200" },
   session_summary_card:   { icon: <FileText className="w-3.5 h-3.5" />, label: "Summary",        color: "text-violet-600 bg-violet-50 border-violet-200" },
+  data_generated:         { icon: <Sparkles className="w-3.5 h-3.5" />, label: "Data Generated", color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
+  data_augmented:         { icon: <Wand2 className="w-3.5 h-3.5" />,    label: "Data Augmented", color: "text-fuchsia-600 bg-fuchsia-50 border-fuchsia-200" },
   table:                  { icon: <BarChart2 className="w-3.5 h-3.5" />,label: "Table",          color: "text-gray-600 bg-gray-50 border-gray-200" },
 };
 const DEFAULT_META = { icon: <FileText className="w-3.5 h-3.5" />, label: "Insight", color: "text-gray-600 bg-gray-50 border-gray-200" };
@@ -97,16 +114,55 @@ const ComplexityBody: React.FC<{ artifact: Artifact }> = ({ artifact }) => (
   </div>
 );
 
-const SummaryBody: React.FC<{ artifact: Artifact }> = ({ artifact }) => (
-  <div className="space-y-1.5 text-xs">
-    {artifact.problem && <p className="font-semibold text-gray-900">{artifact.problem}</p>}
-    {artifact.resources && <p className="text-gray-600">Resources: {artifact.resources.count}{artifact.resources.synthetic_cols?.length ? ` (${artifact.resources.synthetic_cols.length} synthetic cols)` : ""}</p>}
-    {artifact.targets && <p className="text-gray-600">Targets: {artifact.targets.count}{artifact.targets.source === "generated" ? " (generated)" : ""}</p>}
-    {artifact.solver && <p className="text-gray-600">Solver: {artifact.solver}</p>}
-    {artifact.goals?.map((g, i) => <p key={i} className="text-gray-500">• {g}</p>)}
-    {artifact.ready && <p className="text-emerald-600 font-semibold mt-1">✓ Ready to optimize</p>}
-  </div>
-);
+const SummaryBody: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
+  const hasResults = artifact.coverage != null || artifact.best_fitness != null || artifact.assigned != null;
+  return (
+    <div className="space-y-1.5 text-xs">
+      {artifact.problem && <p className="font-semibold text-gray-900">{artifact.problem}</p>}
+
+      {/* Results headline metrics (post-optimization) */}
+      {hasResults && (
+        <div className="grid grid-cols-2 gap-2 my-2">
+          {artifact.coverage != null && (
+            <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-1.5">
+              <div className="text-[10px] uppercase tracking-wide text-emerald-700/70">Coverage</div>
+              <div className="text-sm font-bold text-emerald-700">{artifact.coverage}%</div>
+            </div>
+          )}
+          {artifact.assigned != null && (
+            <div className="rounded-lg bg-gray-50 border border-gray-100 px-2 py-1.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-500">Assigned</div>
+              <div className="text-sm font-bold text-gray-900">{artifact.assigned}{artifact.targets ? ` / ${artifact.targets.count}` : ""}</div>
+            </div>
+          )}
+          {artifact.best_fitness != null && (
+            <div className="rounded-lg bg-gray-50 border border-gray-100 px-2 py-1.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-500">Best fitness</div>
+              <div className="text-sm font-bold text-gray-900">{Number(artifact.best_fitness).toFixed(2)}</div>
+            </div>
+          )}
+          {artifact.elapsed_seconds != null && (
+            <div className="rounded-lg bg-gray-50 border border-gray-100 px-2 py-1.5">
+              <div className="text-[10px] uppercase tracking-wide text-gray-500">Time</div>
+              <div className="text-sm font-bold text-gray-900">{Number(artifact.elapsed_seconds).toFixed(1)}s</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {artifact.resources && <p className="text-gray-600">Resources: {artifact.resources.count}{artifact.resources.synthetic_cols?.length ? ` (${artifact.resources.synthetic_cols.length} synthetic cols)` : ""}</p>}
+      {artifact.targets && <p className="text-gray-600">Targets: {artifact.targets.count}{artifact.targets.source === "generated" ? " (generated)" : ""}</p>}
+      {artifact.solver && <p className="text-gray-600">Solver: {artifact.solver}{artifact.quality_mode ? ` · ${artifact.quality_mode} mode` : ""}</p>}
+      {artifact.goals && artifact.goals.length > 0 && (
+        <div className="pt-1">
+          <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-0.5">Goals used</p>
+          {artifact.goals.map((g, i) => <p key={i} className="text-gray-600">• {g}</p>)}
+        </div>
+      )}
+      {artifact.ready && !hasResults && <p className="text-emerald-600 font-semibold mt-1">✓ Ready to optimize</p>}
+    </div>
+  );
+};
 
 const TableBody: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
   if (!artifact.headers || !artifact.rows) return null;
@@ -128,6 +184,34 @@ const TableBody: React.FC<{ artifact: Artifact }> = ({ artifact }) => {
   );
 };
 
+const DataGeneratedBody: React.FC<{ artifact: Artifact }> = ({ artifact }) => (
+  <div className="space-y-1.5 text-xs">
+    {artifact.note && <p className="text-gray-700">{artifact.note}</p>}
+    <div className="grid grid-cols-2 gap-2 mt-1">
+      <div className="rounded-lg bg-indigo-50 border border-indigo-100 px-2 py-1.5">
+        <div className="text-[10px] uppercase tracking-wide text-indigo-700/70">{artifact.resource_name ?? "Resources"}</div>
+        <div className="text-sm font-bold text-indigo-700">{artifact.resource_rows ?? 0}</div>
+      </div>
+      <div className="rounded-lg bg-indigo-50 border border-indigo-100 px-2 py-1.5">
+        <div className="text-[10px] uppercase tracking-wide text-indigo-700/70">{artifact.target_name ?? "Targets"}</div>
+        <div className="text-sm font-bold text-indigo-700">{artifact.target_rows ?? 0}</div>
+      </div>
+    </div>
+  </div>
+);
+
+const DataAugmentedBody: React.FC<{ artifact: Artifact }> = ({ artifact }) => (
+  <div className="space-y-1.5 text-xs">
+    {artifact.note && <p className="text-gray-700">{artifact.note}</p>}
+    {artifact.generated_name != null && (
+      <p className="text-gray-600">
+        Generated <span className="font-semibold">{artifact.generated_rows}</span> {artifact.generated_name} rows
+        {artifact.source_name ? <> to match your <span className="font-semibold">{artifact.source_name}</span> data.</> : "."}
+      </p>
+    )}
+  </div>
+);
+
 interface ArtifactCardProps {
   artifact: Artifact;
   timestamp?: string;
@@ -145,6 +229,8 @@ export const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifact, timestamp,
       case "coverage_estimate":       return <CoverageBody artifact={artifact} />;
       case "problem_complexity_card": return <ComplexityBody artifact={artifact} />;
       case "session_summary_card":    return <SummaryBody artifact={artifact} />;
+      case "data_generated":          return <DataGeneratedBody artifact={artifact} />;
+      case "data_augmented":          return <DataAugmentedBody artifact={artifact} />;
       case "table":                   return <TableBody artifact={artifact} />;
       default: return artifact.content
         ? <pre className="text-xs text-gray-600 whitespace-pre-wrap">{artifact.content}</pre>
