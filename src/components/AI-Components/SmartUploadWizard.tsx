@@ -15,6 +15,8 @@ import { useUserStore } from '@/store/useUserStore';
 import { useSpeechInput } from '@/hooks/useSpeechInput';
 import GoalDetailPanel from '@/components/AI-Components/GoalDetailPanel';
 import { useCanvas } from '@/contexts/CanvasContext';
+import { SuggestedResponseChips } from '@/components/AI-Components/SuggestedResponseChips';
+import { MultiQuestionChips, QuestionGroup } from '@/components/AI-Components/MultiQuestionChips';
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────
 const TypingIndicator = () => (
@@ -818,17 +820,40 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                         );
                     })}
 
-                    {/* Phase-appropriate quick prompts */}
-                    {!isSending && messages.length > 0 && !isComplete && (
-                        <div className="flex flex-wrap gap-2 pt-1">
-                            {promptsForPhase.map(p => (
-                                <button key={p} onClick={() => sendMessage(p)}
-                                    className="px-3 py-1.5 border rounded-full text-xs transition-colors" style={{ background: 'var(--product-panel)', borderColor: 'var(--border-subtle)', color: 'var(--fg-secondary)' }} onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--neutral-100)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--fg-primary)'; }} onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--product-panel)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--fg-secondary)'; }}>
-                                    {p}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                    {/* Dynamic response chips from the last assistant turn, with
+                        static phase prompts as a fallback when the AI emitted none. */}
+                    {!isSending && messages.length > 0 && !isComplete && (() => {
+                        const lastAsst = [...messages].reverse().find(m => m.role === 'assistant' && m.content !== '');
+                        if (lastAsst?.multiQuestion?.length) {
+                            return (
+                                <MultiQuestionChips
+                                    groups={lastAsst.multiQuestion as QuestionGroup[]}
+                                    onSubmit={(combined) => sendMessage(combined)}
+                                    disabled={isSending}
+                                />
+                            );
+                        }
+                        if (lastAsst?.suggestedResponses?.length) {
+                            return (
+                                <SuggestedResponseChips
+                                    suggestions={lastAsst.suggestedResponses}
+                                    onSelect={(v) => sendMessage(v)}
+                                    disabled={isSending}
+                                />
+                            );
+                        }
+                        // Fallback: static phase-appropriate quick prompts
+                        return (
+                            <div className="flex flex-wrap gap-2 pt-1">
+                                {promptsForPhase.map(p => (
+                                    <button key={p} onClick={() => sendMessage(p)}
+                                        className="px-3 py-1.5 border rounded-full text-xs transition-colors" style={{ background: 'var(--product-panel)', borderColor: 'var(--border-subtle)', color: 'var(--fg-secondary)' }} onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--neutral-100)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--fg-primary)'; }} onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--product-panel)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--fg-secondary)'; }}>
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    })()}
 
 
                     <div ref={endRef} />

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { GoalDefinition, GoalModel, DataContext, GAParams } from '@/hooks/useUnifiedChat';
 
-export type CanvasTab = 'monitor' | 'results' | 'assignments' | 'goals' | 'config' | 'datasets';
+export type CanvasTab = 'monitor' | 'results' | 'assignments' | 'goals' | 'config' | 'datasets' | 'insights';
 
 interface CanvasState {
     isOpen: boolean;

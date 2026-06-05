@@ -190,6 +190,30 @@ export const resultsService = {
     },
 
     /**
+     * Get a grounded, LLM-generated explanation for why a resource was assigned
+     * to its target. Uses the full conversation + dataset context server-side.
+     */
+    explainAssignment: async (
+        jobId: string,
+        assignmentId: string,
+        refresh = false
+    ): Promise<{
+        explanation: string;
+        resource_name: string;
+        target_name: string;
+        score: number;
+        score_breakdown?: Record<string, any> | null;
+        grounded: boolean;
+    }> => {
+        const response = await axiosInstance.post(
+            `/results/${jobId}/assignment/${assignmentId}/explain`,
+            null,
+            { params: refresh ? { refresh: true } : undefined }
+        );
+        return response.data;
+    },
+
+    /**
      * Bulk review multiple assignments
      */
     bulkReview: async (

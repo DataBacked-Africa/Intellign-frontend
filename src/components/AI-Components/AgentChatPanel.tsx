@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAgentChat, ChatMessage, AgentSuggestions } from '@/hooks/useAgentChat';
 import { useSessionStore } from '@/store/useSessionStore';
+import { MarkdownMessage } from '@/components/ui/MarkdownMessage';
 
 const QUICK_PROMPTS = [
     "What columns are available in my dataset?",
@@ -142,7 +143,7 @@ const MessageBubble: React.FC<{
                     ? "bg-gray-900 text-white rounded-tr-sm"
                     : "bg-gray-50 text-gray-800 rounded-tl-sm border border-gray-100"
             )}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                <MarkdownMessage content={message.content} inverted={message.role === 'user'} />
                 {!isUser && message.suggestions && (
                     <SuggestionsCard
                         suggestions={message.suggestions}

@@ -9,6 +9,9 @@ import {
 import { cn } from '@/lib/utils';
 import { useAgentChat, ChatMessage, AgentSuggestions } from '@/hooks/useAgentChat';
 import { useSessionStore } from '@/store/useSessionStore';
+import { MarkdownMessage } from '@/components/ui/MarkdownMessage';
+import { SuggestedResponseChips } from './SuggestedResponseChips';
+import { MultiQuestionChips, QuestionGroup } from './MultiQuestionChips';
 
 // ─── Available models ─────────────────────────────────────────────────────────
 const MODELS = [
@@ -179,7 +182,7 @@ const MessageBubble: React.FC<{
             </div>
             <div className={cn('max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed',
                 isUser ? 'bg-gray-900 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-800 rounded-tl-sm')}>
-                <div className="whitespace-pre-wrap break-words">{renderMarkdown(message.content)}</div>
+                <MarkdownMessage content={message.content} inverted={message.role === 'user'} />
                 {!isUser && message.suggestions && (
                     <SuggestionsCard suggestions={message.suggestions} onApply={onApply} isApplying={isApplying} />
                 )}
@@ -400,6 +403,33 @@ const AgentConversationPanel: React.FC = () => {
                             {messages.map(msg => (
                                 <MessageBubble key={msg.id} message={msg} onApply={applySuggestions} isApplying={isApplying} />
                             ))}
+                            {(() => {
+                                const lastAsst = [...messages].reverse().find(m => m.role === 'assistant') as any;
+                                if (!lastAsst || isLoading) return null;
+                                if (lastAsst.multiQuestion?.length) {
+                                    return (
+                                        <div className="px-4 pb-2">
+                                            <MultiQuestionChips
+                                                groups={lastAsst.multiQuestion as QuestionGroup[]}
+                                                onSubmit={(combined) => sendMessage(combined)}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+                                    );
+                                }
+                                if (lastAsst.suggestedResponses?.length) {
+                                    return (
+                                        <div className="px-4 pb-2">
+                                            <SuggestedResponseChips
+                                                suggestions={lastAsst.suggestedResponses}
+                                                onSelect={(v) => sendMessage(v)}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
                             <div ref={messagesEndRef} />
                         </>)
                 }

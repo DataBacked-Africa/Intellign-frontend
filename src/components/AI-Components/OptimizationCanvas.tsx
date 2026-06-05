@@ -7,12 +7,12 @@
  * Replaces the modal overlay for the optimization lifecycle.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, Minimize2, Plus, Trash2, Save, Edit3, Check, Download,
     ChevronDown, Loader2, RefreshCcw, XCircle, CheckCircle2,
-    ArrowRight, Search, ChevronLeft, ChevronRight,
+    ArrowRight, Search, ChevronLeft, ChevronRight, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCanvas, CanvasTab } from '@/contexts/CanvasContext';
@@ -20,16 +20,27 @@ import { useSessionStore } from '@/store/useSessionStore';
 import { useSessionOrchestrator } from '@/hooks/useSessionOrchestrator';
 import { resultsService } from '@/services/resultsService';
 import { showToast } from '@/components/ui/CustomToast';
-import { GoalDefinition, DataContext } from '@/hooks/useUnifiedChat';
+import { GoalDefinition, DataContext, useUnifiedChat } from '@/hooks/useUnifiedChat';
 import axiosInstance from '@/lib/axiosConfig';
+import { InsightsTab } from './InsightsTab';
+import { DatasetPanel } from './DatasetPanel';
+import { SolverConfigPanel } from './SolverConfigPanel';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Assignment {
     assignment_id: string;
-    resource: { id: string };
-    target: { id: string };
+    resource: { id: string;[k: string]: any };
+    target: { id: string;[k: string]: any };
+    summary?: {
+        resource_name?: string;
+        resource_specialization?: string;
+        target_name?: string;
+        target_specialization?: string;
+    };
     score: number;
+    score_breakdown?: Record<string, any> | null;
+    rationale?: string | null;
     approval_status: 'pending' | 'approved' | 'rejected' | 'modified';
     notes: string | null;
 }
@@ -37,7 +48,7 @@ interface Assignment {
 interface OptimizationData {
     job_id: string;
     status: string;
-    metrics: { best_fitness: number; total_targets: number; assigned_count: number; generations_run: number; population_size: number; total_resources: number; elapsed_time_seconds: number; average_final_fitness: number };
+    metrics: { best_fitness: number; total_targets: number; assigned_count: number; generations_run: number; population_size: number; total_resources: number; elapsed_time_seconds: number; average_final_fitness: number; solution_quality?: number; coverage_pct?: number };
     assignments: Assignment[];
     pagination: { page: number; page_size: number; total_items: number; total_pages: number };
     status_counts: { pending: number; approved: number; modified: number; rejected: number };
@@ -90,21 +101,50 @@ const TIMELINE = [
 ];
 
 const MonitorTab: React.FC = () => {
-    const { logs, progress, sessionStatus } = useSessionStore();
+    const { logs, progress, sessionStatus, liveMetrics } = useSessionStore();
     const isDone = sessionStatus === 'COMPLETED';
     const isFailed = sessionStatus === 'FAILED';
     const isRunning = sessionStatus === 'PROCESSING' || sessionStatus === 'CONFIGURING';
 
-    const stageIdx = isDone ? TIMELINE.length : isRunning ? 3 : 0;
+    // Live elapsed clock while running
+    const [elapsedS, setElapsedS] = useState(0);
+    useEffect(() => {
+        if (!isRunning || !liveMetrics?.startedAt) return;
+        const tick = () => setElapsedS(Math.floor((Date.now() - (liveMetrics.startedAt ?? Date.now())) / 1000));
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
+    }, [isRunning, liveMetrics?.startedAt]);
+
+    const genLabel = liveMetrics && liveMetrics.totalGenerations > 0
+        ? `${liveMetrics.currentGeneration}/${liveMetrics.totalGenerations}`
+        : liveMetrics?.currentGeneration
+            ? String(liveMetrics.currentGeneration)
+            : '—';
+    const fitnessLabel = liveMetrics?.bestFitness ? liveMetrics.bestFitness.toFixed(3) : '—';
+    const elapsedLabel = liveMetrics?.startedAt
+        ? `${Math.floor(elapsedS / 60)}m ${elapsedS % 60}s`
+        : '—';
+
+    // Timeline stage derived from real progress fraction (0–1 of generations)
+    const genFraction = liveMetrics && liveMetrics.totalGenerations > 0
+        ? liveMetrics.currentGeneration / liveMetrics.totalGenerations
+        : 0;
+    const stageIdx = isDone
+        ? TIMELINE.length
+        : isRunning
+            ? (genFraction >= 1 ? 4 : genFraction > 0 ? 3 : 2)
+            : 0;
 
     return (
         <div className="space-y-4">
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
                 {[
-                    { lbl: 'Generation', val: isDone ? '—' : '—' },
-                    { lbl: 'Best fitness', val: isDone ? '—' : '—' },
-                    { lbl: 'Elapsed', val: isDone ? '—' : '—' },
+                    { lbl: 'Generation', val: genLabel },
+                    { lbl: 'Coverage', val: liveMetrics?.coverage != null ? `${liveMetrics.coverage}%` : '—' },
+                    { lbl: 'Best fitness', val: fitnessLabel },
+                    { lbl: 'Elapsed', val: elapsedLabel },
                 ].map(s => (
                     <div key={s.lbl} className="rounded-xl p-4" style={{ background: 'var(--neutral-50)', border: '1px solid var(--border-subtle)' }}>
                         <div className="text-[10px] uppercase tracking-[0.14em] mb-2" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{s.lbl}</div>
@@ -161,6 +201,19 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [page, setPage] = useState(1);
+    // Grounded AI explanations, keyed by assignment_id
+    const [explanations, setExplanations] = useState<Record<string, string>>({});
+    const [explainLoading, setExplainLoading] = useState<string | null>(null);
+
+    const handleExplain = async (id: string, refresh = false) => {
+        setExplainLoading(id);
+        try {
+            const r = await resultsService.explainAssignment(jobId, id, refresh);
+            setExplanations(prev => ({ ...prev, [id]: r.explanation }));
+        } catch {
+            showToast.error('Explanation Failed', 'Could not generate a grounded explanation.');
+        } finally { setExplainLoading(null); }
+    };
 
     const loadData = async (p = 1) => {
         setLoading(true);
@@ -211,10 +264,10 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
             {/* Metrics */}
             <div className="grid grid-cols-2 gap-3">
                 {[
-                    { lbl: 'Resources assigned', val: metrics?.assigned_count ?? 0, sub: `of ${metrics?.total_resources ?? 0}`, hi: true },
+                    { lbl: 'Solution quality', val: typeof metrics?.solution_quality === 'number' ? `${metrics.solution_quality}%` : '—', hi: true },
+                    { lbl: 'Resources assigned', val: metrics?.assigned_count ?? 0, sub: `of ${metrics?.total_resources ?? 0}` },
                     { lbl: 'Target pool', val: metrics?.total_targets ?? 0 },
                     { lbl: 'Best fitness', val: typeof metrics?.best_fitness === 'number' ? metrics.best_fitness.toFixed(3) : '—' },
-                    { lbl: 'Generations', val: (metrics?.generations_run ?? 0).toLocaleString() },
                 ].map(m => (
                     <div key={m.lbl} className="rounded-xl p-4" style={{ background: '#fff', border: `1px solid ${m.hi ? 'rgba(92,20,39,0.22)' : 'var(--border-subtle)'}` }}>
                         <div className="text-[10px] uppercase tracking-[0.12em] mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{m.lbl}</div>
@@ -284,7 +337,7 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                     <thead style={{ background: 'var(--neutral-50)', borderBottom: '1px solid var(--border-subtle)' }}>
                         <tr>
                             <th className="w-8 px-2 py-3" />
-                            {['Resource ID', 'Target ID', 'Score', 'Status', 'Actions'].map(h => (
+                            {['Resource', 'Target', 'Score', 'Status', 'Actions'].map(h => (
                                 <th key={h} className="text-left px-3 py-3 text-[10px] uppercase tracking-[0.12em] font-medium"
                                     style={{ color: 'var(--fg-tertiary)', fontFamily: 'var(--font-mono)' }}>{h}</th>
                             ))}
@@ -302,8 +355,14 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                                                 <ChevronDown size={13} style={{ transform: isExp ? 'rotate(180deg)' : undefined, transition: 'transform 140ms' }} />
                                             </button>
                                         </td>
-                                        <td className="px-3 py-2 text-xs font-medium" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-primary)' }}>{a.resource.id}</td>
-                                        <td className="px-3 py-2 text-xs" style={{ color: 'var(--fg-secondary)' }}>{a.target.id}</td>
+                                        <td className="px-3 py-2">
+                                            <div className="text-xs font-medium" style={{ color: 'var(--fg-primary)' }}>{a.summary?.resource_name || a.resource.id}</div>
+                                            <div className="text-[10px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{a.resource.id}{a.summary?.resource_specialization ? ` · ${a.summary.resource_specialization}` : ''}</div>
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <div className="text-xs" style={{ color: 'var(--fg-secondary)' }}>{a.summary?.target_name || a.target.id}</div>
+                                            <div className="text-[10px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{a.target.id}{a.summary?.target_specialization ? ` · ${a.summary.target_specialization}` : ''}</div>
+                                        </td>
                                         <td className="px-3 py-2 text-xs font-semibold" style={{ color: '#047857' }}>{typeof a.score === 'number' ? a.score.toFixed(3) : a.score}</td>
                                         <td className="px-3 py-2">
                                             <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize', {
@@ -327,9 +386,25 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                                     {isExp && (
                                         <tr>
                                             <td colSpan={6} className="px-5 pb-4 pt-2" style={{ background: 'var(--neutral-50)', borderBottom: '1px solid var(--border-subtle)' }}>
-                                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>Why this pairing</p>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>Why this pairing</p>
+                                                    <button
+                                                        onClick={() => handleExplain(a.assignment_id, !!explanations[a.assignment_id])}
+                                                        disabled={explainLoading === a.assignment_id}
+                                                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold disabled:opacity-50"
+                                                        style={{ border: '1px solid var(--border-default)', background: 'transparent', color: '#6B1D1D', cursor: 'pointer' }}
+                                                        title="Generate a grounded explanation from the full conversation and data"
+                                                    >
+                                                        {explainLoading === a.assignment_id
+                                                            ? <Loader2 size={11} className="animate-spin" />
+                                                            : explanations[a.assignment_id] ? <RefreshCcw size={11} /> : <Sparkles size={11} />}
+                                                        {explanations[a.assignment_id] ? 'Regenerate' : 'Explain with AI'}
+                                                    </button>
+                                                </div>
                                                 <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--fg-primary)' }}>
-                                                    {a.notes ?? `Resource ${a.resource.id} assigned to Target ${a.target.id}. Score reflects the weighted objective function across all defined goals.`}
+                                                    {explanations[a.assignment_id]
+                                                        ?? a.rationale ?? a.notes
+                                                        ?? `${a.summary?.resource_name || a.resource.id} assigned to ${a.summary?.target_name || a.target.id}. Score reflects the weighted objective function across all defined goals. Click "Explain with AI" for a grounded breakdown.`}
                                                 </p>
                                                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-1.5" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>Match score</p>
                                                 <div className="flex items-center gap-3">
@@ -378,7 +453,20 @@ const GoalsTab: React.FC<GoalsTabProps> = ({ goals, sessionId }) => {
     const [draft, setDraft] = useState<Partial<GoalDefinition & { logic_type?: string }>>({});
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => { setLocalGoals(goals); }, [goals]);
+    useEffect(() => { if (goals?.length) setLocalGoals(goals); }, [goals]);
+
+    // The `goals` prop is a snapshot from canvas-open time and may be stale/empty
+    // (goals were auto-applied after the canvas opened). Always fetch the live,
+    // persisted goals from the backend so this tab is accurate after any reload.
+    useEffect(() => {
+        if (!sessionId) return;
+        axiosInstance.get(`/config/goals/${sessionId}`)
+            .then(res => {
+                const fetched = res.data?.goals ?? res.data ?? [];
+                if (Array.isArray(fetched) && fetched.length) setLocalGoals(fetched);
+            })
+            .catch(() => {});
+    }, [sessionId]);
 
     const total = localGoals.reduce((s, g) => s + (g.weight ?? 0), 0);
 
@@ -491,6 +579,17 @@ const GoalsTab: React.FC<GoalsTabProps> = ({ goals, sessionId }) => {
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-semibold truncate" style={{ color: 'var(--fg-primary)' }}>{g.description || 'Untitled goal'}</div>
                                 <div className="text-[11px] mt-0.5" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{LOGIC_LABELS[g.logic_config?.logic_type ?? ''] ?? g.logic_config?.logic_type ?? '—'}</div>
+                                {((g.resource_columns?.length ?? 0) > 0 || (g.target_columns?.length ?? 0) > 0) && (
+                                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--neutral-100, #F3F4F6)', color: 'var(--fg-secondary)' }}>
+                                            {(g.resource_columns ?? []).join(', ') || '—'}
+                                        </span>
+                                        <ArrowRight size={11} style={{ color: 'var(--fg-tertiary)' }} />
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--neutral-100, #F3F4F6)', color: 'var(--fg-secondary)' }}>
+                                            {(g.target_columns ?? []).join(', ') || '—'}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <span className="text-xs font-semibold tabular-nums shrink-0" style={{ color: 'var(--fg-primary)' }}>{g.weight}%</span>
                             <div className="flex gap-1 shrink-0">
@@ -671,42 +770,89 @@ const TABS: { id: CanvasTab; label: string }[] = [
     { id: 'goals', label: 'Goals' },
     { id: 'config', label: 'Config' },
     { id: 'datasets', label: 'Datasets' },
+    { id: 'insights', label: 'Insights' },
 ];
 
 const OptimizationCanvas: React.FC = () => {
     const { isOpen, isMinimized, tab, setTab, close, minimize, sessionId, goals, preexistingJobId, dataContext, problemName } = useCanvas();
     const { sessionStatus, jobId: storeJobId, setStatus, setJobId, progress } = useSessionStore();
     const { startOptimization, cancelOptimization, connectToProgress, disconnect } = useSessionOrchestrator();
+    const { messages, artifactCount, solverConfig, downloadDataset, isGenerating, dataContext: chatDataContext, latestJobId } = useUnifiedChat({ initialSessionId: sessionId ?? undefined });
+    const [solverConfigLocal, setSolverConfigLocal] = useState<any>(null);
+    const [reportedInsights, setReportedInsights] = useState<number | null>(null);
     const startedRef = useRef(false);
 
-    const effectiveJobId = storeJobId ?? preexistingJobId ?? '';
+    // Insight badge must match the Insights tab exactly. `artifactCount` from /state
+    // counts DB rows with any artifacts (inflated). Count the real insight cards from
+    // the loaded messages; once the tab mounts it reports its precise total.
+    const msgInsightCount = useMemo(
+        () => messages.reduce((n, m) => n + (m.artifacts?.length ?? 0), 0),
+        [messages],
+    );
+    const insightBadge = reportedInsights ?? msgInsightCount;
+
+    const effectiveJobId = storeJobId ?? preexistingJobId ?? latestJobId ?? '';
     const isDone = sessionStatus === 'COMPLETED';
     const isRunning = sessionStatus === 'PROCESSING' || sessionStatus === 'CONFIGURING';
     const isFailed = sessionStatus === 'FAILED';
+
+    // Adopt a job started from CHAT (RunOptimization → optimization_started → job_id).
+    // The chat hook writes the job to the shared store; when storeJobId appears while
+    // running, connect to the live progress stream so Monitor/Results fill.
+    const connectedJobRef = useRef<string | null>(null);
+    useEffect(() => {
+        const jid = storeJobId ?? latestJobId;
+        if (jid && connectedJobRef.current !== jid && sessionStatus !== 'COMPLETED') {
+            connectedJobRef.current = jid;
+            if (!storeJobId) setJobId(jid);
+            setStatus('PROCESSING');
+            setTab('monitor');
+            connectToProgress(jid);
+        }
+    }, [storeJobId, latestJobId]); // eslint-disable-line
 
     // Auto-switch to results tab when done
     useEffect(() => {
         if (isDone && (tab === 'monitor')) setTab('results');
     }, [isDone]); // eslint-disable-line
 
-    // Start optimization when canvas opens
+    // Auto-switch to datasets tab when generation starts
+    useEffect(() => {
+        if (isGenerating) setTab('datasets');
+    }, [isGenerating]); // eslint-disable-line
+
+    // Auto-start optimization only when the canvas opens to the Monitor tab AND
+    // the system is actually ready to run (goals defined). Opening to view data,
+    // solver config, goals, or insights must NOT kick off an optimization —
+    // that previously fired /optimizations/run prematurely and 404'd.
     useEffect(() => {
         if (!isOpen) { startedRef.current = false; return; }
         if (startedRef.current) return;
         startedRef.current = true;
 
+        // Always reconnect to an existing/active job regardless of tab
         if (preexistingJobId) { setJobId(preexistingJobId); setStatus('PROCESSING'); connectToProgress(preexistingJobId); return; }
         if (storeJobId && (sessionStatus === 'PROCESSING' || sessionStatus === 'COMPLETED')) { if (sessionStatus === 'PROCESSING') connectToProgress(storeJobId); return; }
         if (!sessionId) return;
+
+        const readyToOptimize = (goals?.length ?? 0) > 0;
+        const openedToRun = tab === 'monitor';
 
         axiosInstance.get(`/optimizations/jobs/${sessionId}`)
             .then(res => {
                 const jobs: any[] = res.data?.jobs ?? res.data ?? [];
                 const active = jobs.find((j: any) => ['pending', 'running', 'processing'].includes((j.status ?? '').toLowerCase()));
-                if (active?.job_id) { setJobId(active.job_id); setStatus('PROCESSING'); connectToProgress(active.job_id); }
-                else startOptimization(sessionId, { configOverride: goals?.length ? { goals, ga_params: null } : undefined });
+                if (active?.job_id) { setJobId(active.job_id); setStatus('PROCESSING'); connectToProgress(active.job_id); return; }
+                // Only auto-run when on the Monitor tab with goals ready
+                if (openedToRun && readyToOptimize) {
+                    startOptimization(sessionId, { configOverride: { goals, ga_params: null } });
+                }
             })
-            .catch(() => startOptimization(sessionId, { configOverride: goals?.length ? { goals, ga_params: null } : undefined }));
+            .catch(() => {
+                if (openedToRun && readyToOptimize) {
+                    startOptimization(sessionId, { configOverride: { goals, ga_params: null } });
+                }
+            });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
@@ -737,9 +883,15 @@ const OptimizationCanvas: React.FC = () => {
             <div className="flex px-4 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)', background: '#fff' }}>
                 {TABS.map(t => (
                     <button key={t.id} onClick={() => setTab(t.id)}
-                        className="relative px-4 py-3 text-sm font-medium transition-colors"
+                        className="relative px-4 py-3 text-sm font-medium transition-colors flex items-center gap-1.5"
                         style={{ border: 0, background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', color: tab === t.id ? 'var(--brand-maroon)' : 'var(--fg-secondary)', borderBottom: `2px solid ${tab === t.id ? 'var(--brand-maroon)' : 'transparent'}`, marginBottom: -1 }}>
+                        {t.id === 'insights' && <Sparkles className="w-3 h-3" />}
                         {t.label}
+                        {t.id === 'insights' && insightBadge > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#6B1D1D] text-white font-bold min-w-[18px] text-center">
+                                {insightBadge}
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>
@@ -760,8 +912,26 @@ const OptimizationCanvas: React.FC = () => {
                                 : <div className="py-12 text-center"><p style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--brand-maroon-deep)' }}>No assignments yet.</p><p className="text-sm mt-1" style={{ color: 'var(--fg-tertiary)' }}>Once converged, every resource → target pairing lands here.</p></div>
                         )}
                         {tab === 'goals' && <GoalsTab goals={goals} sessionId={sessionId} />}
-                        {tab === 'config' && <ConfigTab />}
-                        {tab === 'datasets' && <DatasetsTab sessionId={sessionId} dataContext={dataContext} />}
+                        {tab === 'config' && (
+                            sessionId
+                                ? <SolverConfigPanel
+                                    sessionId={sessionId}
+                                    config={(solverConfigLocal ?? solverConfig) as any}
+                                    onConfigUpdated={(cfg) => setSolverConfigLocal(cfg)}
+                                  />
+                                : <ConfigTab />
+                        )}
+                        {tab === 'datasets' && (
+                            sessionId
+                                ? <DatasetPanel
+                                    sessionId={sessionId}
+                                    dataContext={chatDataContext ?? dataContext}
+                                    onDownload={(table, format) => downloadDataset(table, format)}
+                                    isGenerating={isGenerating}
+                                  />
+                                : <DatasetsTab sessionId={sessionId} dataContext={dataContext} />
+                        )}
+                        {tab === 'insights' && <InsightsTab messages={messages} jobId={effectiveJobId || undefined} onCountChange={setReportedInsights} />}
                     </motion.div>
                 </AnimatePresence>
             </div>

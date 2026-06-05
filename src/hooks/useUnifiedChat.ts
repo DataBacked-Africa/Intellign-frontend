@@ -73,8 +73,10 @@ export interface ChatResponse {
     ga_params: GAParams | null;
     artifacts?: Artifact[] | null;
     goal_summary?: string | null;
-    /** Populated by the ML API when action_taken === 'optimization_started'. */
     job_id?: string | null;
+    suggested_responses?: string[] | null;
+    multi_question?: Array<{ id: string; question: string; suggestions: string[] }> | null;
+    solver_config?: Record<string, any> | null;
 }
 
 export interface AttachedFileInfo {
@@ -93,6 +95,8 @@ export interface ChatMessage {
     dataPreview?: any | null;
     goals?: GoalDefinition[] | null;
     artifacts?: Artifact[] | null;
+    suggestedResponses?: string[] | null;
+    multiQuestion?: Array<{ id: string; question: string; suggestions: string[] }> | null;
 }
 
 interface UnifiedChatState {
@@ -107,8 +111,11 @@ interface UnifiedChatState {
     goals: GoalDefinition[];
     gaParams: GAParams | null;
     error: string | null;
-    /** Job ID returned by the ML API when it auto-starts optimization. */
     latestJobId: string | null;
+    solverConfig: Record<string, any> | null;
+    dataPreview: Record<string, any> | null;
+    artifactCount: number;
+    isGenerating: boolean;
 }
 
 const generateSessionId = (): string => crypto.randomUUID();
@@ -136,76 +143,65 @@ export const useUnifiedChat = ({
         gaParams: null,
         error: null,
         latestJobId: null,
+        solverConfig: null,
+        dataPreview: null,
+        artifactCount: 0,
+        isGenerating: false,
     }));
 
     const abortRef = useRef<AbortController | null>(null);
     const registeredRef = useRef(false);
 
-    // ── Load session state on mount (readiness, goals, phase) ────────────────
-    // Called BEFORE the first message so ContextBar + ReadinessStrip render
-    // correctly on page load without needing a chat turn.
+    // ── Hydration on mount — history and state load INDEPENDENTLY so the chat
+    //    renders the instant history arrives, without waiting on the (heavier)
+    //    /state call. This keeps reloads fast. ───────────────────────────────
     useEffect(() => {
         if (!initialSessionId) return;
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-        fetch(`${API_URL}/ingest/chat/${initialSessionId}/state`, { headers })
-            .then(r => (r.ok ? r.json() : null))
-            .then(data => {
-                if (!data) return;
+        const headers = authHeaders();
+
+        // History → render messages ASAP, flip the skeleton off immediately.
+        fetch(`${API_URL}/ingest/chat/${initialSessionId}/history`, { headers })
+            .then(r => r.ok ? r.json() : null).catch(() => null)
+            .then((historyData) => {
+                const rawMessages: any[] = historyData?.messages ?? [];
+                const loadedMessages: ChatMessage[] = rawMessages.map((m: any, i: number) => ({
+                    id:               m.id ?? `hist-${i}`,
+                    role:             (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+                    content:          m.content ?? m.message ?? '',
+                    timestamp:        m.timestamp ? new Date(m.timestamp) : new Date(),
+                    artifacts:        m.artifacts ?? null,
+                    actionTaken:      m.action_taken ?? null,
+                    suggestedResponses: null,
+                    multiQuestion:    null,
+                }));
+                if (loadedMessages.length > 0) registeredRef.current = true;
                 setState(prev => ({
                     ...prev,
-                    phase: (data.phase as 'ingestion' | 'goal_definition') ?? prev.phase,
-                    isComplete: data.is_complete ?? prev.isComplete,
-                    goalModel: data.goal_model ?? prev.goalModel,
-                    dataContext: data.data_context ?? prev.dataContext,
-                    goals: Array.isArray(data.goals) ? data.goals : prev.goals,
-                    latestJobId: data.job_id ?? prev.latestJobId,
+                    messages:         loadedMessages.length > 0 ? loadedMessages : prev.messages,
+                    isLoadingHistory: false,
+                }));
+            })
+            .catch(() => setState(prev => ({ ...prev, isLoadingHistory: false })));
+
+        // State → fills phase/goals/context as it arrives; never blocks the chat.
+        fetch(`${API_URL}/ingest/chat/${initialSessionId}/state`, { headers })
+            .then(r => r.ok ? r.json() : null).catch(() => null)
+            .then((stateData) => {
+                if (!stateData) return;
+                setState(prev => ({
+                    ...prev,
+                    phase:         (stateData.phase as 'ingestion' | 'goal_definition') ?? prev.phase,
+                    isComplete:    stateData.is_complete  ?? prev.isComplete,
+                    goalModel:     stateData.goal_model   ?? prev.goalModel,
+                    dataContext:   stateData.data_context ?? prev.dataContext,
+                    goals:         Array.isArray(stateData.goals) ? stateData.goals : prev.goals,
+                    latestJobId:   stateData.job_id       ?? prev.latestJobId,
+                    solverConfig:  stateData.solver_config ?? null,
+                    dataPreview:   stateData.data_preview  ?? null,
+                    artifactCount: stateData.artifact_count ?? 0,
                 }));
             })
             .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // ── Auto-load history when resuming an existing session ───────────────────
-    useEffect(() => {
-        if (!initialSessionId) return;
-
-        let cancelled = false;
-
-        fetch(`${API_URL}/ingest/chat/${initialSessionId}/history`, { headers: authHeaders() })
-            .then(res => (res.ok ? res.json() : null))
-            .then(data => {
-                if (cancelled) return;
-
-                const raw: any[] = data?.messages ?? [];
-
-                if (raw.length > 0) {
-                    const loaded: ChatMessage[] = raw.map((m: any, i: number) => ({
-                        id: m.id ?? `hist-${i}`,
-                        role: m.role === 'user' ? 'user' : 'assistant',
-                        content: m.content ?? m.message ?? '',
-                        timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
-                        actionTaken: m.action_taken ?? null,
-                        artifacts: m.artifacts ?? null,
-                    }));
-
-                    // Session already in DB if it has history
-                    registeredRef.current = true;
-
-                    setState(prev => ({
-                        ...prev,
-                        messages: loaded,
-                        isLoadingHistory: false,
-                    }));
-                } else {
-                    setState(prev => ({ ...prev, isLoadingHistory: false }));
-                }
-            })
-            .catch(() => {
-                if (!cancelled) setState(prev => ({ ...prev, isLoadingHistory: false }));
-            });
-
-        return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // intentionally runs once on mount only
 
@@ -257,52 +253,153 @@ export const useUnifiedChat = ({
 
         registerSession(sessionId);
 
-        try {
-            const form = new FormData();
-            form.append('message', text);
-            form.append('include_history', 'true');
-            files.forEach(f => form.append('files', f));
+        const _genActions = ['generate_sample_dataset', 'generate_missing_tables', 'augment_missing_data'];
+        const patchAssistant = (patch: Partial<ChatMessage>) =>
+            setState(prev => ({
+                ...prev,
+                messages: prev.messages.map(m => m.id === loadingId ? { ...m, ...patch } : m),
+            }));
 
+        try {
             abortRef.current?.abort();
             abortRef.current = new AbortController();
 
-            const res = await fetch(`${API_URL}/ingest/chat/${sessionId}`, {
-                method: 'POST',
-                headers: authHeaders(),
-                body: form,
-                signal: abortRef.current.signal,
-            });
+            // ── File uploads go to the dedicated /ingest/files endpoint ─────────
+            // That endpoint ingests asynchronously, so we must WAIT for the data
+            // to land before sending the chat turn — otherwise the agent sees no
+            // data and synthesizes its own instead of using the upload.
+            if (files.length > 0) {
+                patchAssistant({ content: 'Ingesting your data…' });
+                setState(prev => ({ ...prev, isGenerating: false }));
 
-            if (!res.ok) {
-                const errText = await res.text().catch(() => res.statusText);
-                throw new Error(errText);
+                const upForm = new FormData();
+                files.forEach(f => upForm.append('files', f));
+                upForm.append('hint', text);
+                const upRes = await fetch(`${API_URL}/ingest/files/${sessionId}`, {
+                    method: 'POST', headers: authHeaders(), body: upForm, signal: abortRef.current.signal,
+                });
+                if (!upRes.ok) throw new Error(await upRes.text().catch(() => upRes.statusText));
+
+                // Poll session state until ingestion has produced dataset metadata
+                // (or an ingestion error / timeout). Then continue to the chat turn.
+                const deadline = Date.now() + 90_000;
+                let ingested = false;
+                while (Date.now() < deadline) {
+                    await new Promise(r => setTimeout(r, 1500));
+                    try {
+                        const sres = await fetch(`${API_URL}/ingest/chat/${sessionId}/state`, {
+                            headers: authHeaders(), signal: abortRef.current.signal,
+                        });
+                        if (!sres.ok) continue;
+                        const sdata = await sres.json();
+                        const dc = sdata?.data_context ?? {};
+                        if (sdata?.ingestion_error) {
+                            throw new Error(sdata.ingestion_error?.error ?? 'Ingestion failed.');
+                        }
+                        if (dc?.resources_metadata || dc?.targets_metadata) {
+                            setState(prev => ({ ...prev, dataContext: dc }));
+                            ingested = true;
+                            break;
+                        }
+                    } catch (e: any) {
+                        if (e?.name === 'AbortError') throw e;
+                        // transient — keep polling until deadline
+                    }
+                }
+                if (!ingested) {
+                    patchAssistant({ content: 'Your data is taking a while to process. I’ll continue once it’s ready — you can also retry shortly.' });
+                }
+                // Fall through to the streaming turn so the agent now responds with
+                // the uploaded data available.
             }
 
-            const data: ChatResponse = await res.json();
+            // ── Streaming path (Rec 1+2) ────────────────────────────────────────
+            const form = new FormData();
+            form.append('message', text);
+            form.append('include_history', 'true');
+            const res = await fetch(`${API_URL}/ingest/chat/${sessionId}/stream`, {
+                method: 'POST', headers: authHeaders(), body: form, signal: abortRef.current.signal,
+            });
+            if (!res.ok || !res.body) throw new Error(await res.text().catch(() => res.statusText));
 
-            const assistantMsg: ChatMessage = {
-                id: loadingId,
-                role: 'assistant',
-                content: data.message,
-                timestamp: new Date(),
-                actionTaken: data.action_taken,
-                dataPreview: data.data_preview,
-                goals: data.goals,
-                artifacts: data.artifacts ?? null,
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let streamedText = '';
+
+            const handleEvent = (evt: any) => {
+                if (evt.type === 'delta') {
+                    streamedText += evt.text;
+                    patchAssistant({ content: streamedText });
+                } else if (evt.type === 'message') {
+                    patchAssistant({
+                        content: evt.message || streamedText,
+                        artifacts: evt.artifacts ?? null,
+                        suggestedResponses: evt.suggested_responses ?? null,
+                        multiQuestion: evt.multi_question ?? null,
+                    });
+                    setState(prev => ({
+                        ...prev,
+                        phase: evt.phase ?? prev.phase,
+                        goalModel: evt.goal_model ?? prev.goalModel,
+                    }));
+                } else if (evt.type === 'action') {
+                    const _isGen = !!evt.action_taken && _genActions.some((a: string) => String(evt.action_taken).includes(a));
+                    patchAssistant({ actionTaken: evt.action_taken, dataPreview: evt.data_preview });
+                    setState(prev => ({
+                        ...prev,
+                        isComplete: evt.is_complete ?? prev.isComplete,
+                        dataContext: evt.data_context ?? prev.dataContext,
+                        isGenerating: _isGen || prev.isGenerating,
+                        // Optimization kicked off from chat → expose the job so the
+                        // canvas can connect to the live progress stream.
+                        latestJobId: evt.job_id ?? prev.latestJobId,
+                    }));
+                    // Push the job to the SHARED store so the canvas (a separate
+                    // useUnifiedChat instance) and orchestrator can pick it up.
+                    if (evt.action_taken === 'optimization_started' && evt.job_id) {
+                        const store = useSessionStore.getState();
+                        store.setJobId(evt.job_id);
+                        store.setStatus('PROCESSING');
+                    }
+                } else if (evt.type === 'goals') {
+                    // Auto-applied goals (LLM-compiled from the turn-1 widget picks)
+                    if (Array.isArray(evt.goals) && evt.goals.length) {
+                        setState(prev => ({ ...prev, goals: evt.goals }));
+                    }
+                } else if (evt.type === 'insights') {
+                    // Milestone insight artifacts → append to the message so the
+                    // canvas Insights tab (which scans message artifacts) picks them up.
+                    if (Array.isArray(evt.artifacts) && evt.artifacts.length) {
+                        setState(prev => ({
+                            ...prev,
+                            artifactCount: prev.artifactCount + evt.artifacts.length,
+                            messages: prev.messages.map(m =>
+                                m.id === loadingId
+                                    ? { ...m, artifacts: [...(m.artifacts ?? []), ...evt.artifacts] }
+                                    : m),
+                        }));
+                    }
+                } else if (evt.type === 'error') {
+                    patchAssistant({ content: evt.message || 'Something went wrong.' });
+                }
             };
 
-            setState(prev => ({
-                ...prev,
-                isSending: false,
-                phase: data.phase,
-                isComplete: data.is_complete,
-                goalModel: data.goal_model ?? prev.goalModel,
-                dataContext: data.data_context ?? prev.dataContext,
-                gaParams: data.ga_params ?? prev.gaParams,
-                goals: data.goals ? [...prev.goals, ...data.goals] : prev.goals,
-                latestJobId: data.job_id ?? prev.latestJobId,
-                messages: prev.messages.map(m => m.id === loadingId ? assistantMsg : m),
-            }));
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const parts = buffer.split('\n\n');
+                buffer = parts.pop() ?? '';
+                for (const part of parts) {
+                    const line = part.trim();
+                    if (!line.startsWith('data:')) continue;
+                    try { handleEvent(JSON.parse(line.slice(5).trim())); } catch { /* skip */ }
+                }
+            }
+
+            setState(prev => ({ ...prev, isSending: false }));
 
         } catch (err: any) {
             if (err.name === 'AbortError') return;
@@ -358,6 +455,10 @@ export const useUnifiedChat = ({
             gaParams: null,
             error: null,
             latestJobId: null,
+            solverConfig: null,
+            dataPreview: null,
+            artifactCount: 0,
+            isGenerating: false,
         });
     }, []);
 
@@ -367,5 +468,9 @@ export const useUnifiedChat = ({
         downloadDataset,
         getDatasetUrl,
         reset,
+        solverConfig:  state.solverConfig,
+        dataPreview:   state.dataPreview,
+        artifactCount: state.artifactCount,
+        isGenerating:  state.isGenerating,
     };
 };
