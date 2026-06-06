@@ -183,7 +183,7 @@ interface SessionState {
 
 export const useSessionStore = create<SessionState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             sessionId: null,
             jobId: null,
             newChatKey: 0,
@@ -207,7 +207,18 @@ export const useSessionStore = create<SessionState>()(
             setJobId: (id) => set({ jobId: id }),
             setStatus: (status) => set({ sessionStatus: status }),
             setProgress: (progress) => set({ progress }),
-            setQualityMode: (mode) => set({ qualityMode: mode }),
+            setQualityMode: (mode) => {
+                set({ qualityMode: mode });
+                // Persist the human-chosen mode to the session so a chat-triggered
+                // run honours it too (not just the Run button). Non-blocking; the
+                // /run payload still carries the mode regardless.
+                const sid = get().sessionId;
+                if (sid) {
+                    axiosInstance
+                        .post(`/optimizations/mode/${sid}`, { quality_mode: mode })
+                        .catch(() => { /* best-effort; ignore */ });
+                }
+            },
             setLiveMetrics: (m) => set((state) => ({
                 liveMetrics: {
                     currentGeneration: m.currentGeneration ?? state.liveMetrics?.currentGeneration ?? 0,
