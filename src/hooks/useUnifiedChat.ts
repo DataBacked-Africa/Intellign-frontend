@@ -435,7 +435,7 @@ export const useUnifiedChat = ({
             }
             if (stalled) throw new Error('The connection went quiet — please try again.');
 
-            setState(prev => ({ ...prev, isSending: false }));
+            setState(prev => ({ ...prev, isSending: false, isGenerating: false }));
 
         } catch (err: any) {
             if (err.name === 'AbortError') return;

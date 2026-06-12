@@ -194,24 +194,36 @@ export const DatasetPanel: React.FC<DatasetPanelProps> = ({
       try {
         const data: GenerationStatus & { type?: string; ready_to_run?: boolean; goals?: any[] } = JSON.parse(ev.data);
         if (data.type === 'bridge') {
-          // Generation done + goals compiled server-side → light up the Run card.
+          // Generation done + goals compiled server-side → light up the Run card
+          // and clear the generating flag so the UI unblocks.
           import('@/store/useSessionStore').then(({ useSessionStore }) => {
             useSessionStore.getState().setChatShared({
               readyToRun: !!data.ready_to_run,
               goals: data.goals ?? [],
+              isGenerating: false,
             });
           });
+          // Also trigger a preview load — the bridge event means data is ready.
+          setTimeout(fetchPreviews, 500);
           return;
         }
         setGenStatus(data);
         if (data.status === "complete") {
           es.close();
           sseRef.current = null;
+          // Reset the shared isGenerating flag so the canvas header badge clears
+          // and the optimization run is no longer visually blocked.
+          import('@/store/useSessionStore').then(({ useSessionStore }) => {
+            useSessionStore.getState().setChatShared({ isGenerating: false });
+          });
           // Auto-fetch previews once done
           setTimeout(fetchPreviews, 500);
         } else if (data.status === "failed") {
           es.close();
           sseRef.current = null;
+          import('@/store/useSessionStore').then(({ useSessionStore }) => {
+            useSessionStore.getState().setChatShared({ isGenerating: false });
+          });
         }
       } catch {}
     };
@@ -231,6 +243,10 @@ export const DatasetPanel: React.FC<DatasetPanelProps> = ({
           setGenStatus(data);
           if (data.status === "complete" || data.status === "failed") {
             if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+            // Reset shared isGenerating flag on both terminal states.
+            import('@/store/useSessionStore').then(({ useSessionStore }) => {
+              useSessionStore.getState().setChatShared({ isGenerating: false });
+            });
             if (data.status === "complete") setTimeout(fetchPreviews, 500);
           }
         } catch { /* transient — keep polling */ }
