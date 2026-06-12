@@ -100,8 +100,8 @@ export const MultiQuestionChips: React.FC<MultiQuestionChipsProps> = ({
                   className={cn(
                     "px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all",
                     chosen
-                      ? "border-[#6B1D1D] bg-[#6B1D1D]/10 text-[#6B1D1D] font-semibold"
-                      : "border-gray-300 text-gray-600 bg-transparent hover:border-[#6B1D1D]/50 hover:text-[#6B1D1D]/80",
+                      ? "border-[var(--brand-maroon)] bg-[var(--brand-maroon)]/10 text-[var(--brand-maroon)] font-semibold"
+                      : "border-gray-300 text-gray-600 bg-transparent hover:border-[var(--brand-maroon)]/50 hover:text-[var(--brand-maroon)]/80",
                     "disabled:opacity-40 disabled:cursor-not-allowed",
                   )}
                 >
@@ -120,7 +120,7 @@ export const MultiQuestionChips: React.FC<MultiQuestionChipsProps> = ({
                 onChange={(e) => setCustom((c) => ({ ...c, [group.id]: e.target.value }))}
                 placeholder="Add your own…"
                 disabled={disabled}
-                className="flex-1 bg-transparent text-[12px] text-gray-700 placeholder:text-gray-400 focus:outline-none border-b border-dashed border-gray-300 focus:border-[#6B1D1D]/50 py-0.5"
+                className="flex-1 bg-transparent text-[12px] text-gray-700 placeholder:text-gray-400 focus:outline-none border-b border-dashed border-gray-300 focus:border-[var(--brand-maroon)]/50 py-0.5"
               />
             </div>
           )}
@@ -136,7 +136,7 @@ export const MultiQuestionChips: React.FC<MultiQuestionChipsProps> = ({
             className={cn(
               "px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all",
               ready && !disabled
-                ? "bg-[#6B1D1D] text-white hover:bg-[#6B1D1D]/90"
+                ? "bg-[var(--brand-maroon)] text-white hover:bg-[var(--brand-maroon)]/90"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed",
             )}
           >

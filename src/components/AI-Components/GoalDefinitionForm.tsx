@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { useSessionStore, GoalDefinitionPayload } from '@/store/useSessionStore';
+import { useSessionStore } from '@/store/useSessionStore';
+import { GoalDefinitionPayload } from '@/types/models';
 import { useSessionOrchestrator } from '@/hooks/useSessionOrchestrator';
 import { motion } from 'framer-motion';
 import { Plus, Play, X, HelpCircle, ChevronDown, ChevronUp, Trash2, Sparkles } from 'lucide-react';

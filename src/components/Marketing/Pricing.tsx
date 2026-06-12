@@ -33,6 +33,7 @@ const TIERS = [
     sub: "For regulated industries.",
     feats: ["Unlimited usage", "Custom integrations", "Dedicated support and SLAs", "Advanced compliance and constraints"],
     cta: "Talk to sales",
+    href: "mailto:hello@databackedafrica.com",
   },
   {
     name: "API · developers",
@@ -41,6 +42,7 @@ const TIERS = [
     sub: "A revenue layer for AI builders.",
     feats: ["Subscription-based API access", "MCP and function-calling native", "Long-term enterprise contracts"],
     cta: "Read API docs",
+    href: "/docs",
   },
 ];
 
@@ -69,7 +71,11 @@ export default function Pricing() {
                 ))}
               </ul>
               <div className="tier__cta">
-                <Link href="/auth/signup" className="btn btn-primary">{t.cta}</Link>
+                {(t as { href?: string }).href?.startsWith("mailto:") ? (
+                  <a href={(t as { href?: string }).href} className="btn btn-primary">{t.cta}</a>
+                ) : (
+                  <Link href={(t as { href?: string }).href ?? "/auth/signup"} className="btn btn-primary">{t.cta}</Link>
+                )}
               </div>
             </div>
           ))}

@@ -378,7 +378,9 @@ const AgentConversationPanel: React.FC = () => {
                 <div className="flex items-center gap-1.5">
                     <ModelSelector value={model} onChange={setModel} />
                     {messages.length > 0 && (
-                        <button onClick={clearChat} title="Clear conversation"
+                        <button onClick={() => {
+                            if (window.confirm('Clear this conversation? The chat history for this session will be deleted and cannot be recovered.')) clearChat();
+                        }} title="Clear conversation"
                             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                         </button>

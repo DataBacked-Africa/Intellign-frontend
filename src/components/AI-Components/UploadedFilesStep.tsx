@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useSessionStore, FileMetadata, DatasetMetadata } from '@/store/useSessionStore';
+import { useSessionStore } from '@/store/useSessionStore';
+import { FileMetadata, DatasetMetadata } from '@/types/models';
 import { Database, FileJson, CheckCircle2, Clock, ChevronDown, ChevronUp, Hash, Type, ToggleLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';

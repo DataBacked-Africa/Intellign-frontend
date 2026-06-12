@@ -2,116 +2,15 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import axiosInstance from '@/lib/axiosConfig';
 
-// ── Shared types ──────────────────────────────────────────────────────────────
-
-export interface LogicConfig {
-    logic_type: string;
-    aggregation_method?: string | null;
-    comparison_column?: string | null;
-    threshold_value?: number | null;
-    numeric_operator?: string;
-    mapping_rules?: Record<string, string[]> | null;
-    exact_match?: boolean;
-    max_distance_value?: number | null;
-    distance_unit?: string;
-    minimize_distance?: boolean;
-    set_operation?: string | null;
-    min_intersection_size?: number;
-    time_unit?: string;
-    buffer_time?: number;
-    scoring_rules?: Record<string, number> | null;
-    value_splitter?: string | null;
-}
-
-export interface GoalDefinitionPayload {
-    [goalId: string]: {
-        id: string;
-        description: string;
-        resource_columns: string[];
-        target_columns: string[];
-        logic_config: LogicConfig;
-        weight: number;
-        award_type: 'Reward' | 'Penalty';
-        logic_primitive: string | null;
-    };
-}
-
-export interface ColumnMetadata {
-    column_name: string;
-    data_type: string;
-    is_nullable: boolean;
-    unique_values_count?: number | null;
-    sample_values: any[];
-    min_value?: number | null;
-    max_value?: number | null;
-}
-
-export interface DatasetMetadata {
-    count: number;
-    columns: string[];
-    preview?: any[];
-    type?: string;
-}
-
-// Legacy export kept for components that import it
-export interface FileMetadata {
-    url?: string;
-    publicId?: string;
-    originalName?: string;
-    format?: string;
-    size?: number;
-}
-
-// Matches the shape returned by GET /results/{job_id}
-export interface OptimizationResult {
-    job_id?: string;
-    session_id?: string;
-    status?: string;
-    optimization_status?: string;
-    metrics?: {
-        total_resources?: number;
-        total_targets?: number;
-        assigned_targets?: number;
-        unassigned_targets?: number;
-        average_distance?: number;
-        max_distance?: number;
-        min_distance?: number;
-        average_targets_per_resource?: number;
-        workload_std_dev?: number;
-        total_fitness_score?: number;
-        best_fitness?: number;
-        assigned_count?: number;
-        generations_run?: number;
-        population_size?: number;
-        elapsed_time_seconds?: number;
-        average_final_fitness?: number;
-    };
-    status_counts?: {
-        pending: number;
-        approved: number;
-        rejected: number;
-        modified: number;
-    };
-    assignments?: any[];
-    pagination?: {
-        page: number;
-        page_size: number;
-        total_items: number;
-        total_pages: number;
-    };
-    fitness_history?: number[];
-    average_history?: number[];
-    created_at?: string;
-    // Legacy ingestion shape (kept for backward compat)
-    ingestion?: {
-        status: string;
-        session_id: string;
-        resources_metadata?: DatasetMetadata;
-        targets_metadata?: DatasetMetadata;
-    };
-    resources_metadata?: DatasetMetadata;
-    targets_metadata?: DatasetMetadata;
-}
+import {
+    LogicConfig,
+    GoalDefinitionPayload,
+    ColumnMetadata,
+    DatasetMetadata,
+    FileMetadata,
+    OptimizationResult,
+    ChatShared
+} from '@/types/models';
 
 interface SessionState {
     // ── Core identifiers ──────────────────────────────────────────────────────
@@ -147,6 +46,9 @@ interface SessionState {
     // ── Goal definitions (manual/form-based, kept for GoalDefinitionForm) ─────
     goals: GoalDefinitionPayload;
 
+    // ── Shared chat state (mirrored by useUnifiedChat; read by canvas/shell) ──
+    chat: ChatShared;
+
     // ── Legacy file references (kept for UI compatibility) ────────────────────
     sourceFile: any | null;
     schemaFile: any | null;
@@ -164,6 +66,7 @@ interface SessionState {
     setResult: (data: OptimizationResult) => void;
     setError: (error: string | null) => void;
     setGoals: (goals: GoalDefinitionPayload) => void;
+    setChatShared: (partial: Partial<ChatShared>) => void;
     addGoal: (goalId: string, goal: GoalDefinitionPayload[string]) => void;
     removeGoal: (goalId: string) => void;
     updateGoal: (goalId: string, goal: Partial<GoalDefinitionPayload[string]>) => void;
@@ -198,6 +101,11 @@ export const useSessionStore = create<SessionState>()(
             resourcesMetadata: null,
             targetsMetadata: null,
             goals: {},
+            chat: {
+                messages: [], dataContext: null, isGenerating: false,
+                solverConfig: null, latestJobId: null, artifactCount: 0,
+                phaseUiHint: null, goals: [], readyToRun: false,
+            },
             sourceFile: null,
             schemaFile: null,
             schemaPreview: null,
@@ -246,6 +154,7 @@ export const useSessionStore = create<SessionState>()(
             setError: (error) => set({ error }),
 
             setGoals: (goals) => set({ goals }),
+            setChatShared: (partial) => set((state) => ({ chat: { ...state.chat, ...partial } })),
             addGoal: (goalId, goal) =>
                 set((state) => ({ goals: { ...state.goals, [goalId]: goal } })),
             removeGoal: (goalId) =>
@@ -289,6 +198,11 @@ export const useSessionStore = create<SessionState>()(
                     resourcesMetadata: null,
                     targetsMetadata: null,
                     goals: {},
+                    chat: {
+                        messages: [], dataContext: null, isGenerating: false,
+                        solverConfig: null, latestJobId: null, artifactCount: 0,
+                        phaseUiHint: null, goals: [], readyToRun: false,
+                    },
                     sourceFile: null,
                     schemaFile: null,
                     schemaPreview: null,

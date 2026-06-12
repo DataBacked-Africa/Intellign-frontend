@@ -2,7 +2,7 @@ const STEPS = [
   { n: "01", t: "Describe",  b: "Plain English. Tell Intellign the goal, the constraints, and what counts as a good solve." },
   { n: "02", t: "Ingest",    b: "Drop in your CSV, point at an API, or stream from your system. Columns are inferred and explained." },
   { n: "03", t: "Translate", b: "Goals + constraints get formalised into a structured optimization problem.", emph: true },
-  { n: "04", t: "Solve",     b: "The genetic algorithm core runs for as long as it needs — usually seconds, never more than 60." },
+  { n: "04", t: "Solve",     b: "The engine picks the right solver for the problem and runs it — typical solves finish in seconds." },
   { n: "05", t: "Explain",   b: "Every assignment ships with a human-readable rationale. Auditable, defensible, exportable." },
 ];
 
@@ -28,24 +28,15 @@ export default function HowItWorks() {
             </div>
           ))}
         </div>
-        <div style={{
-          marginTop: 24, padding: "16px 18px",
-          background: "#fff", border: "1px solid var(--brand-bone-deep)", borderRadius: 12,
-          display: "flex", alignItems: "center", gap: 14, fontSize: 14, color: "var(--fg-secondary)",
-          flexWrap: "wrap", width: "100%", overflow: "hidden",
-        }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--brand-maroon)" }}>
+        <div className="mt-6 px-[18px] py-4 bg-white border border-[var(--brand-bone-deep)] rounded-xl flex items-center gap-[14px] text-sm text-[var(--fg-secondary)] flex-wrap w-full overflow-hidden">
+          <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-[var(--brand-maroon)]">
             Example
           </span>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 18, color: "var(--brand-maroon-deep)", fontStyle: "italic", flex: 1, minWidth: 0 }}>
+          <span className="font-display text-[18px] text-[var(--brand-maroon-deep)] italic flex-1 min-w-0">
             &ldquo;Build next week&apos;s roster for 24 nurses across 3 wards. Maximise fairness, cap overtime at 8h, honour all leave requests.&rdquo;
           </span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 18, color: "var(--brand-maroon)" }}>→</span>
-          <span style={{
-            fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-primary)",
-            background: "var(--brand-bone)", padding: "10px 14px", borderRadius: 8,
-            borderLeft: "3px solid var(--brand-maroon)",
-          }}>
+          <span className="font-mono text-[18px] text-[var(--brand-maroon)]">→</span>
+          <span className="font-mono text-[13px] text-[var(--fg-primary)] bg-[var(--brand-bone)] px-[14px] py-[10px] rounded-lg border-l-[3px] border-[var(--brand-maroon)]">
             structured roster + rationale,<br />returned in 4.2s.
           </span>
         </div>

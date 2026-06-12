@@ -15,6 +15,7 @@ import {
     PanelLeftClose, Minimize2, Plus, Trash2, Save, Cpu, Settings,
     TrendingUp, Play, BarChart2, ChevronLeft, ChevronUp,
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import GoalDetailPanel from '@/components/AI-Components/GoalDetailPanel';
 
@@ -51,9 +52,9 @@ interface MockGoal {
 }
 
 const INITIAL_GOALS: MockGoal[] = [
-    { id: 'g1', description: 'Prioritise high-need, underserved facilities.', award_type: 'Reward', weight: 45, logic_type: 'weighted_scoring', resource_columns: [], target_columns: ['need_score'] },
-    { id: 'g2', description: 'Match nurse qualifications to facility requirements.', award_type: 'Reward', weight: 35, logic_type: 'categorical_match', resource_columns: ['qualifications'], target_columns: ['required_skills'] },
-    { id: 'g3', description: 'Penalise long deployment distances.', award_type: 'Penalty', weight: 20, logic_type: 'spatial_proximity', resource_columns: ['location_x', 'location_y'], target_columns: ['location_x', 'location_y'] },
+    { id: 'g1', description: 'Match medical specialization to facility needs.', award_type: 'Reward', weight: 45, logic_type: 'categorical_match', resource_columns: ['specialization'], target_columns: ['centre_specialization'] },
+    { id: 'g2', description: 'Prioritise facilities with critical disease burden.', award_type: 'Reward', weight: 35, logic_type: 'weighted_scoring', resource_columns: [], target_columns: ['prevalent_diseases'] },
+    { id: 'g3', description: 'Respect facility personnel capacity.', award_type: 'Penalty', weight: 20, logic_type: 'numeric_threshold', resource_columns: [], target_columns: ['personnel_capacity'] },
 ];
 
 const MOCK_ASSIGNMENTS = [
@@ -67,18 +68,18 @@ const MOCK_ASSIGNMENTS = [
 ];
 
 const RESOURCES = [
-    { id: 'HW-0042', name: 'Adaeze N.',   qualifications: 'RN, ICU',         state: 'Lagos',  availability: 'Mon–Sat' },
-    { id: 'HW-0118', name: 'Yusuf I.',    qualifications: 'RN, Pediatrics',  state: 'Kano',   availability: 'Mon–Fri' },
-    { id: 'HW-0067', name: 'Chiamaka O.', qualifications: 'Midwife',         state: 'Enugu',  availability: 'Mon–Sun' },
-    { id: 'HW-0089', name: 'Tunde A.',    qualifications: 'Community CHEW',  state: 'FCT',    availability: 'Mon–Fri' },
-    { id: 'HW-0014', name: 'Folake B.',   qualifications: 'RN, Cardio',      state: 'PH',     availability: 'Mon–Sat' },
+    { id: 'HW-0042', name: 'Adaeze N.',   specialization: 'ICU / Emergency', qualification: 'RN (BSc)',  deployed: 'Lagos' },
+    { id: 'HW-0118', name: 'Yusuf I.',    specialization: 'Pediatrics',      qualification: 'RN',        deployed: 'Kano' },
+    { id: 'HW-0067', name: 'Chiamaka O.', specialization: 'Maternal health', qualification: 'Midwife',   deployed: 'Enugu' },
+    { id: 'HW-0089', name: 'Tunde A.',    specialization: 'Community health',qualification: 'CHEW',      deployed: 'FCT' },
+    { id: 'HW-0014', name: 'Folake B.',   specialization: 'Cardiology',      qualification: 'RN (MSc)',  deployed: 'Rivers' },
 ];
 const TARGETS = [
-    { id: 'FAC-LAG-12', name: 'Lagos PHC, Ajeromi',  need: 'ICU + emergency',      state: 'Lagos',  capacity: 4 },
-    { id: 'FAC-KAN-03', name: 'Kano Cottage Hospital',need: 'Pediatric + maternal', state: 'Kano',   capacity: 6 },
-    { id: 'FAC-ENU-08', name: 'Enugu MCH',            need: 'Midwife + outreach',   state: 'Enugu',  capacity: 3 },
-    { id: 'FAC-ABU-21', name: 'FCT Field clinic',     need: 'CHEW',                 state: 'FCT',    capacity: 8 },
-    { id: 'FAC-PHC-05', name: 'PH Health Centre',     need: 'Cardio + general',     state: 'Rivers', capacity: 5 },
+    { id: 'FAC-LAG-12', name: 'Ajeromi PHC, Lagos',    need: 'ICU + emergency',      diseases: 'Malaria, hypertension', capacity: 4 },
+    { id: 'FAC-KAN-03', name: 'Kano Cottage Hospital', need: 'Pediatric + maternal', diseases: 'Measles, malnutrition', capacity: 6 },
+    { id: 'FAC-ENU-08', name: 'Enugu MCH',             need: 'Maternal health',      diseases: 'Maternal anaemia',      capacity: 3 },
+    { id: 'FAC-ABU-21', name: 'FCT Field Clinic',      need: 'Community health',     diseases: 'HIV/AIDS, TB',          capacity: 8 },
+    { id: 'FAC-PHC-05', name: 'PH Health Centre',      need: 'Cardio + general',     diseases: 'Hypertension',          capacity: 5 },
 ];
 
 const FITNESS_HISTORY = Array.from({ length: 60 }, (_, i) =>
@@ -148,20 +149,20 @@ const FitnessChart = () => {
 // ── Canvas tabs ────────────────────────────────────────────────────────────────
 
 const TIMELINE = [
-    { stage: 'ingest',    label: 'Data ingested',             sub: '150 resources · 20 targets' },
-    { stage: 'translate', label: 'Problem translated',        sub: 'Goals + constraints formalised' },
-    { stage: 'init',      label: 'Population seeded',         sub: '256 candidate assignments' },
-    { stage: 'solve',     label: 'Genetic algorithm running', sub: 'Mutating, crossing over, evaluating' },
-    { stage: 'converge',  label: 'Convergence detected',      sub: 'Δ-fitness < 1e-4 for 50 generations' },
+    { stage: 'ingest',    label: 'Data validated',            sub: '50 graduates · 20 facilities' },
+    { stage: 'translate', label: 'Goals compiled',            sub: '3 goals → executable fitness function' },
+    { stage: 'init',      label: 'Solver selected',           sub: 'Assignment problem → genetic algorithm' },
+    { stage: 'solve',     label: 'Solver running',            sub: 'Evaluating candidate assignments' },
+    { stage: 'converge',  label: 'Convergence detected',      sub: 'Fitness plateau reached' },
     { stage: 'explain',   label: 'Rationale generated',       sub: 'Per-assignment notes ready' },
 ];
 
 const MonitorTab = ({ runStage }: { runStage: string }) => {
     const stageIdx = ['idle','ingest','translate','init','solve','converge','explain','done'].indexOf(runStage);
     const stats = [
-        { lbl: 'Generation', val: runStage === 'done' ? '1,847' : '0' },
+        { lbl: 'Generation', val: runStage === 'done' ? '42' : '0' },
         { lbl: 'Best fitness', val: runStage === 'done' ? '0.987' : '—' },
-        { lbl: 'Elapsed', val: runStage === 'done' ? '4.2s' : '—' },
+        { lbl: 'Elapsed', val: runStage === 'done' ? '6.2s' : '—' },
     ];
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -200,10 +201,10 @@ const ResultsTab = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {[
-                { lbl: 'Resources assigned', val: '118', sub: 'of 150', hi: true },
+                { lbl: 'Resources assigned', val: '50', sub: 'of 50', hi: true },
                 { lbl: 'Target pool', val: '20' },
                 { lbl: 'Best fitness', val: '0.987' },
-                { lbl: 'Generations', val: '1,847' },
+                { lbl: 'Generations', val: '42' },
             ].map(m => (
                 <div key={m.lbl} style={{ background: '#fff', border: `1px solid ${m.hi ? 'rgba(92,20,39,0.22)' : T.neutral200}`, borderRadius: 10, padding: '14px 16px' }}>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: T.neutral500, marginBottom: 4 }}>{m.lbl}</div>
@@ -218,8 +219,8 @@ const ResultsTab = () => (
         <div style={{ background: '#fff', border: `1px solid ${T.neutral200}`, borderRadius: 10, padding: 16 }}>
             <h3 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: T.ink }}>Approval status</h3>
             {[
-                { lbl: 'Approved', n: 92, c: '#10B981' }, { lbl: 'Pending', n: 18, c: '#F59E0B' },
-                { lbl: 'Rejected', n: 4, c: '#EF4444' }, { lbl: 'Modified', n: 4, c: '#3B82F6' },
+                { lbl: 'Approved', n: 41, c: '#10B981' }, { lbl: 'Pending', n: 6, c: '#F59E0B' },
+                { lbl: 'Rejected', n: 1, c: '#EF4444' }, { lbl: 'Modified', n: 2, c: '#3B82F6' },
             ].map(item => (
                 <div key={item.lbl} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: 13 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: T.neutral600 }}>
@@ -230,7 +231,7 @@ const ResultsTab = () => (
                 </div>
             ))}
             <div style={{ height: 6, borderRadius: 999, overflow: 'hidden', display: 'flex', marginTop: 10, background: T.neutral100 }}>
-                {[78, 15.3, 3.4, 3.4].map((pct, i) => (
+                {[82, 12, 2, 4].map((pct, i) => (
                     <div key={i} style={{ height: '100%', width: `${pct}%`, background: ['#10B981','#F59E0B','#EF4444','#3B82F6'][i] }} />
                 ))}
             </div>
@@ -528,7 +529,7 @@ const ConfigTab = () => {
 const DatasetsTab = () => {
     const [active, setActive] = useState<'resources' | 'targets'>('resources');
     const rows = active === 'resources' ? RESOURCES : TARGETS;
-    const cols = active === 'resources' ? ['ID', 'Name', 'Qualifications', 'State', 'Availability'] : ['ID', 'Name', 'Need profile', 'State', 'Capacity'];
+    const cols = active === 'resources' ? ['ID', 'Name', 'Specialization', 'Qualification', 'Deployed state'] : ['ID', 'Facility', 'Specialization need', 'Prevalent diseases', 'Capacity'];
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -536,7 +537,7 @@ const DatasetsTab = () => {
                     {(['resources', 'targets'] as const).map(t => (
                         <button key={t} onClick={() => setActive(t)}
                             style={{ padding: '4px 12px', borderRadius: 999, border: 0, fontSize: 11, fontWeight: 500, cursor: 'pointer', background: active === t ? T.maroon : 'transparent', color: active === t ? T.bone : T.neutral600 }}>
-                            {t === 'resources' ? 'Resources · 150' : 'Targets · 20'}
+                            {t === 'resources' ? 'Graduates · 50' : 'Facilities · 20'}
                         </button>
                     ))}
                 </div>
@@ -564,7 +565,7 @@ const DatasetsTab = () => {
                     </tbody>
                 </table>
                 <div style={{ padding: '8px 12px', fontSize: 11, color: T.neutral400, fontFamily: 'var(--font-mono)', borderTop: `1px solid ${T.neutral100}` }}>
-                    Showing {rows.length} of {active === 'resources' ? 150 : 20} · source: {active === 'resources' ? 'uploaded + synthetic columns' : 'generated'}
+                    Showing {rows.length} of {active === 'resources' ? 50 : 20} · source: generated sample (NYSC healthcare deployment)
                 </div>
             </div>
         </div>
@@ -715,21 +716,15 @@ const renderMd = (text: string): React.ReactNode[] => {
 };
 
 const MOCK_MESSAGES_LIST = [
-    { id: '1', role: 'user' as const, content: 'I need to assign 150 nurses to 20 clinics based on qualifications, availability, and minimize travel distance.', ts: '09:41' },
-    { id: '2', role: 'assistant' as const, content: "Got it. Before we look at data, a few quick questions:\n\n- Roughly how many nurses and clinics are involved?\n- What are the main constraints — availability windows, skill requirements?\n- Do you have existing data to upload, or should I generate a sample dataset?", ts: '09:41', action: null },
-    { id: '3', role: 'user' as const, content: '150 nurses, 20 clinics. Key constraints are availability and specialization match. I have a CSV.', ts: '09:42' },
-    { id: '4', role: 'assistant' as const, content: "Perfect — please share your file and I'll analyse it.\n\nI've set up the goal model:\n- **Problem type:** Staff assignment\n- **Entities:** Nurses → Clinics\n- **Objectives:** Minimize overtime · Match specializations\n- **Scale:** Medium", ts: '09:42', action: 'await_data_upload' },
-    { id: '5', role: 'user' as const, content: 'Here is my nurse data.', ts: '09:43', files: [{ name: 'nurses.csv', size: '48 KB' }] },
-    { id: '6', role: 'assistant' as const, content: "I've reviewed your nurse data — **150 records**, looks clean.\n\nBased on your goal I also need clinic information, and I noticed gaps:\n\n- Clinic table (id, name, capacity, required_skills)\n- Nurse columns: hourly_cost, location_x, location_y\n\nWant me to generate realistic clinic data and fill the missing nurse columns?", ts: '09:43', action: 'ingest_files' },
-    { id: '7', role: 'user' as const, content: 'Generate it all.', ts: '09:44' },
-    { id: '8', role: 'assistant' as const, content: "Generated **20 clinic profiles** and filled the nurse gaps — here's a preview.\n\n| Clinic ID | Name | Capacity | Required skills |\n|---|---|---|---|\n| C001 | Port Clinic | 8 | General, Triage |\n| C002 | Heart Centre | 12 | Cardio, General |\n| C003 | North Hub | 6 | Surgery, General |\n\nConfirm to finalize.", ts: '09:44', action: 'generate_missing_tables' },
-    { id: '9', role: 'user' as const, content: 'Looks good, finalize.', ts: '09:45' },
-    { id: '10', role: 'assistant' as const, content: "All set.\n- **Resources:** 150 nurses (your data + synthetic columns)\n- **Targets:** 20 clinics (generated)\n\nNow tell me your optimization goals in plain English.", ts: '09:45', action: 'finalize' },
-    { id: '11', role: 'user' as const, content: 'Prioritize underserved areas, match qualifications to clinic needs, and minimize travel distance.', ts: '09:46' },
-    { id: '12', role: 'assistant' as const, content: "Three goals captured — weights distributed to reflect your priorities. You can adjust them in the **Goals** tab of the canvas.", ts: '09:46', action: 'goal_definition_turn', goals: true },
+    { id: '1', role: 'user' as const, content: 'I need to deploy NYSC healthcare graduates to primary health facilities across Nigeria. Match their medical specializations to facility needs and prioritise facilities with critical disease burden.', ts: '09:41' },
+    { id: '2', role: 'assistant' as const, content: "Got it — here's what I understand:\n\n- **Graduates** → **Primary health facilities**\n- **Objectives:** Match specializations to facility needs · Prioritise critical disease burden\n\nPick a data source and confirm the goals you care about:", ts: '09:41', action: null, chips: ['Generate a sample for me', "I'll upload my data", 'Match specializations', 'Prioritise disease burden'] },
+    { id: '3', role: 'user' as const, content: 'Generate a sample for me · Match specializations · Prioritise disease burden', ts: '09:42' },
+    { id: '4', role: 'assistant' as const, content: "Generating a realistic sample now — **50 healthcare graduates** and **20 primary facilities**.\n\n| ID | Name | Specialization | Deployed |\n|---|---|---|---|\n| HW-0042 | Adaeze N. | ICU / Emergency | Lagos |\n| HW-0118 | Yusuf I. | Pediatrics | Kano |\n| HW-0067 | Chiamaka O. | Maternal health | Enugu |\n\nI've compiled your goals (you can tune weights in the **Goals** tab):\n\n- Match specialization → facility need · **45%**\n- Prioritise critical disease burden · **35%**\n- Respect personnel capacity · **20%**\n\n**Shall I run the optimization now?**", ts: '09:42', action: 'generate_sample_dataset', goals: true },
+    { id: '5', role: 'user' as const, content: 'Yes, run it.', ts: '09:43' },
+    { id: '6', role: 'assistant' as const, content: "Optimization dispatched — the canvas shows live progress. Every assignment will come back with a per-decision rationale you can review, approve, or modify.", ts: '09:43', action: 'optimization_started', run: true },
 ];
 
-const MessageBubble = ({ msg, onOpenCanvas }: { msg: any; onOpenCanvas: (tab: CanvasTab) => void }) => {
+const MessageBubble = ({ msg, onOpenCanvas, onStartRun, runStage }: { msg: any; onOpenCanvas: (tab: CanvasTab) => void; onStartRun: () => void; runStage: string }) => {
     const isUser = msg.role === 'user';
     return (
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flexDirection: isUser ? 'row-reverse' : 'row' }}>
@@ -742,7 +737,7 @@ const MessageBubble = ({ msg, onOpenCanvas }: { msg: any; onOpenCanvas: (tab: Ca
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                             {msg.files.map((f: any, i: number) => (
                                 <div key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: '#fff', border: `1px solid ${T.neutral200}`, borderRadius: 8, fontSize: 11, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                                    <span style={{ color: T.maroon }}>📄</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.maroon} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                     <span style={{ fontWeight: 500 }}>{f.name}</span>
                                     <span style={{ color: T.neutral400 }}>{f.size}</span>
                                 </div>
@@ -755,10 +750,25 @@ const MessageBubble = ({ msg, onOpenCanvas }: { msg: any; onOpenCanvas: (tab: Ca
                             <CheckCircle2 size={10} /> {msg.action}
                         </div>
                     )}
+                    {msg.chips && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                            {msg.chips.map((c: string) => (
+                                <span key={c} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 999, border: `1px solid rgba(92,20,39,0.2)`, background: 'rgba(92,20,39,0.05)', color: T.maroonDeep, fontWeight: 500 }}>
+                                    {c}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                     {msg.goals && (
                         <button onClick={() => onOpenCanvas('goals')}
                             style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8, fontSize: 12, color: T.maroon, background: 'rgba(92,20,39,0.06)', border: `1px solid rgba(92,20,39,0.15)`, borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
                             <Target size={12} /> Open Goals tab in canvas →
+                        </button>
+                    )}
+                    {msg.run && runStage === 'idle' && (
+                        <button onClick={onStartRun}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 13, fontWeight: 600, color: T.bone, background: T.maroon, border: 0, borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            <Play size={13} fill={T.bone} /> Watch the solve live
                         </button>
                     )}
                 </div>
@@ -819,7 +829,16 @@ export default function DemoPage() {
     const isDone = runStage === 'done';
 
     return (
-        <div style={{ display: 'flex', height: '100vh', width: '100%', background: T.bone, overflow: 'hidden', fontFamily: 'var(--font-sans)' }}>
+        <div data-theme="light" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', overflow: 'hidden' }}>
+            {/* Guided-demo banner */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '7px 16px', background: T.maroonDeep, color: T.bone, fontSize: 12.5, flexShrink: 0, flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.7 }}>Guided demo</span>
+                <span>NYSC healthcare deployment — 50 graduates → 20 facilities, sample data, fully interactive.</span>
+                <Link href="/workspace" style={{ color: T.bone, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                    Launch the app to solve your own →
+                </Link>
+            </div>
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, width: '100%', background: T.bone, overflow: 'hidden', fontFamily: 'var(--font-sans)' }}>
             {/* Sidebar */}
             <aside style={{ width: 260, background: T.bone, borderRight: `1px solid ${T.boneDeep}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 <div style={{ padding: '14px 12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -894,12 +913,12 @@ export default function DemoPage() {
                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 12px', padding: '9px 14px', background: T.boneDeep, border: `1px solid ${T.neutral200}`, borderRadius: 14, fontSize: 12 }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.maroon, paddingRight: 12, borderRight: `1px solid rgba(0,0,0,0.08)` }}>Active problem</span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.neutral600 }}>
-                            <b style={{ color: T.ink, fontFamily: 'var(--font-sans)' }}>Nurse → Clinic Assignment</b>
+                            <b style={{ color: T.ink, fontFamily: 'var(--font-sans)' }}>NYSC Healthcare Deployment</b>
                         </span>
                         <span style={{ width: 1, height: 13, background: 'rgba(0,0,0,0.08)' }} />
                         <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.neutral600 }}>
                             <Database size={12} style={{ color: T.neutral500 }} />
-                            <b style={{ color: T.ink }}>150</b> resources · <b style={{ color: T.ink }}>20</b> targets
+                            <b style={{ color: T.ink }}>50</b> graduates · <b style={{ color: T.ink }}>20</b> facilities
                         </span>
                         <span style={{ width: 1, height: 13, background: 'rgba(0,0,0,0.08)' }} />
                         <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.neutral600 }}>
@@ -944,7 +963,7 @@ export default function DemoPage() {
 
                 {/* Messages */}
                 <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 24px 16px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-                    {MOCK_MESSAGES_LIST.map(msg => <MessageBubble key={msg.id} msg={msg} onOpenCanvas={openCanvas} />)}
+                    {MOCK_MESSAGES_LIST.map(msg => <MessageBubble key={msg.id} msg={msg} onOpenCanvas={openCanvas} onStartRun={startRun} runStage={runStage} />)}
                 </div>
 
                 {/* Composer */}
@@ -964,7 +983,7 @@ export default function DemoPage() {
                     <button onClick={() => setCanvasMinimized(false)}
                         style={{ position: 'absolute', right: 22, bottom: 80, display: 'flex', alignItems: 'center', gap: 8, background: T.maroon, color: T.bone, border: 0, borderRadius: 999, padding: '9px 16px', boxShadow: '0 6px 18px rgba(92,20,39,0.28)', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit' }}>
                         <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#FFD08A', animation: 'pulse 1.2s ease-in-out infinite', display: 'inline-block' }} />
-                        {isDone ? 'Optimization complete · 118 / 150 assigned' : 'Solving…'}
+                        {isDone ? 'Optimization complete · 50 / 50 assigned' : 'Solving…'}
                         <TrendingUp size={14} />
                     </button>
                 )}
@@ -989,6 +1008,7 @@ export default function DemoPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+        </div>
         </div>
     );
 }

@@ -44,12 +44,11 @@ export default function UseCases() {
           {CASES.map((c) => (
             <div
               key={c.eb}
-              className="use"
-              style={c.emph ? { background: "var(--brand-maroon-deep)", color: "var(--brand-bone)" } : undefined}
+              className={`use ${c.emph ? "bg-[var(--brand-maroon-deep)] text-[var(--brand-bone)]" : ""}`}
             >
-              <div className="use__eb" style={c.emph ? { color: "var(--brand-bone)", opacity: 0.7 } : undefined}>{c.eb}</div>
-              <div className="use__t" style={c.emph ? { color: "var(--brand-bone)" } : undefined}>{c.t}</div>
-              <div className="use__b" style={c.emph ? { color: "rgba(244,239,231,0.75)" } : undefined}>{c.b}</div>
+              <div className={`use__eb ${c.emph ? "text-[var(--brand-bone)] opacity-70" : ""}`}>{c.eb}</div>
+              <div className={`use__t ${c.emph ? "text-[var(--brand-bone)]" : ""}`}>{c.t}</div>
+              <div className={`use__b ${c.emph ? "text-[var(--brand-bone)] opacity-75" : ""}`}>{c.b}</div>
             </div>
           ))}
         </div>

@@ -4,7 +4,8 @@
    Intellign Design System — Tokens + Global Styles
    ============================================================ */
 
-:root {
+:root, [data-theme="light"] {
+  color-scheme: light;          /* required for light-dark() to resolve */
   /* --- Brand Core --- */
   --brand-maroon:        #5C1427;
   --brand-maroon-deep:   #3E0E1A;
@@ -119,7 +120,103 @@
   --dur-fast:    140ms;
   --dur-base:    220ms;
   --dur-slow:    400ms;
+
+  --bg-header: rgba(244, 239, 231, 0.85);   /* translucent app header */
+
+  /* --- UI gray ramp (Tailwind gray-* utilities resolve here) --- */
+  --ui-gray-50:  #F9FAFB;
+  --ui-gray-100: #F3F4F6;
+  --ui-gray-200: #E5E7EB;
+  --ui-gray-300: #D1D5DB;
+  --ui-gray-400: #9CA3AF;
+  --ui-gray-500: #6B7280;
+  --ui-gray-600: #4B5563;
+  --ui-gray-700: #374151;
+  --ui-gray-800: #1F2937;
+  --ui-gray-900: #111827;
 }
+
+/* ============================================================
+   Dark theme — primitive remap (semantic tokens cascade through var()).
+   Warm dark, NOT color inversion: surfaces stay warm-dark, text warm-light,
+   maroon brightened for contrast on dark surfaces (WCAG-checked pairs).
+   ============================================================ */
+[data-theme="dark"] {
+  --brand-maroon:        #A14059;   /* button/badge fills — white text 4.6:1 */
+  --brand-maroon-deep:   #E3B9C4;   /* display headings on dark: 10:1 */
+  --brand-maroon-rich:   #B25068;
+  --brand-maroon-bright: #C2607A;
+  --brand-maroon-50:     #38222A;   /* tinted backgrounds */
+  --brand-maroon-100:    #462A34;
+  --brand-maroon-200:    #8A5364;
+  --brand-bone:          #121010;   /* page — deepened for solid surface separation */
+  --brand-bone-deep:     #282321;
+  --brand-ink:           #FFFFFF;   /* primary text, brightened from F2EEE6 */
+  --brand-gradient: linear-gradient(135deg, #A14059 0%, #B25068 50%, #C2607A 100%);
+
+  --product-bg:      #1B1816;
+  --product-panel:   #252220;
+  --product-divider: #3B3530;
+
+  --neutral-0:   #211D1A;          /* raised surfaces — lifted off the page */
+  --neutral-50:  #262220;
+  --neutral-100: #2C2724;
+  --neutral-200: #3D3731;
+  --neutral-300: #4E4740;
+  --neutral-400: #9E9890;
+  --neutral-500: #BAB4AB;
+  --neutral-600: #D9D3CA;
+  --neutral-700: #EBE5DB;
+  --neutral-800: #F8F3EA;
+  --neutral-900: #FFFFFF;
+
+  --accent-amber-bg: #3A2F17;
+  --accent-teal-bg:  #16302E;
+  --accent-rust-bg:  #3A2118;
+  --accent-error-bg: #3C1A21;
+
+  --shadow-1: 0 1px 0 rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-2: 0 1px 0 rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-3: 0 2px 0 rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.6);
+  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.04);
+  --shadow-focus: 0 0 0 3px rgba(194, 96, 122, 0.35);
+
+  --ui-gray-50:  #262220;
+  --ui-gray-100: #2C2724;
+  --ui-gray-200: #3D3731;
+  --ui-gray-300: #4E4740;
+  --ui-gray-400: #9E9890;
+  --ui-gray-500: #BAB4AB;
+  --ui-gray-600: #D9D3CA;
+  --ui-gray-700: #EBE5DB;
+  --ui-gray-800: #F8F3EA;
+  --ui-gray-900: #FFFFFF;
+
+  --bg-header: rgba(18, 16, 16, 0.92);  /* more opaque so content never bleeds through */
+
+  color-scheme: dark;
+}
+
+/* bg-white is a surface in app components — flip it in dark; nested
+   light wrappers (marketing inside a dark app session) restore it. */
+
+/* ── Theme switching ── brief cross-fade applied by useTheme() ─────────────── */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: background-color 0.25s ease, color 0.25s ease,
+              border-color 0.25s ease, fill 0.25s ease, stroke 0.25s ease !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-switching,
+  .theme-switching *,
+  .theme-switching *::before,
+  .theme-switching *::after { transition: none !important; }
+}
+
+[data-theme="dark"] .bg-white { background-color: var(--neutral-0); }
+[data-theme="dark"] [data-theme="light"] .bg-white { background-color: #FFFFFF; }
 
 /* Tailwind theme overrides */
 @theme inline {
@@ -127,6 +224,17 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
   --color-background: var(--brand-bone);
   --color-foreground: var(--fg-primary);
+  /* gray-* utilities become theme-aware (light/dark ramps above) */
+  --color-gray-50:  var(--ui-gray-50);
+  --color-gray-100: var(--ui-gray-100);
+  --color-gray-200: var(--ui-gray-200);
+  --color-gray-300: var(--ui-gray-300);
+  --color-gray-400: var(--ui-gray-400);
+  --color-gray-500: var(--ui-gray-500);
+  --color-gray-600: var(--ui-gray-600);
+  --color-gray-700: var(--ui-gray-700);
+  --color-gray-800: var(--ui-gray-800);
+  --color-gray-900: var(--ui-gray-900);
 }
 
 /* ============================================================
@@ -356,7 +464,7 @@
 .showcase { padding: 88px 0 96px; border-top: 1px solid var(--brand-bone-deep); }
 .showcase__tabs {
   display: inline-flex; gap: 4px; padding: 4px;
-  background: #fff; border: 1px solid var(--brand-bone-deep);
+  background: var(--neutral-0); border: 1px solid var(--brand-bone-deep);
   border-radius: 999px; margin: 0 auto 32px; position: relative;
 }
 .showcase__tab-row { display: flex; justify-content: center; margin-bottom: 24px; }
@@ -369,7 +477,7 @@
 }
 .showcase__tabs button.is-active { background: var(--brand-maroon); color: var(--brand-bone); }
 .showcase__panel {
-  background: #fff; border: 1px solid var(--brand-bone-deep);
+  background: var(--neutral-0); border: 1px solid var(--brand-bone-deep);
   border-radius: 18px; padding: 24px;
   box-shadow: 0 12px 40px rgba(20, 17, 15, 0.08);
   display: grid; grid-template-columns: 1fr 1.5fr; gap: 32px;
@@ -395,13 +503,13 @@
   background: var(--brand-maroon); margin-top: 9px; flex-shrink: 0;
 }
 .mock {
-  background: #FAFAF8; border: 1px solid var(--neutral-200);
+  background: var(--neutral-50); border: 1px solid var(--neutral-200);
   border-radius: 12px; height: 380px; overflow: hidden; position: relative;
   display: flex; font-family: var(--font-sans); font-size: 11px;
   box-shadow: 0 8px 24px rgba(20, 17, 15, 0.06);
 }
 .mock__sidebar {
-  width: 130px; flex-shrink: 0; background: #F4F4F4;
+  width: 130px; flex-shrink: 0; background: var(--neutral-100);
   border-right: 1px solid var(--neutral-200); padding: 12px 8px;
   display: flex; flex-direction: column; gap: 8px;
 }
@@ -416,14 +524,14 @@
   padding: 5px 8px; border-radius: 4px;
   font-size: 10.5px; color: var(--fg-secondary);
 }
-.mock__sb-item.is-active { background: rgba(0,0,0,0.06); color: var(--brand-maroon-deep); font-weight: 500; }
+.mock__sb-item.is-active { background: color-mix(in srgb, var(--fg-primary) 7%, transparent); color: var(--brand-maroon-deep); font-weight: 500; }
 .mock__sb-item .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; opacity: 0.4; }
 .mock__sb-sec {
   font-family: var(--font-mono); font-size: 8.5px;
   letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--fg-tertiary); padding: 6px; margin-top: 4px;
 }
-.mock__main { flex: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
+.mock__main { flex: 1; display: flex; flex-direction: column; background: var(--neutral-0); min-width: 0; }
 .mock__top {
   height: 32px; flex-shrink: 0; border-bottom: 1px solid var(--neutral-200);
   display: flex; align-items: center; padding: 0 12px;
@@ -435,7 +543,7 @@
   font-weight: 400; margin-bottom: 14px;
 }
 .mock__greet .a {
-  background: linear-gradient(90deg, #5C1427, #8A1E3A);
+  background: var(--brand-gradient);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 .mock__greet .b { color: var(--neutral-300); }
@@ -448,23 +556,23 @@
 .mock__ctxbar .ch-eb {
   font-family: var(--font-mono); font-size: 8.5px;
   letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--brand-maroon); padding-right: 8px; border-right: 1px solid rgba(0,0,0,0.08);
+  color: var(--brand-maroon); padding-right: 8px; border-right: 1px solid color-mix(in srgb, var(--fg-primary) 10%, transparent);
 }
 .mock__ctxbar .ch-chip { color: var(--fg-secondary); }
 .mock__ctxbar .ch-chip b { color: var(--brand-maroon-deep); font-weight: 600; }
-.mock__ctxbar .ch-status { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: #047857; font-weight: 500; }
+.mock__ctxbar .ch-status { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: light-dark(#047857, #34D399); font-weight: 500; }
 .mock__ctxbar .ch-status .dot { width: 5px; height: 5px; border-radius: 999px; background: #10B981; }
 .mock__readiness { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
 .mock__readiness .ck {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px; border-radius: 999px;
-  background: #fff; border: 1px solid var(--neutral-200);
+  background: var(--neutral-0); border: 1px solid var(--neutral-200);
   font-family: var(--font-mono); font-size: 9px; color: var(--fg-tertiary);
 }
-.mock__readiness .ck.done { background: #ECFDF5; border-color: #A7F3D0; color: #047857; }
+.mock__readiness .ck.done { background: light-dark(#ECFDF5, #16302E); border-color: light-dark(#A7F3D0, #1F6E6A); color: light-dark(#047857, #34D399); }
 .mock__msg { display: flex; gap: 6px; margin-bottom: 8px; }
 .mock__msg .av { width: 18px; height: 18px; border-radius: 999px; flex-shrink: 0; }
-.mock__msg .av.bot { background: linear-gradient(135deg, #5C1427, #8A1E3A); }
+.mock__msg .av.bot { background: var(--brand-gradient); }
 .mock__msg .av.user { background: var(--brand-bone); border: 1px solid var(--neutral-200); }
 .mock__msg .bub { font-size: 10.5px; color: var(--fg-primary); line-height: 1.4; flex: 1; padding-top: 1px; }
 .mock__msg.user .bub {
@@ -475,14 +583,14 @@
 .mock__msg.user { flex-direction: row-reverse; }
 .mock--has-canvas .mock__chat { flex: 1; }
 .mock__canvas {
-  width: 180px; flex-shrink: 0; background: #fff;
+  width: 180px; flex-shrink: 0; background: var(--neutral-0);
   border-left: 1px solid var(--neutral-200); display: flex; flex-direction: column;
 }
 .mock__canvas-head {
   padding: 8px 12px; border-bottom: 1px solid var(--neutral-200);
   display: flex; align-items: center; gap: 6px;
   font-family: var(--font-display); font-size: 14px;
-  color: var(--brand-maroon-deep); background: #FAFAF8;
+  color: var(--brand-maroon-deep); background: var(--neutral-50);
 }
 .mock__canvas-head .dot { width: 6px; height: 6px; border-radius: 999px; background: #F59E0B; }
 .mock__canvas-tabs {
@@ -512,7 +620,7 @@
   font-weight: 400; color: var(--brand-maroon-deep); margin: 0;
 }
 .mock__pg-cfg {
-  background: #fff; border: 1px solid var(--neutral-200); border-radius: 6px;
+  background: var(--neutral-0); border: 1px solid var(--neutral-200); border-radius: 6px;
   padding: 10px 12px; margin-bottom: 8px;
   display: flex; align-items: center; justify-content: space-between;
 }
@@ -520,7 +628,7 @@
 .mock__pg-cfg .sum { font-family: var(--font-mono); font-size: 9.5px; color: var(--fg-tertiary); display: flex; gap: 10px; }
 .mock__pg-cfg .sum b { color: var(--brand-maroon-deep); font-weight: 600; }
 .mock__pg-sec {
-  background: #fff; border: 1px solid var(--neutral-200); border-radius: 6px;
+  background: var(--neutral-0); border: 1px solid var(--neutral-200); border-radius: 6px;
   padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
 }
 .mock__pg-sec .num {
@@ -538,7 +646,7 @@
 }
 .how__step {
   padding: 28px 20px; border: 1px solid var(--brand-bone-deep);
-  background: #fff; border-right: 0;
+  background: var(--neutral-0); border-right: 0;
   display: flex; flex-direction: column; gap: 12px;
 }
 .how__step:first-child { border-radius: 12px 0 0 12px; }
@@ -546,7 +654,7 @@
 .how__step.is-emph { background: var(--brand-maroon-deep); border-color: var(--brand-maroon-deep); color: var(--brand-bone); }
 .how__step.is-emph .step-n { color: var(--brand-bone); }
 .how__step.is-emph .step-t { color: var(--brand-bone); }
-.how__step.is-emph .step-b { color: rgba(244,239,231,0.7); }
+.how__step.is-emph .step-b { color: color-mix(in srgb, var(--brand-bone) 78%, transparent); }
 .how__step .step-n { font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--brand-maroon); letter-spacing: -0.02em; }
 .how__step .step-t { font-size: 17px; font-weight: 600; color: var(--brand-maroon-deep); }
 .how__step .step-b { font-size: 13.5px; color: var(--fg-secondary); line-height: 1.5; }
@@ -575,7 +683,7 @@
 .code-section h2 em { font-style: italic; color: var(--brand-maroon); }
 .code-section p { font-size: 16px; line-height: 1.6; color: var(--neutral-700); margin: 0 0 20px; }
 .code-block {
-  background: var(--brand-ink); color: var(--brand-bone);
+  background: #14110F; color: #F4EFE7;  /* terminal stays dark in both themes */
   border-radius: 10px; padding: 22px 24px;
   font-family: var(--font-mono); font-size: 13px; line-height: 1.65;
   box-shadow: 0 12px 32px rgba(20, 17, 15, 0.18); overflow-x: auto;
@@ -589,7 +697,7 @@
 .pricing { padding: 96px 0; border-top: 1px solid var(--brand-bone-deep); }
 .pricing__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .tier {
-  background: #fff; border: 1px solid var(--brand-bone-deep);
+  background: var(--neutral-0); border: 1px solid var(--brand-bone-deep);
   border-radius: 14px; padding: 28px 24px; display: flex; flex-direction: column;
 }
 .tier.is-feature { background: var(--brand-maroon-deep); color: var(--brand-bone); border-color: var(--brand-maroon-deep); }
@@ -601,9 +709,9 @@
 }
 .tier.is-feature .tier__price { color: var(--brand-bone); }
 .tier__price small { font-family: var(--font-sans); font-size: 14px; color: var(--fg-tertiary); font-weight: 400; margin-left: 4px; }
-.tier.is-feature .tier__price small { color: rgba(244,239,231,0.7); }
+.tier.is-feature .tier__price small { color: color-mix(in srgb, var(--brand-bone) 75%, transparent); }
 .tier__sub { font-size: 13px; color: var(--fg-secondary); margin-bottom: 18px; }
-.tier.is-feature .tier__sub { color: rgba(244,239,231,0.75); }
+.tier.is-feature .tier__sub { color: color-mix(in srgb, var(--brand-bone) 80%, transparent); }
 .tier__feats { list-style: none; padding: 0; margin: 0 0 22px; display: flex; flex-direction: column; gap: 8px; }
 .tier__feats li { font-size: 13px; color: var(--neutral-700); display: flex; align-items: flex-start; gap: 8px; }
 .tier.is-feature .tier__feats li { color: var(--brand-bone); }
@@ -612,7 +720,7 @@
 .tier__cta { margin-top: auto; }
 .tier .btn-primary { width: 100%; justify-content: center; }
 .tier.is-feature .btn-primary { background: var(--brand-bone); color: var(--brand-maroon-deep); }
-.tier.is-feature .btn-primary:hover { background: #fff; }
+.tier.is-feature .btn-primary:hover { background: var(--neutral-0); }
 
 /* Launch CTA */
 .launch-cta {
@@ -633,12 +741,12 @@
   color: var(--brand-bone); margin: 18px 0 18px; position: relative;
 }
 .launch-cta h2 em { font-style: italic; color: var(--brand-maroon-bright); }
-.launch-cta p { font-size: 18px; line-height: 1.55; color: rgba(244,239,231,0.8); max-width: 580px; margin: 0 auto 36px; position: relative; }
+.launch-cta p { font-size: 18px; line-height: 1.55; color: color-mix(in srgb, var(--brand-bone) 85%, transparent); max-width: 580px; margin: 0 auto 36px; position: relative; }
 .launch-cta__cta { display: inline-flex; gap: 12px; position: relative; flex-wrap: wrap; justify-content: center; }
 .launch-cta .btn-primary { background: var(--brand-bone); color: var(--brand-maroon-deep); }
-.launch-cta .btn-primary:hover { background: #fff; }
-.launch-cta .btn-secondary { background: transparent; color: var(--brand-bone); border-color: rgba(244,239,231,0.3); }
-.launch-cta .btn-secondary:hover { background: rgba(244,239,231,0.08); }
+.launch-cta .btn-primary:hover { background: var(--neutral-0); }
+.launch-cta .btn-secondary { background: transparent; color: var(--brand-bone); border-color: color-mix(in srgb, var(--brand-bone) 35%, transparent); }
+.launch-cta .btn-secondary:hover { background: color-mix(in srgb, var(--brand-bone) 10%, transparent); }
 
 /* Footer */
 .mk-footer {
@@ -878,3 +986,95 @@ html, body { overflow-x: hidden; max-width: 100vw; }
    ============================================================ */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+/* ── Accessibility: respect reduced-motion (kills framer + CSS animations) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Anchor targets clear the fixed marketing nav */
+section[id] { scroll-margin-top: 84px; }
+html { scroll-behavior: smooth; }
+
+
+/* ── Marketing nav: mobile ── */
+.mk-nav__burger { display: none; background: transparent; border: 0; color: var(--brand-maroon-deep); padding: 6px; border-radius: 8px; cursor: pointer; }
+.mk-nav__mobile { display: none; }
+@media (max-width: 960px) {
+  .mk-nav__items, .mk-nav__signin { display: none !important; }
+  .mk-nav__burger { display: inline-flex; align-items: center; }
+  .mk-nav__mobile {
+    display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--brand-bone, #F4EFE7); border-bottom: 1px solid rgba(0,0,0,0.08);
+    padding: 8px 20px 16px; gap: 2px; z-index: 60;
+  }
+  .mk-nav__mobile a { padding: 11px 8px; font-size: 15px; color: var(--brand-maroon-deep); text-decoration: none; border-radius: 8px; min-height: 44px; display: flex; align-items: center; }
+  .mk-nav__mobile a:active { background: rgba(92,20,39,0.06); }
+}
+
+
+/* ── Chat bubbles: wide markdown tables scroll inside the bubble ── */
+.msg-bubble table, .prose table { display: block; max-width: 100%; overflow-x: auto; }
+
+/* ── Touch targets: suggestion chips + icon buttons reach 44px on touch devices ── */
+@media (pointer: coarse) {
+  button { min-height: 44px; }
+  .mk-nav__burger, .mk-nav__mobile a { min-height: 44px; }
+}
+
+/* ── Numbers never jitter: metrics, scores, counts ── */
+.tabular, td, th { font-variant-numeric: tabular-nums; }
+
+
+/* ── Optimization canvas: side panel on desktop, bottom sheet on mobile ── */
+.opt-canvas {
+  width: min(720px, 46vw);
+  flex-shrink: 0;
+  border-left: 1px solid var(--border-subtle);
+}
+@media (max-width: 1100px) {
+  .opt-canvas { width: min(560px, 52vw); }
+}
+@media (max-width: 768px) {
+  .opt-canvas {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+    width: 100%; height: 78dvh; z-index: 50;
+    border-left: 0; border-top: 1px solid var(--border-subtle);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+    animation: sheet-up 260ms cubic-bezier(0.2,0,0,1);
+  }
+}
+@keyframes sheet-up {
+  from { transform: translateY(24px); opacity: 0.6; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+
+/* ── Keyboard focus: always visible, brand-colored, never removed ── */
+:focus-visible {
+  outline: 2px solid var(--brand-maroon, #5C1427);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Marketing Dark Mode overrides */
+[data-theme="dark"] .mk-nav { background: var(--bg-header); }
+[data-theme="dark"] .hero__visual { background: #14110F; color: #F4EFE7; border: 1px solid rgba(244, 239, 231, 0.08); }
+[data-theme="dark"] .hero__visual-head { border-bottom-color: rgba(244, 239, 231, 0.08); }
+[data-theme="dark"] .hero__term-meta { background: rgba(244, 239, 231, 0.04); border-left-color: rgba(212, 154, 170, 0.4); }
+[data-theme="dark"] .hero__term-table-head { border-bottom-color: rgba(244, 239, 231, 0.08); }
+[data-theme="dark"] .hero__term-table-row.is-converged { color: #F4EFE7; }
+[data-theme="dark"] .hero__term-table-row.is-converged > span { color: #F4EFE7; }
+[data-theme="dark"] .hero__chart { border-top-color: rgba(244, 239, 231, 0.08); }
+[data-theme="dark"] .showcase__tabs { background: var(--neutral-100); border-color: var(--neutral-300); }
+[data-theme="dark"] .how__step { background: var(--product-bg); border-color: var(--product-divider); }
+/* Re-assert the emphasised step: the rule above ties specificity with
+   `.how__step.is-emph` and would otherwise clobber its accent background. */
+[data-theme="dark"] .how__step.is-emph { background: var(--brand-maroon-deep); border-color: var(--brand-maroon-deep); }

@@ -27,11 +27,12 @@ export default function MarketingFooter() {
       </div>
       <div className="mk-footer__col">
         <h5>Developers</h5>
-        <a href="#docs">Documentation</a>
-        <a href="#docs">API reference</a>
-        <a href="#docs">MCP guide</a>
-        <a href="#docs">SDK · pip install intellign</a>
-        <a href="#docs">Status</a>
+        <Link href="/docs">Documentation</Link>
+        <Link href="/docs">API reference</Link>
+        <Link href="/docs">MCP guide</Link>
+        <Link href="/docs">SDK · pip install intellign</Link>
+        <Link href="/demo">Live demo</Link>
+        <Link href="/status">Status</Link>
       </div>
       <div className="mk-footer__col">
         <h5>Company</h5>

@@ -31,13 +31,13 @@ export default function Hero() {
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </Link>
-          <a href="#how" className="btn btn-secondary btn-lg">See how it works</a>
+          <Link href="/demo" className="btn btn-secondary btn-lg">Try the live demo</Link>
         </div>
 
         <div className="hero__trust">
           <span className="trust-item">
             <span className="trust-dot" />
-            Built &amp; testing in Phase 01
+            Early access — onboarding design partners
           </span>
           <span className="trust-item">
             <span className="trust-mono">pip install intellign</span>
@@ -46,7 +46,7 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="hero__visual" style={{ minWidth: 0, width: "100%" }}>
+      <div className="hero__visual" style={{ minWidth: 0, width: "100%" }} aria-hidden="true">
         <div className="hero__visual-head">
           <span className="hero__visual-dot" />
           <span className="hero__visual-dot" />

@@ -13,8 +13,8 @@ export default function CapabilityStrip() {
         <div className="cap__num">02</div>
         <div className="cap__title">Optimal out.</div>
         <div className="cap__body">
-          A genetic algorithm tuned for assignment problems — guaranteed feasible,
-          near-optimal at scale.
+          A solver engine that picks the right method per problem — assignment,
+          scheduling, or routing — and validates every input before it runs.
         </div>
       </div>
       <div className="cap">

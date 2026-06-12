@@ -13,52 +13,13 @@ const authHeaders = (): Record<string, string> => {
 
 // ── Response types (aligned to FRONTEND_INTEGRATION.md) ──────────────────────
 
-export interface GoalDefinition {
-    description: string;
-    weight: number;
-    award_type: 'Reward' | 'Penalty';
-    resource_columns: string[];
-    target_columns: string[];
-    logic_config: Record<string, any>;
-    explanation?: string;
-}
-
-export interface GAParams {
-    population_size: number;
-    generations: number;
-    mutation_rate: number;
-    selection_method: string;
-}
-
-export interface GoalModel {
-    problem_type: string | null;
-    confidence: number;
-    entities: {
-        resources?: { name: string };
-        targets?: { name: string };
-    };
-    objectives: string[];
-    constraints: string[];
-    estimated_scale: string | null;
-    description: string | null;
-}
-
-export interface DataContext {
-    status: 'none' | 'partial' | 'complete';
-    resources_metadata: { count: number; columns: string[] } | null;
-    targets_metadata: { count: number; columns: string[] } | null;
-    missing_tables: string[];
-    missing_columns: Record<string, any>;
-    synthetic_flags: Record<string, any>;
-}
-
-export interface Artifact {
-    type: 'table' | string;
-    content: string;
-    headers?: string[];
-    rows?: string[][];
-    title?: string;
-}
+import {
+    GoalDefinition,
+    GAParams,
+    GoalModel,
+    DataContext,
+    Artifact
+} from '@/types/models';
 
 export interface ChatResponse {
     session_id: string;
@@ -66,7 +27,7 @@ export interface ChatResponse {
     action_taken: string | null;
     data_preview: any | null;
     is_complete: boolean;
-    phase: 'ingestion' | 'goal_definition';
+    phase: string;  // ingestion | discovery | data_sourcing | analysis | goal_definition | finalization | optimization | optimization_review | data_ready | gathering | finalizing
     goal_model: GoalModel | null;
     data_context: DataContext | null;
     goals: GoalDefinition[] | null;
@@ -83,6 +44,14 @@ export interface AttachedFileInfo {
     name: string;
     size: number;
     type: string;
+}
+
+export interface UploadChip {
+    key: string;                 // name:size
+    name: string;
+    state: 'uploading' | 'ingesting' | 'complete' | 'failed';
+    rows?: { resources: number; targets: number } | null;
+    error?: string | null;
 }
 
 export interface ChatMessage {
@@ -102,7 +71,7 @@ export interface ChatMessage {
 interface UnifiedChatState {
     sessionId: string;
     messages: ChatMessage[];
-    phase: 'ingestion' | 'goal_definition';
+    phase: string;
     isComplete: boolean;
     isSending: boolean;
     isLoadingHistory: boolean;
@@ -116,6 +85,7 @@ interface UnifiedChatState {
     dataPreview: Record<string, any> | null;
     artifactCount: number;
     isGenerating: boolean;
+    uploads: UploadChip[];
 }
 
 const generateSessionId = (): string => crypto.randomUUID();
@@ -147,6 +117,7 @@ export const useUnifiedChat = ({
         dataPreview: null,
         artifactCount: 0,
         isGenerating: false,
+        uploads: [],
     }));
 
     const abortRef = useRef<AbortController | null>(null);
@@ -190,7 +161,7 @@ export const useUnifiedChat = ({
                 if (!stateData) return;
                 setState(prev => ({
                     ...prev,
-                    phase:         (stateData.phase as 'ingestion' | 'goal_definition') ?? prev.phase,
+                    phase:         stateData.phase ?? prev.phase,
                     isComplete:    stateData.is_complete  ?? prev.isComplete,
                     goalModel:     stateData.goal_model   ?? prev.goalModel,
                     dataContext:   stateData.data_context ?? prev.dataContext,
@@ -204,6 +175,22 @@ export const useUnifiedChat = ({
             .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // intentionally runs once on mount only
+
+    // ── Mirror shared state into the zustand store (single UI truth source).
+    // The canvas and shell read from the store; they no longer mount their own
+    // useUnifiedChat instance (which used to drift from this one).
+    useEffect(() => {
+        useSessionStore.getState().setChatShared({
+            messages: state.messages,
+            dataContext: state.dataContext,
+            isGenerating: state.isGenerating,
+            solverConfig: state.solverConfig,
+            latestJobId: state.latestJobId,
+            artifactCount: state.artifactCount,
+            goals: state.goals,
+        });
+    }, [state.messages, state.dataContext, state.isGenerating, state.solverConfig,
+        state.latestJobId, state.artifactCount, state.goals]);
 
     const update = (partial: Partial<UnifiedChatState>) =>
         setState(prev => ({ ...prev, ...partial }));
@@ -221,6 +208,74 @@ export const useUnifiedChat = ({
                 registeredRef.current = false;
             });
     }, []);
+
+    // ── Eager upload: process files the moment they're attached ───────────────
+    const uploadedKeysRef = useRef<Set<string>>(new Set());
+    const uploadPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const _setChip = (key: string, patch: Partial<UploadChip>) =>
+        setState(prev => ({
+            ...prev,
+            uploads: prev.uploads.map(u => u.key === key ? { ...u, ...patch } : u),
+        }));
+
+    const uploadFiles = useCallback(async (files: File[], hint: string = '') => {
+        const fresh = files.filter(f => !uploadedKeysRef.current.has(`${f.name}:${f.size}`));
+        if (fresh.length === 0) return;
+        const { sessionId } = state;
+        registerSession(sessionId);
+
+        const chips: UploadChip[] = fresh.map(f => ({
+            key: `${f.name}:${f.size}`, name: f.name, state: 'uploading',
+        }));
+        fresh.forEach(f => uploadedKeysRef.current.add(`${f.name}:${f.size}`));
+        setState(prev => ({ ...prev, uploads: [...prev.uploads, ...chips] }));
+
+        try {
+            const form = new FormData();
+            fresh.forEach(f => form.append('files', f));
+            form.append('hint', hint);
+            const res = await fetch(`${API_URL}/ingest/files/${sessionId}`, {
+                method: 'POST', headers: authHeaders(), body: form,
+            });
+            if (!res.ok) throw new Error(await res.text().catch(() => res.statusText));
+            chips.forEach(c => _setChip(c.key, { state: 'ingesting' }));
+
+            // Poll ingestion-status until terminal (server enforces an orphan
+            // deadline, so this always terminates).
+            if (uploadPollRef.current) clearInterval(uploadPollRef.current);
+            uploadPollRef.current = setInterval(async () => {
+                try {
+                    const r = await fetch(`${API_URL}/ingest/chat/${sessionId}/ingestion-status`, { headers: authHeaders() });
+                    if (!r.ok) return;
+                    const st = await r.json();
+                    if (st.status === 'complete') {
+                        if (uploadPollRef.current) { clearInterval(uploadPollRef.current); uploadPollRef.current = null; }
+                        chips.forEach(c => _setChip(c.key, {
+                            state: 'complete',
+                            rows: { resources: st.resources_rows ?? 0, targets: st.targets_rows ?? 0 },
+                        }));
+                        // Refresh dataContext so panels react immediately.
+                        fetch(`${API_URL}/ingest/chat/${sessionId}/state`, { headers: authHeaders() })
+                            .then(sr => sr.ok ? sr.json() : null).catch(() => null)
+                            .then(sd => { if (sd?.data_context) setState(prev => ({ ...prev, dataContext: sd.data_context })); });
+                    } else if (st.status === 'failed') {
+                        if (uploadPollRef.current) { clearInterval(uploadPollRef.current); uploadPollRef.current = null; }
+                        chips.forEach(c => _setChip(c.key, { state: 'failed', error: st.error ?? 'Ingestion failed.' }));
+                        chips.forEach(c => uploadedKeysRef.current.delete(c.key));  // allow retry
+                    }
+                } catch { /* transient — keep polling */ }
+            }, 1500);
+        } catch (err: any) {
+            chips.forEach(c => {
+                _setChip(c.key, { state: 'failed', error: err.message ?? 'Upload failed.' });
+                uploadedKeysRef.current.delete(c.key);
+            });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.sessionId, registerSession]);
+
+    useEffect(() => () => { if (uploadPollRef.current) clearInterval(uploadPollRef.current); }, []);
 
     // ── Send a message (with optional file attachments) ───────────────────────
     const sendMessage = useCallback(async (text: string, files: File[] = []) => {
@@ -264,53 +319,12 @@ export const useUnifiedChat = ({
             abortRef.current?.abort();
             abortRef.current = new AbortController();
 
-            // ── File uploads go to the dedicated /ingest/files endpoint ─────────
-            // That endpoint ingests asynchronously, so we must WAIT for the data
-            // to land before sending the chat turn — otherwise the agent sees no
-            // data and synthesizes its own instead of using the upload.
+            // ── Eager upload: files normally start ingesting the moment they're
+            // attached (uploadFiles). If any arrive here un-uploaded (programmatic
+            // call), kick the upload off now WITHOUT blocking the chat turn — the
+            // backend smart-waits on in-progress ingestion before the agent answers.
             if (files.length > 0) {
-                patchAssistant({ content: 'Ingesting your data…' });
-                setState(prev => ({ ...prev, isGenerating: false }));
-
-                const upForm = new FormData();
-                files.forEach(f => upForm.append('files', f));
-                upForm.append('hint', text);
-                const upRes = await fetch(`${API_URL}/ingest/files/${sessionId}`, {
-                    method: 'POST', headers: authHeaders(), body: upForm, signal: abortRef.current.signal,
-                });
-                if (!upRes.ok) throw new Error(await upRes.text().catch(() => upRes.statusText));
-
-                // Poll session state until ingestion has produced dataset metadata
-                // (or an ingestion error / timeout). Then continue to the chat turn.
-                const deadline = Date.now() + 90_000;
-                let ingested = false;
-                while (Date.now() < deadline) {
-                    await new Promise(r => setTimeout(r, 1500));
-                    try {
-                        const sres = await fetch(`${API_URL}/ingest/chat/${sessionId}/state`, {
-                            headers: authHeaders(), signal: abortRef.current.signal,
-                        });
-                        if (!sres.ok) continue;
-                        const sdata = await sres.json();
-                        const dc = sdata?.data_context ?? {};
-                        if (sdata?.ingestion_error) {
-                            throw new Error(sdata.ingestion_error?.error ?? 'Ingestion failed.');
-                        }
-                        if (dc?.resources_metadata || dc?.targets_metadata) {
-                            setState(prev => ({ ...prev, dataContext: dc }));
-                            ingested = true;
-                            break;
-                        }
-                    } catch (e: any) {
-                        if (e?.name === 'AbortError') throw e;
-                        // transient — keep polling until deadline
-                    }
-                }
-                if (!ingested) {
-                    patchAssistant({ content: 'Your data is taking a while to process. I’ll continue once it’s ready — you can also retry shortly.' });
-                }
-                // Fall through to the streaming turn so the agent now responds with
-                // the uploaded data available.
+                void uploadFiles(files, text);
             }
 
             // ── Streaming path (Rec 1+2) ────────────────────────────────────────
@@ -344,6 +358,9 @@ export const useUnifiedChat = ({
                         goalModel: evt.goal_model ?? prev.goalModel,
                     }));
                 } else if (evt.type === 'action') {
+                    if (evt.phase_ui_hint) {
+                        useSessionStore.getState().setChatShared({ phaseUiHint: evt.phase_ui_hint });
+                    }
                     const _isGen = !!evt.action_taken && _genActions.some((a: string) => String(evt.action_taken).includes(a));
                     patchAssistant({ actionTaken: evt.action_taken, dataPreview: evt.data_preview });
                     setState(prev => ({
@@ -385,19 +402,38 @@ export const useUnifiedChat = ({
                 }
             };
 
-            // eslint-disable-next-line no-constant-condition
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                buffer += decoder.decode(value, { stream: true });
-                const parts = buffer.split('\n\n');
-                buffer = parts.pop() ?? '';
-                for (const part of parts) {
-                    const line = part.trim();
-                    if (!line.startsWith('data:')) continue;
-                    try { handleEvent(JSON.parse(line.slice(5).trim())); } catch { /* skip */ }
+            // Stale-stream watchdog: if the server stops sending for 90s (proxy
+            // drop, hung backend), abort and surface an error instead of leaving
+            // the spinner forever. Heavy actions stream progress events, so a
+            // healthy turn never goes silent that long.
+            let lastChunkAt = Date.now();
+            let stalled = false;
+            const stallTimer = setInterval(() => {
+                if (Date.now() - lastChunkAt > 90_000) {
+                    stalled = true;
+                    abortRef.current?.abort();
                 }
+            }, 5_000);
+
+            try {
+                // eslint-disable-next-line no-constant-condition
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    lastChunkAt = Date.now();
+                    buffer += decoder.decode(value, { stream: true });
+                    const parts = buffer.split('\n\n');
+                    buffer = parts.pop() ?? '';
+                    for (const part of parts) {
+                        const line = part.trim();
+                        if (!line.startsWith('data:')) continue;
+                        try { handleEvent(JSON.parse(line.slice(5).trim())); } catch { /* skip */ }
+                    }
+                }
+            } finally {
+                clearInterval(stallTimer);
             }
+            if (stalled) throw new Error('The connection went quiet — please try again.');
 
             setState(prev => ({ ...prev, isSending: false }));
 
@@ -415,7 +451,7 @@ export const useUnifiedChat = ({
                 ),
             }));
         }
-    }, [state, registerSession]);
+    }, [state, registerSession, uploadFiles]);
 
     // ── Dataset download URL helpers ──────────────────────────────────────────
     const getDatasetUrl = useCallback((table: 'resources' | 'targets', format: 'csv' | 'xlsx' = 'csv') => {
@@ -459,12 +495,27 @@ export const useUnifiedChat = ({
             dataPreview: null,
             artifactCount: 0,
             isGenerating: false,
+            uploads: [],
         });
+    }, []);
+
+    const stopGenerating = useCallback(() => {
+        abortRef.current?.abort();
+        setState(prev => ({
+            ...prev,
+            isSending: false,
+            messages: prev.messages.map((m, i) =>
+                i === prev.messages.length - 1 && m.role === 'assistant' && !m.content
+                    ? { ...m, content: '_Stopped._' }
+                    : m),
+        }));
     }, []);
 
     return {
         ...state,
         sendMessage,
+        uploadFiles,
+        stopGenerating,
         downloadDataset,
         getDatasetUrl,
         reset,

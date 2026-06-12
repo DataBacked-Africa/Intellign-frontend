@@ -8,7 +8,8 @@ import {
     AlertCircle, BarChart2, Plus, ChevronDown, Mic, Lightbulb
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUnifiedChat, ChatMessage, GoalDefinition, GoalModel, DataContext, Artifact, AttachedFileInfo } from '@/hooks/useUnifiedChat';
+import { useUnifiedChat, ChatMessage, AttachedFileInfo } from '@/hooks/useUnifiedChat';
+import { GoalDefinition, GoalModel, DataContext, Artifact } from '@/types/models';
 import { useSessionStore } from '@/store/useSessionStore';
 import { showToast } from '@/components/ui/CustomToast';
 import { useUserStore } from '@/store/useUserStore';
@@ -66,7 +67,7 @@ const FileChips: React.FC<{ files: AttachedFileInfo[] }> = ({ files }) => (
     <div className="flex flex-wrap gap-1.5 mb-2">
         {files.map((f, i) => (
             <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-gray-200 shadow-sm">
-                <FileSpreadsheet className="w-3 h-3 text-[#5C1427] shrink-0" />
+                <FileSpreadsheet className="w-3 h-3 text-[var(--brand-maroon)] shrink-0" />
                 <div className="leading-none">
                     <p className="text-[11px] font-medium text-gray-800 truncate max-w-[140px]">{f.name}</p>
                     <p className="text-[10px] text-gray-500 mt-0.5">{fmt(f.size)}</p>
@@ -283,11 +284,11 @@ const GoalsPanel: React.FC<{ goals: GoalDefinition[]; onViewGoal: (goal: GoalDef
     if (!goals.length) return null;
     const total = goals.reduce((s, g) => s + (g.weight ?? 0), 0);
     return (
-        <div className="mt-3 rounded-xl border border-[#5C1427]/20 bg-[#5C1427]/5 overflow-hidden text-xs">
-            <div className="flex items-center justify-between px-3 py-2 bg-[#5C1427]/10 border-b border-[#5C1427]/20">
+        <div className="mt-3 rounded-xl border border-[var(--brand-maroon)]/20 bg-[var(--brand-maroon)]/5 overflow-hidden text-xs">
+            <div className="flex items-center justify-between px-3 py-2 bg-[var(--brand-maroon)]/10 border-b border-[var(--brand-maroon)]/20">
                 <div className="flex items-center gap-2">
-                    <Target className="w-3 h-3 text-[#5C1427]" />
-                    <span className="font-bold text-[#5C1427] uppercase tracking-wide">
+                    <Target className="w-3 h-3 text-[var(--brand-maroon)]" />
+                    <span className="font-bold text-[var(--brand-maroon)] uppercase tracking-wide">
                         {goals.length} Goal{goals.length !== 1 ? 's' : ''} Defined
                     </span>
                 </div>
@@ -300,7 +301,7 @@ const GoalsPanel: React.FC<{ goals: GoalDefinition[]; onViewGoal: (goal: GoalDef
             </div>
             <div className="p-3 space-y-2">
                 {goals.map((g, i) => (
-                    <div key={i} className="bg-white rounded-lg px-2.5 py-2 border border-[#5C1427]/10 space-y-1.5">
+                    <div key={i} className="bg-white rounded-lg px-2.5 py-2 border border-[var(--brand-maroon)]/10 space-y-1.5">
                         <div className="flex items-start gap-2">
                             <span className={cn(
                                 'mt-0.5 shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold',
@@ -311,17 +312,17 @@ const GoalsPanel: React.FC<{ goals: GoalDefinition[]; onViewGoal: (goal: GoalDef
                                 <p className="text-gray-400 text-[10px] mt-0.5">{g.logic_config?.logic_type?.replace(/_/g, ' ')}</p>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-[#5C1427] font-bold tabular-nums">{g.weight}%</span>
+                                <span className="text-[var(--brand-maroon)] font-bold tabular-nums">{g.weight}%</span>
                                 <button
                                     onClick={() => onViewGoal(g, i)}
-                                    className="text-[10px] text-gray-400 hover:text-[#5C1427] underline underline-offset-2 transition-colors"
+                                    className="text-[10px] text-gray-400 hover:text-[var(--brand-maroon)] underline underline-offset-2 transition-colors"
                                 >view</button>
                             </div>
                         </div>
                         {/* Weight bar */}
                         <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-[#5C1427] rounded-full transition-all duration-500"
+                                className="h-full bg-[var(--brand-maroon)] rounded-full transition-all duration-500"
                                 style={{ width: `${g.weight ?? 0}%` }}
                             />
                         </div>
@@ -442,7 +443,7 @@ const MessageBubble: React.FC<{
             className={cn('flex gap-2.5 items-start', isUser && 'flex-row-reverse')}
         >
             <div
-                className={cn('w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm', isUser ? '' : 'bg-gradient-to-br from-[#5C1427] to-[#8A1E3A]')}
+                className={cn('w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm', isUser ? '' : 'bg-gradient-to-br from-[var(--brand-maroon)] to-[var(--brand-maroon-bright)]')}
                 style={isUser ? { background: 'var(--product-panel)', border: '1px solid var(--border-subtle)', color: 'var(--fg-tertiary)' } : {}}
             >
                 {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5 text-white" />}
@@ -467,8 +468,18 @@ const MessageBubble: React.FC<{
                         </div>
                     )}
                     {!isLoading && (
-                        <div className={cn('text-[10px] mt-1 opacity-40', isUser ? 'text-right' : 'text-left')}>
-                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <div className={cn('flex items-center gap-2 mt-1', isUser ? 'justify-end' : 'justify-start')}>
+                            <span className="text-[10px] opacity-40">
+                                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {!isUser && msg.content && (
+                                <button
+                                    onClick={() => navigator.clipboard?.writeText(msg.content)}
+                                    title="Copy message"
+                                    aria-label="Copy message"
+                                    className="text-[10px] opacity-30 hover:opacity-80 underline underline-offset-2 transition-opacity cursor-pointer"
+                                >copy</button>
+                            )}
                         </div>
                     )}
                 </div>
@@ -515,7 +526,7 @@ const ContextBar: React.FC<{
     const statusColor = isComplete
         ? 'bg-emerald-100 text-emerald-700'
         : phase === 'goal_definition'
-        ? 'bg-[#5C1427]/10 text-[#5C1427]'
+        ? 'bg-[var(--brand-maroon)]/10 text-[var(--brand-maroon)]'
         : 'bg-amber-100 text-amber-700';
     return (
         <div className="flex items-center gap-2 px-3 py-2 rounded-[16px] text-xs mb-1.5 flex-shrink-0 flex-wrap shadow-sm" style={{ background: 'var(--brand-bone)', border: '1px solid var(--brand-bone-deep)' }}>
@@ -545,7 +556,7 @@ const ContextBar: React.FC<{
             {isComplete && (
                 <button
                     onClick={onRun}
-                    className="ml-auto flex items-center gap-1 px-3 py-1 bg-[#5C1427] hover:bg-[#7a1b35] text-white rounded-full font-semibold transition-colors"
+                    className="ml-auto flex items-center gap-1 px-3 py-1 bg-[var(--brand-maroon)] hover:bg-[#7a1b35] text-white rounded-full font-semibold transition-colors"
                 >
                     <Zap className="w-3 h-3" /> Run
                 </button>
@@ -560,30 +571,41 @@ const ReadinessStrip: React.FC<{
     goalsCount: number;
     isComplete: boolean;
     phase: string;
-    onOpenCanvas: (tab: 'datasets' | 'goals' | 'results') => void;
+    onOpenCanvas: (tab: 'datasets' | 'goals' | 'results' | 'monitor') => void;
 }> = ({ dataContext, goalsCount, isComplete, phase, onOpenCanvas }) => {
-    // Infer state from phase when dataContext is null (resumed sessions don't restore state client-side)
-    // goal_definition phase → data is already finalized
-    const phaseIsPostIngestion = phase === 'goal_definition';
+    const { chat: sharedChat, sessionStatus } = useSessionStore();
+    const hint = sharedChat.phaseUiHint;
+
+    // Five-step ladder: Goal → Data → Goals → Run → Results.
+    const phaseIsPostIngestion = ['goal_definition', 'finalization', 'optimization', 'optimization_review'].includes(phase);
+    const goalCaptured = phase !== 'ingestion' || phaseIsPostIngestion;
     const dataReady = dataContext
         ? (dataContext.status === 'partial' || dataContext.status === 'complete')
         : phaseIsPostIngestion || isComplete;
-    const goalsReady = goalsCount > 0 || isComplete;
+    const goalsReady = goalsCount > 0 || (sharedChat.goals?.length ?? 0) > 0 || isComplete;
+    const running = hint === 'running' || sessionStatus === 'PROCESSING';
+    const resultsReady = hint === 'results' || sessionStatus === 'COMPLETED';
+
     const items = [
-        { label: 'Data ready', done: dataReady, tab: 'datasets' as const },
-        { label: 'Goals defined', done: goalsReady, tab: 'goals' as const },
-        { label: 'Ready to optimize', done: isComplete, tab: 'results' as const },
+        { label: 'Goal',    done: goalCaptured,                       active: !goalCaptured,                          tab: 'goals'    as const },
+        { label: 'Data',    done: dataReady,                          active: goalCaptured && !dataReady,             tab: 'datasets' as const },
+        { label: 'Goals',   done: goalsReady,                         active: dataReady && !goalsReady,               tab: 'goals'    as const },
+        { label: 'Run',     done: running || resultsReady,            active: goalsReady && !running && !resultsReady, tab: 'monitor'  as const },
+        { label: 'Results', done: resultsReady,                       active: running,                                 tab: 'results'  as const },
     ];
     return (
-        <div className="flex items-center gap-1 mb-2 flex-shrink-0">
+        <div className="flex items-center gap-1 mb-2 flex-shrink-0" role="navigation" aria-label="Progress">
             {items.map((item, i) => (
                 <React.Fragment key={item.label}>
                     <button
                         onClick={() => onOpenCanvas(item.tab)}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all"
+                        aria-current={item.active ? 'step' : undefined}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${item.active ? 'animate-pulse' : ''}`}
                         style={item.done
-                            ? { background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', cursor: 'pointer' }
-                            : { background: 'var(--product-panel)', color: 'var(--fg-tertiary)', border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
+                            ? { background: 'light-dark(#ECFDF5, #16302E)', color: 'light-dark(#047857, #34D399)', border: '1px solid light-dark(#A7F3D0, #1F6E6A)' }
+                            : item.active
+                                ? { background: 'rgba(92,20,39,0.07)', color: 'var(--brand-maroon)', border: '1px solid rgba(92,20,39,0.25)' }
+                                : { background: 'var(--product-panel)', color: 'var(--fg-tertiary)', border: '1px solid var(--border-subtle)' }}
                     >
                         {item.done
                             ? <CheckCircle2 className="w-2.5 h-2.5 shrink-0" />
@@ -605,7 +627,7 @@ const ConfidenceBar: React.FC<{ confidence: number }> = ({ confidence }) => (
         <BarChart2 className="w-3 h-3" />
         <span>Goal confidence</span>
         <div className="flex-1 h-1.5 rounded-full overflow-hidden max-w-[120px]" style={{ background: 'var(--brand-bone-deep)' }}>
-            <div className="h-full bg-[#5C1427] rounded-full transition-all duration-500"
+            <div className="h-full bg-[var(--brand-maroon)] rounded-full transition-all duration-500"
                 style={{ width: `${Math.round(confidence * 100)}%` }} />
         </div>
         <span className="font-medium text-gray-600">{Math.round(confidence * 100)}%</span>
@@ -640,10 +662,11 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
     const {
         sessionId, messages, phase, isComplete, isSending, isLoadingHistory,
         goalModel, dataContext, goals, gaParams, error, latestJobId,
-        sendMessage, downloadDataset, reset,
+        sendMessage, uploadFiles, uploads, stopGenerating, downloadDataset, reset,
     } = useUnifiedChat({ initialSessionId, onSessionCreated });
 
-    const { setSessionId } = useSessionStore();
+    const { setSessionId, chat: sharedChat, setChatShared } = useSessionStore();
+    const readyToRun = sharedChat.readyToRun;
     const { user } = useUserStore();
     const canvas = useCanvas();
 
@@ -716,9 +739,28 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dataContext, goals, sessionId, goalModel]);
 
+    const scrollBoxRef = useRef<HTMLDivElement>(null);
+    const [pinnedToBottom, setPinnedToBottom] = useState(true);
+    const [hasNewBelow, setHasNewBelow] = useState(false);
+
+    // Auto-scroll only while the user is pinned to the bottom — never yank the
+    // view mid-read. A "new messages" pill appears instead.
     useEffect(() => {
-        endRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (pinnedToBottom) {
+            endRef.current?.scrollIntoView({ behavior: 'smooth' });
+            setHasNewBelow(false);
+        } else {
+            setHasNewBelow(true);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messages, isSending]);
+
+    const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
+        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        setPinnedToBottom(nearBottom);
+        if (nearBottom) setHasNewBelow(false);
+    }, []);
 
     const deriveProblemName = () => {
         if (goalModel?.description) return goalModel.description;
@@ -754,8 +796,26 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
         setGoalDetailOpen(true);
     }, []);
 
-    const addFiles = (incoming: File[]) =>
-        setAttachedFiles(prev => [...prev, ...incoming.filter(f => !prev.find(p => p.name === f.name))]);
+    const addFiles = (incoming: File[]) => {
+        const fresh = incoming.filter(f => !attachedFiles.find(p => p.name === f.name));
+        if (fresh.length === 0) return;
+        setAttachedFiles(prev => [...prev, ...fresh]);
+        // Eager upload: ingestion starts NOW, while the user is still typing.
+        void uploadFiles(fresh, input.trim());
+    };
+
+    const chipFor = (f: File) => uploads.find(u => u.key === `${f.name}:${f.size}`);
+    const chipBadge = (f: File): { label: string; cls: string } => {
+        const c = chipFor(f);
+        if (!c) return { label: '', cls: '' };
+        if (c.state === 'uploading') return { label: 'uploading…', cls: 'text-gray-400' };
+        if (c.state === 'ingesting') return { label: 'analysing…', cls: 'text-amber-600' };
+        if (c.state === 'complete') {
+            const r = c.rows; const total = (r?.resources ?? 0) + (r?.targets ?? 0);
+            return { label: `✓ ${total} rows`, cls: 'text-emerald-600' };
+        }
+        return { label: `✗ ${c.error ? 'failed' : 'failed'}`, cls: 'text-red-500' };
+    };
 
     const promptsForPhase = phase === 'goal_definition' ? GOAL_PROMPTS : INGESTION_PROMPTS;
     const isIdle = messages.length === 0;
@@ -797,6 +857,14 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                 <div className="flex items-center gap-2 px-3 py-2 mb-2 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex-shrink-0">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span className="flex-1">{error}</span>
+                    <button
+                        onClick={() => {
+                            const lastUser = [...messages].reverse().find(m => m.role === 'user');
+                            if (lastUser) sendMessage(lastUser.content);
+                        }}
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-100 hover:bg-red-200 transition-colors cursor-pointer">
+                        Retry
+                    </button>
                 </div>
             )}
 
@@ -805,7 +873,15 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
 
             {/* ── Messages area (only when not idle) ─────────────────────── */}
             {!isLoadingHistory && !isIdle && (
-                <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-4">
+                <div ref={scrollBoxRef} onScroll={handleScroll}
+                    className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-4 relative" aria-live="polite" aria-busy={isSending}>
+                    {hasNewBelow && (
+                        <button
+                            onClick={() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); setPinnedToBottom(true); setHasNewBelow(false); }}
+                            className="sticky top-1 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-md cursor-pointer"
+                            style={{ background: 'var(--brand-maroon)' }}
+                        >↓ New messages</button>
+                    )}
                     {messages.map((msg, i) => {
                         const isLastAssistant = msg.role === 'assistant';
                         const showLoading = isLastAssistant && isSending && i === messages.length - 1 && msg.content === '';
@@ -856,6 +932,34 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                     })()}
 
 
+                    {/* ── Turn-2.5 Run card: generation finished + goals compiled while
+                        the user watched — one click instead of typing a third message. */}
+                    {readyToRun && !isSending && (
+                        <div className="flex items-center gap-3 p-3.5 rounded-xl border"
+                            style={{ background: 'rgba(92,20,39,0.04)', borderColor: 'rgba(92,20,39,0.18)' }}>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold" style={{ color: 'var(--brand-maroon-deep)' }}>
+                                    Data ready — goals compiled.
+                                </p>
+                                <p className="text-xs mt-0.5" style={{ color: 'var(--fg-secondary)' }}>
+                                    {sharedChat.goals?.length ?? 0} goal{(sharedChat.goals?.length ?? 0) === 1 ? '' : 's'} set ·{' '}
+                                    <button onClick={() => canvas.open('goals', { sessionId, goals, gaParams })}
+                                        className="underline underline-offset-2 cursor-pointer" style={{ color: 'var(--brand-maroon)' }}>
+                                        review & edit
+                                    </button>
+                                    {' '}· mode: <b>{useSessionStore.getState().qualityMode}</b>
+                                    {' '}({useSessionStore.getState().qualityMode === 'fast' ? '~seconds' : useSessionStore.getState().qualityMode === 'balanced' ? '~30s' : '~1-2 min'})
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => { setChatShared({ readyToRun: false }); sendMessage('Yes, run the optimization now.'); }}
+                                className="px-4 py-2 rounded-lg text-sm font-semibold text-white shrink-0 cursor-pointer"
+                                style={{ background: 'var(--brand-maroon)' }}>
+                                Run optimization
+                            </button>
+                        </div>
+                    )}
+
                     <div ref={endRef} />
                 </div>
             )}
@@ -869,7 +973,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                 >
                     <div className=" mt-10 md:mt-0 text-left px-2">
                         <h1 className="text-4xl md:text-[56px] leading-tight font-semibold mb-2 tracking-tight">
-                            <span className="bg-gradient-to-r from-[#5C1427] via-[#731931] to-[#8A1E3A] bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-[var(--brand-maroon)] via-[#731931] to-[var(--brand-maroon-bright)] bg-clip-text text-transparent">
                                 Hi {user?.name?.split(' ')[0] || 'there'}
                             </span>
                         </h1>
@@ -884,8 +988,13 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                             <div className="flex flex-wrap gap-2 px-3 pt-2">
                                 {attachedFiles.map((f, i) => (
                                     <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-xs text-gray-700 shadow-sm">
-                                        <FileSpreadsheet className="w-3 h-3 text-[#5C1427]" />
+                                        <FileSpreadsheet className="w-3 h-3 text-[var(--brand-maroon)]" />
                                         <span className="max-w-[140px] truncate font-medium">{f.name}</span>
+                                        {chipBadge(f).label && (
+                                            <span className={`text-[10px] font-semibold ${chipBadge(f).cls}`} title={chipFor(f)?.error ?? undefined}>
+                                                {chipBadge(f).label}
+                                            </span>
+                                        )}
                                         <button onClick={() => setAttachedFiles(prev => prev.filter((_, j) => j !== i))}
                                             className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors">
                                             <X className="w-3 h-3" />
@@ -942,13 +1051,21 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                                     </button>
                                 )}
 
-                                {(input.trim() || attachedFiles.length > 0) && (
+                                {isSending ? (
+                                    <button
+                                        onClick={stopGenerating}
+                                        title="Stop generating"
+                                        aria-label="Stop generating"
+                                        className="w-10 h-10 rounded-full bg-gray-900 hover:bg-red-700 text-white flex items-center justify-center transition-all ml-1 cursor-pointer"
+                                    >
+                                        <span className="w-3 h-3 bg-white rounded-[2px]" />
+                                    </button>
+                                ) : (input.trim() || attachedFiles.length > 0) && (
                                     <button
                                         onClick={handleSend}
-                                        disabled={isSending}
-                                        className="w-10 h-10 rounded-full bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center transition-all disabled:opacity-50 ml-1"
+                                        className="w-10 h-10 rounded-full bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center transition-all ml-1 cursor-pointer"
                                     >
-                                        {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 ml-0.5" />}
+                                        <Send className="w-4 h-4 ml-0.5" />
                                     </button>
                                 )}
                             </div>
@@ -967,7 +1084,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                     <div className="flex flex-wrap justify-center gap-3 mt-6">
                         {[
                             {
-                                icon: <Database className="w-4 h-4 text-[#5C1427]" />,
+                                icon: <Database className="w-4 h-4 text-[var(--brand-maroon)]" />,
                                 text: "Deploy health workers to facilities",
                                 prompt: "I need to assign healthcare workers to clinics and hospitals based on qualifications, availability, and facility needs."
                             },
@@ -977,7 +1094,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                                 prompt: "I want to assign field officers to communities, matching their expertise to the population's needs and minimising travel distance."
                             },
                             {
-                                icon: <Zap className="w-4 h-4 text-[#8A1E3A]" />,
+                                icon: <Zap className="w-4 h-4 text-[var(--brand-maroon-bright)]" />,
                                 text: "Allocate teachers to schools",
                                 prompt: "I need to allocate teachers to schools, matching subject specialisations to school requirements and respecting capacity limits."
                             },
@@ -1004,7 +1121,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         onClick={handleRunOptimization}
-                        className="flex items-center gap-2 px-5 py-2 bg-[#5C1427] hover:bg-[#7a1b35] text-white rounded-full text-sm font-medium shadow-sm transition-colors"
+                        className="flex items-center gap-2 px-5 py-2 bg-[var(--brand-maroon)] hover:bg-[#7a1b35] text-white rounded-full text-sm font-medium shadow-sm transition-colors"
                     >
                         <Zap className="w-4 h-4" />
                         Run Optimization
@@ -1021,8 +1138,13 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                             <div className="flex flex-wrap gap-2 px-3 pt-2">
                                 {attachedFiles.map((f, i) => (
                                     <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-xs text-gray-700 shadow-sm">
-                                        <FileSpreadsheet className="w-3 h-3 text-[#5C1427]" />
+                                        <FileSpreadsheet className="w-3 h-3 text-[var(--brand-maroon)]" />
                                         <span className="max-w-[140px] truncate font-medium">{f.name}</span>
+                                        {chipBadge(f).label && (
+                                            <span className={`text-[10px] font-semibold ${chipBadge(f).cls}`} title={chipFor(f)?.error ?? undefined}>
+                                                {chipBadge(f).label}
+                                            </span>
+                                        )}
                                         <button onClick={() => setAttachedFiles(prev => prev.filter((_, j) => j !== i))}
                                             className="ml-0.5 text-gray-400 hover:text-red-500 transition-colors">
                                             <X className="w-3 h-3" />

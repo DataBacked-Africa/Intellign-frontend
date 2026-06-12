@@ -613,8 +613,8 @@ const OptimizationModal: React.FC<OptimizationModalProps> = ({ isOpen, onClose, 
                         {/* Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-[#5C1427]/10 flex items-center justify-center">
-                                    <Zap className="w-4 h-4 text-[#5C1427]" />
+                                <div className="w-8 h-8 rounded-lg bg-[var(--brand-maroon)]/10 flex items-center justify-center">
+                                    <Zap className="w-4 h-4 text-[var(--brand-maroon)]" />
                                 </div>
                                 <div>
                                     <h2 className="text-base font-semibold text-gray-900">Optimization</h2>
@@ -659,7 +659,7 @@ const OptimizationModal: React.FC<OptimizationModalProps> = ({ isOpen, onClose, 
                                     startOptimization(sessionId, { configOverride });
                                 }
                             }}
-                                                className="flex items-center gap-2 px-4 py-2 bg-[#5C1427] hover:bg-[#7a1b35] text-white rounded-lg text-sm font-medium transition-colors">
+                                                className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-maroon)] hover:bg-[#7a1b35] text-white rounded-lg text-sm font-medium transition-colors">
                                                 <RefreshCcw className="w-3.5 h-3.5" /> Retry
                                             </button>
                                             <button onClick={handleClose}

@@ -32,6 +32,9 @@ interface OptimizationMetrics {
     total_resources: number;
     elapsed_time_seconds: number;
     average_final_fitness: number;
+    degraded?: boolean;                    // primary solver failed; fallback produced this result
+    fallback_errors?: string[] | null;
+    is_synthetic?: boolean;
 }
 
 interface OptimizationData {
@@ -331,8 +334,24 @@ const ModifyAssignmentModal = ({
 
 // Main Component
 const OptimizationResultsView = () => {
-    const { resultData, jobId: storeJobId } = useSessionStore();
+    const { resultData, jobId: storeJobId, chat } = useSessionStore();
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
+    const [sortKey, setSortKey] = useState<'resource' | 'target' | 'score' | null>(null);
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+    // Debounce the search so 1000-row filters don't run per keystroke.
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedQuery(searchQuery), 250);
+        return () => clearTimeout(t);
+    }, [searchQuery]);
+
+    const toggleSort = (key: 'resource' | 'target' | 'score') => {
+        if (sortKey === key) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+        else { setSortKey(key); setSortDir(key === 'score' ? 'desc' : 'asc'); }
+    };
+    const ariaSort = (key: string): 'ascending' | 'descending' | 'none' =>
+        sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none';
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [modifyModalOpen, setModifyModalOpen] = useState(false);
@@ -466,8 +485,33 @@ const OptimizationResultsView = () => {
 
     if (!optimizationData) {
         return (
-            <div className="w-full flex items-center justify-center p-12 text-gray-400">
-                No optimization data available.
+            <div className="w-full flex flex-col items-center justify-center p-12 gap-4 text-center">
+                <Target className="w-10 h-10 text-gray-300" />
+                <div>
+                    <p className="text-sm font-semibold text-gray-600">No results yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Run an optimization to view the results dashboard.</p>
+                </div>
+                <button
+                    disabled={!chat?.readyToRun}
+                    onClick={async () => {
+                        const sid = useSessionStore.getState().sessionId;
+                        if (!sid) return;
+                        try {
+                            const axios = (await import('@/lib/axiosConfig')).default;
+                            const res = await axios.post(`/optimizations/run/${sid}`, { quality_mode: useSessionStore.getState().qualityMode, auto_approve: false });
+                            if (res.data?.job_id) {
+                                useSessionStore.getState().setJobId(res.data.job_id);
+                                useSessionStore.getState().setStatus('PROCESSING');
+                                showToast.success('Optimization Started', 'Running the engine...');
+                            }
+                        } catch {
+                            showToast.error('Run failed', 'Could not start the optimization.');
+                        }
+                    }}
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {chat?.readyToRun ? 'Run optimization' : 'Run optimization (waiting for data/goals)'}
+                </button>
             </div>
         );
     }
@@ -476,12 +520,23 @@ const OptimizationResultsView = () => {
 
     // Filter assignments
     const filteredAssignments = assignments?.filter(a => {
-        const matchesSearch = searchQuery === '' ||
-            a.resource.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            a.target.id.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = debouncedQuery === '' ||
+            a.resource.id.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+            a.target.id.toLowerCase().includes(debouncedQuery.toLowerCase());
         const matchesStatus = statusFilter === 'all' || a.approval_status === statusFilter;
         return matchesSearch && matchesStatus;
     }) || [];
+
+    if (sortKey) {
+        filteredAssignments.sort((a, b) => {
+            const av = sortKey === 'score' ? a.score : sortKey === 'resource' ? a.resource.id : a.target.id;
+            const bv = sortKey === 'score' ? b.score : sortKey === 'resource' ? b.resource.id : b.target.id;
+            const cmp = typeof av === 'number' && typeof bv === 'number'
+                ? av - bv
+                : String(av).localeCompare(String(bv));
+            return sortDir === 'asc' ? cmp : -cmp;
+        });
+    }
 
     const itemsPerPage = 10;
     const totalPages = Math.ceil(filteredAssignments.length / itemsPerPage);
@@ -492,6 +547,40 @@ const OptimizationResultsView = () => {
 
     return (
         <div className="w-full space-y-6 p-4 md:p-6">
+            {/* Degraded-result banner — fallback solver produced this result */}
+            {metrics?.degraded && (
+                <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <div className="flex-1">
+                        <span className="font-semibold">Approximate result: </span>
+                        <span>
+                            the primary solver was unavailable, so a fallback method
+                            {(metrics as any)?.solver_used ? ` (${(metrics as any).solver_used})` : ''} produced these
+                            assignments. Valid but may not be optimal.
+                        </span>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            const sid = useSessionStore.getState().sessionId;
+                            if (!sid) return;
+                            try {
+                                const { useSessionOrchestrator } = await import('@/hooks/useSessionOrchestrator');
+                                // Hook can't be called here — post directly with best mode.
+                                const axios = (await import('@/lib/axiosConfig')).default;
+                                const res = await axios.post(`/optimizations/run/${sid}`, { quality_mode: 'best', auto_approve: false });
+                                if (res.data?.job_id) {
+                                    useSessionStore.getState().setJobId(res.data.job_id);
+                                    useSessionStore.getState().setStatus('PROCESSING');
+                                    showToast.success('Re-running', 'Started a fresh run with the best solver.');
+                                }
+                            } catch {
+                                showToast.error('Re-run failed', 'Could not start a new run.');
+                            }
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 hover:bg-amber-200 border border-amber-300 transition-colors shrink-0 cursor-pointer">
+                        Re-run with best
+                    </button>
+                </div>
+            )}
             {/* Metrics Row */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <MetricCard
@@ -537,8 +626,11 @@ const OptimizationResultsView = () => {
             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 {/* Table Header */}
                 <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                         Assignments ({filteredAssignments.length})
+                        {metrics?.is_synthetic && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded font-medium">synthetic</span>
+                        )}
                     </h3>
                     <div className="flex items-center gap-3">
                         {/* Search */}
@@ -589,9 +681,18 @@ const OptimizationResultsView = () => {
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
-                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Resource ID</th>
-                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Target ID</th>
-                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Score</th>
+                                {([['resource', 'Resource ID'], ['target', 'Target ID'], ['score', 'Score']] as const).map(([key, label]) => (
+                                    <th key={key} aria-sort={ariaSort(key)}
+                                        className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">
+                                        <button onClick={() => toggleSort(key)}
+                                            className="inline-flex items-center gap-1 uppercase tracking-wider cursor-pointer hover:text-gray-800 transition-colors">
+                                            {label}
+                                            <span aria-hidden="true" className="text-[10px]">
+                                                {sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}
+                                            </span>
+                                        </button>
+                                    </th>
+                                ))}
                                 <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Status</th>
                                 <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">Actions</th>
                             </tr>

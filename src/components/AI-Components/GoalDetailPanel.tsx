@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Target, ChevronDown, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { GoalDefinition } from '@/hooks/useUnifiedChat';
+import { GoalDefinition } from '@/types/models';
 
 // ─── Logic type display helpers ───────────────────────────────────────────────
 
@@ -82,8 +82,8 @@ const GoalDetailPanel: React.FC<GoalDetailPanelProps> = ({
                         {/* Header */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
                             <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-lg bg-[#5C1427]/10 flex items-center justify-center">
-                                    <Target className="w-4 h-4 text-[#5C1427]" />
+                                <div className="w-8 h-8 rounded-lg bg-[var(--brand-maroon)]/10 flex items-center justify-center">
+                                    <Target className="w-4 h-4 text-[var(--brand-maroon)]" />
                                 </div>
                                 <div>
                                     <h2 className="text-sm font-bold text-gray-900">Goal {goalIndex + 1}</h2>
@@ -94,7 +94,7 @@ const GoalDetailPanel: React.FC<GoalDetailPanelProps> = ({
                                 {onUpdate && !editMode && (
                                     <button
                                         onClick={() => setEditMode(true)}
-                                        className="px-3 py-1.5 text-xs font-medium text-[#5C1427] hover:bg-[#5C1427]/10 rounded-lg transition-colors"
+                                        className="px-3 py-1.5 text-xs font-medium text-[var(--brand-maroon)] hover:bg-[var(--brand-maroon)]/10 rounded-lg transition-colors"
                                     >
                                         Edit
                                     </button>
@@ -116,7 +116,7 @@ const GoalDetailPanel: React.FC<GoalDetailPanelProps> = ({
                                         value={description}
                                         onChange={e => setDescription(e.target.value)}
                                         rows={3}
-                                        className="w-full px-3 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#5C1427]/40 focus:ring-2 focus:ring-[#5C1427]/10 resize-none transition-all"
+                                        className="w-full px-3 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[var(--brand-maroon)]/40 focus:ring-2 focus:ring-[var(--brand-maroon)]/10 resize-none transition-all"
                                     />
                                 ) : (
                                     <p className="text-sm text-gray-900 leading-relaxed">{goal.description || '—'}</p>
@@ -148,19 +148,19 @@ const GoalDetailPanel: React.FC<GoalDetailPanelProps> = ({
                                 <div>
                                     <div className="flex items-center justify-between mb-1.5">
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Weight</label>
-                                        <span className="text-xs font-bold text-[#5C1427]">{editMode ? weight : goal.weight}%</span>
+                                        <span className="text-xs font-bold text-[var(--brand-maroon)]">{editMode ? weight : goal.weight}%</span>
                                     </div>
                                     {editMode ? (
                                         <input
                                             type="range" min={0} max={100} step={5}
                                             value={weight}
                                             onChange={e => setWeight(Number(e.target.value))}
-                                            className="w-full h-1.5 accent-[#5C1427]"
+                                            className="w-full h-1.5 accent-[var(--brand-maroon)]"
                                         />
                                     ) : (
                                         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-[#5C1427] rounded-full"
+                                                className="h-full bg-[var(--brand-maroon)] rounded-full"
                                                 style={{ width: `${goal.weight ?? 0}%` }}
                                             />
                                         </div>
@@ -260,7 +260,7 @@ const GoalDetailPanel: React.FC<GoalDetailPanelProps> = ({
                                 </button>
                                 <button
                                     onClick={handleSave}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-[#5C1427] hover:bg-[#7a1b35] text-white text-sm font-semibold rounded-xl transition-colors"
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-[var(--brand-maroon)] hover:bg-[#7a1b35] text-white text-sm font-semibold rounded-xl transition-colors"
                                 >
                                     <Save className="w-3.5 h-3.5" /> Save
                                 </button>

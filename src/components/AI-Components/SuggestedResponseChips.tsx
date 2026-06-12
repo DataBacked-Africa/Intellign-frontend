@@ -25,8 +25,8 @@ export const SuggestedResponseChips: React.FC<SuggestedResponseChipsProps> = ({
           disabled={disabled}
           className={cn(
             "px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all",
-            "border-[#6B1D1D]/30 text-[#6B1D1D]/80 bg-transparent",
-            "hover:border-[#6B1D1D] hover:bg-[#6B1D1D]/10 hover:text-[#6B1D1D]",
+            "border-[var(--brand-maroon)]/30 text-[var(--brand-maroon)]/80 bg-transparent",
+            "hover:border-[var(--brand-maroon)] hover:bg-[var(--brand-maroon)]/10 hover:text-[var(--brand-maroon)]",
             "disabled:opacity-40 disabled:cursor-not-allowed",
           )}
         >

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { GoalDefinition, GoalModel, DataContext, GAParams } from '@/hooks/useUnifiedChat';
+import { GoalDefinition, GoalModel, DataContext, GAParams } from '@/types/models';
 
 export type CanvasTab = 'monitor' | 'results' | 'assignments' | 'goals' | 'config' | 'datasets' | 'insights';
 

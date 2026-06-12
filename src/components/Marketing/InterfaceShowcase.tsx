@@ -279,6 +279,9 @@ export default function InterfaceShowcase() {
           <MockToRender />
         </div>
       </div>
-    </section>
+          <p style={{ textAlign: "center", fontSize: 12, color: "var(--neutral-500)", marginTop: 18, fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+        Illustrative interface — explore the real thing in the <a href="/demo" style={{ color: "var(--brand-maroon)", textDecoration: "underline" }}>live demo</a>.
+      </p>
+</section>
   );
 }

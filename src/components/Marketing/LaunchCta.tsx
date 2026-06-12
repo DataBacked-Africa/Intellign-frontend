@@ -6,8 +6,8 @@ export default function LaunchCta() {
       <div className="eyebrow">Get started</div>
       <h2>Every organization needs<br /><em>optimization</em>. We&apos;d like you in<br />when they start asking AI for it.</h2>
       <p>
-        Launch the app, drop in your data, and describe a problem. Most teams
-        ship their first solve in the same afternoon they sign up.
+        Launch the app, describe a problem, and run your first solve —
+        three chat turns from question to an explained assignment.
       </p>
       <div className="launch-cta__cta">
         <Link href="/workspace" className="btn btn-primary btn-lg">

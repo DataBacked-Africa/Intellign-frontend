@@ -6,6 +6,8 @@ import { Menu, PanelLeftOpen, ChevronDown, Share, Check, Zap, Target, LayoutTemp
 import { useSessionStore } from '@/store/useSessionStore';
 import { CanvasProvider, useCanvas } from '@/contexts/CanvasContext';
 import OptimizationCanvas from '@/components/AI-Components/OptimizationCanvas';
+import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -34,7 +36,7 @@ const AppShellInner: React.FC<AppShellProps> = ({ children }) => {
     }, []);
 
     return (
-        <div className="flex h-screen w-full overflow-hidden" style={{ background: 'var(--brand-bone)', color: 'var(--fg-primary)' }}>
+        <div className="flex h-dvh w-full overflow-hidden" style={{ background: 'var(--brand-bone)', color: 'var(--fg-primary)' }}>
 
             {/* Desktop Sidebar */}
             <div className="hidden md:block">
@@ -54,7 +56,7 @@ const AppShellInner: React.FC<AppShellProps> = ({ children }) => {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col h-full relative min-w-0">
                 {/* Sticky Top Bar */}
-                <header className="sticky top-0 z-10 h-14 flex items-center justify-between px-2 sm:px-4 flex-shrink-0 border-b transition-colors" style={{ background: 'rgba(244,239,231,0.85)', backdropFilter: 'blur(12px)', borderColor: 'transparent' }}>
+                <header className="sticky top-0 z-10 h-14 flex items-center justify-between px-2 sm:px-4 flex-shrink-0 border-b transition-colors" style={{ background: 'var(--bg-header)', backdropFilter: 'blur(12px)', borderColor: 'transparent' }}>
                     {/* Left: Toggles & Title */}
                     <div className="flex items-center gap-1 sm:gap-2">
                         {/* Mobile Toggle */}
@@ -116,7 +118,7 @@ const AppShellInner: React.FC<AppShellProps> = ({ children }) => {
                                                     {m === 'Smart Chat' ? 'AI-assisted optimization' : 'Traditional configuration'}
                                                 </div>
                                             </div>
-                                            {selectedMethod === m && <Check className="w-4 h-4 text-[#5C1427]" />}
+                                            {selectedMethod === m && <Check className="w-4 h-4 text-[var(--brand-maroon)]" />}
                                         </button>
                                     ))}
                                 </div>
@@ -159,6 +161,8 @@ const AppShellInner: React.FC<AppShellProps> = ({ children }) => {
                             <Share className="w-4 h-4" />
                             Share
                         </button>
+                        <ThemeToggle />
+                        <NotificationBell />
                     </div>
                 </header>
 
