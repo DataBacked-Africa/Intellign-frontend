@@ -214,7 +214,11 @@ export const useSessionOrchestrator = () => {
     const fetchResults = useCallback(async (jobId: string) => {
         try {
             const response = await axiosInstance.get(`/results/${jobId}`, {
-                params: { page: 1, page_size: 50, include_enriched: true },
+                // Pull the full result set (backend max) so the Assignments tab shows
+                // the true count and paginates client-side — a 50-row fetch made large
+                // rosters look capped at 50. Backend filters __OFF__ non-assignments,
+                // so realistic schedules land well under this ceiling.
+                params: { page: 1, page_size: 500, include_enriched: true },
             });
             setResult(response.data);
         } catch (error: any) {
