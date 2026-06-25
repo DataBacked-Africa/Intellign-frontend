@@ -29,7 +29,11 @@ const AppShellInner: React.FC<AppShellProps> = ({ children }) => {
     const [shareOpen, setShareOpen] = useState(false);
     const { sessionId } = useSessionStore();
     const authToken = useUserStore(s => s.token);
-    const { participants, cursors, sendCursor } = useSessionPresence({ sessionId, authToken });
+    const signalSessionUpdate = useSessionStore(s => s.signalSessionUpdate);
+    const { participants, cursors, sendCursor } = useSessionPresence({
+        sessionId, authToken,
+        onSessionUpdated: signalSessionUpdate, // collaborators refetch session state live
+    });
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown on outside click

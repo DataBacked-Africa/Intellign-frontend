@@ -100,9 +100,9 @@ export function useSessionPresence({ sessionId, authToken, shareToken, onSession
 
   const sendCursor = useCallback((x: number, y: number) => {
     const ws = wsRef.current;
-    const self = selfRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN || !self) return;
-    ws.send(JSON.stringify({ type: "cursor", cursor: { x, y, color: self.color, name: "You" } }));
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    // Server stamps the sender's real name + color from the room roster.
+    ws.send(JSON.stringify({ type: "cursor", cursor: { x, y } }));
   }, []);
 
   return { participants, cursors, connected, sendCursor };

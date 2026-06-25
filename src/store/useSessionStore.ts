@@ -54,8 +54,12 @@ interface SessionState {
     schemaFile: any | null;
     schemaPreview: { columns: string[] } | null;
     isUploadingRequest: boolean;
+    // Bumped whenever a realtime "session_updated" ping arrives — the chat hook
+    // watches this to refetch session state (phase ladder, goals) live for collaborators.
+    sessionUpdateNonce: number;
 
     // ── Actions ───────────────────────────────────────────────────────────────
+    signalSessionUpdate: () => void;
     setSessionId: (id: string | null) => void;
     setJobId: (id: string | null) => void;
     setStatus: (status: SessionState['sessionStatus']) => void;
@@ -110,6 +114,7 @@ export const useSessionStore = create<SessionState>()(
             schemaFile: null,
             schemaPreview: null,
             isUploadingRequest: false,
+            sessionUpdateNonce: 0,
 
             setSessionId: (id) => set({ sessionId: id }),
             setJobId: (id) => set({ jobId: id }),
@@ -155,6 +160,7 @@ export const useSessionStore = create<SessionState>()(
 
             setGoals: (goals) => set({ goals }),
             setChatShared: (partial) => set((state) => ({ chat: { ...state.chat, ...partial } })),
+            signalSessionUpdate: () => set((s) => ({ sessionUpdateNonce: s.sessionUpdateNonce + 1 })),
             addGoal: (goalId, goal) =>
                 set((state) => ({ goals: { ...state.goals, [goalId]: goal } })),
             removeGoal: (goalId) =>

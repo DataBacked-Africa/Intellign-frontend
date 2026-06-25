@@ -522,12 +522,19 @@ const ContextBar: React.FC<{
         (goalModel?.entities?.resources?.name && goalModel?.entities?.targets?.name
             ? `${goalModel.entities.resources.name} → ${goalModel.entities.targets.name}`
             : goalModel?.problem_type?.replace(/_/g, ' ') ?? 'Optimization');
-    const statusLabel = isComplete ? 'Ready' : phase === 'goal_definition' ? 'Defining goals' : 'Ingesting';
-    const statusColor = isComplete
-        ? 'bg-emerald-100 text-emerald-700'
-        : phase === 'goal_definition'
-        ? 'bg-[var(--brand-maroon)]/10 text-[var(--brand-maroon)]'
-        : 'bg-amber-100 text-amber-700';
+    // Per-stage status: a clear label + short hint of what's happening / what's next.
+    const hasData = resCount != null || tgtCount != null;
+    const stage: { label: string; hint: string; color: string; pulse: boolean } =
+        isComplete
+            ? { label: 'Ready to optimize', hint: 'Run when you are', color: 'bg-emerald-100 text-emerald-700', pulse: false }
+            : phase === 'goal_definition'
+                ? (goalsCount > 0
+                    ? { label: 'Tuning goals', hint: 'Adjust weights or add goals', color: 'bg-[var(--brand-maroon)]/10 text-[var(--brand-maroon)]', pulse: true }
+                    : { label: 'Defining goals', hint: 'Tell me what to optimize', color: 'bg-[var(--brand-maroon)]/10 text-[var(--brand-maroon)]', pulse: true })
+                : hasData
+                    ? { label: 'Reviewing data', hint: 'Checking your tables', color: 'bg-amber-100 text-amber-700', pulse: true }
+                    : { label: 'Gathering data', hint: 'Upload or generate a sample', color: 'bg-amber-100 text-amber-700', pulse: true };
+    const statusColor = stage.color;
     return (
         <div className="flex items-center gap-2 px-3 py-2 rounded-[16px] text-xs mb-1.5 flex-shrink-0 flex-wrap shadow-sm" style={{ background: 'var(--brand-bone)', border: '1px solid var(--brand-bone-deep)' }}>
             <span className="font-semibold text-gray-900 truncate max-w-[220px]">{problemName}</span>
@@ -552,7 +559,14 @@ const ContextBar: React.FC<{
                     <span className="text-gray-200 select-none">·</span>
                 </>
             )}
-            <span className={cn('px-2 py-0.5 rounded-full font-semibold', statusColor)}>{statusLabel}</span>
+            <span className={cn('flex items-center gap-1.5 px-2 py-0.5 rounded-full font-semibold', statusColor)}>
+                <span className="relative flex w-1.5 h-1.5">
+                    {stage.pulse && <span className="absolute inline-flex w-full h-full rounded-full opacity-60 animate-ping" style={{ background: 'currentColor' }} />}
+                    <span className="relative inline-flex w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
+                </span>
+                {stage.label}
+            </span>
+            <span className="text-gray-400 hidden sm:inline">{stage.hint}</span>
             {isComplete && (
                 <button
                     onClick={onRun}

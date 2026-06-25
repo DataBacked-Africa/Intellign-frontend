@@ -81,10 +81,20 @@ const FitnessChart: React.FC<{ history: number[]; average: number[] }> = ({ hist
             <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-32">
                 <defs><linearGradient id="cv-cg" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#D49AAA" stopOpacity="0.28" /><stop offset="100%" stopColor="#D49AAA" stopOpacity="0" /></linearGradient></defs>
                 {[0.25, 0.5, 0.75].map(t => <line key={t} x1={pad} x2={w - pad} y1={h - pad - t * (h - 2 * pad)} y2={h - pad - t * (h - 2 * pad)} stroke="rgba(255,255,255,0.06)" />)}
-                <path d={`${fitPath} L${last[0].toFixed(1)} ${(h - pad).toFixed(1)} L${pad} ${(h - pad).toFixed(1)} Z`} fill="url(#cv-cg)" />
-                <path d={avgPath} fill="none" stroke="rgba(107,114,128,0.4)" strokeWidth="1.5" />
-                <path d={fitPath} fill="none" stroke="#D49AAA" strokeWidth="2" />
-                <circle cx={last[0]} cy={last[1]} r="3.5" fill="#14110F" stroke="#D49AAA" strokeWidth="1.5" />
+                {/* Area fades in under the curve */}
+                <motion.path d={`${fitPath} L${last[0].toFixed(1)} ${(h - pad).toFixed(1)} L${pad} ${(h - pad).toFixed(1)} Z`} fill="url(#cv-cg)"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, ease: 'easeOut' }} />
+                {/* Average line draws in */}
+                <motion.path d={avgPath} fill="none" stroke="rgba(107,114,128,0.4)" strokeWidth="1.5"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: 'easeInOut' }} />
+                {/* Best-fitness line draws in over the average */}
+                <motion.path d={fitPath} fill="none" stroke="#D49AAA" strokeWidth="2" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.3, ease: 'easeInOut' }} />
+                {/* Leading marker pulses + glides to the latest point */}
+                <motion.circle r="3.5" fill="#14110F" stroke="#D49AAA" strokeWidth="1.5"
+                    animate={{ cx: last[0], cy: last[1] }} transition={{ type: 'spring', stiffness: 120, damping: 18 }} />
+                <motion.circle cx={last[0]} cy={last[1]} r="3.5" fill="none" stroke="#D49AAA"
+                    animate={{ r: [3.5, 9, 3.5], opacity: [0.7, 0, 0.7] }} transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }} />
             </svg>
         </div>
     );
@@ -251,6 +261,13 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
 
     const { metrics, assignments = [], status_counts, fitness_history = [], average_history = [] } = data;
 
+    // How many resources landed on each target — useful for assignment tasks where
+    // multiple resources can share a target (up to its capacity).
+    const targetCounts = assignments.reduce<Record<string, number>>((m, a) => {
+        m[a.target.id] = (m[a.target.id] || 0) + 1;
+        return m;
+    }, {});
+
     const filtered = assignments.filter(a => {
         const q = searchQuery.toLowerCase();
         return (q === '' || a.resource.id.toLowerCase().includes(q) || a.target.id.toLowerCase().includes(q))
@@ -273,8 +290,15 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                     <div key={m.lbl} className="rounded-xl p-4" style={{ background: 'var(--neutral-0)', border: `1px solid ${m.hi ? 'rgba(92,20,39,0.22)' : 'var(--border-subtle)'}` }}>
                         <div className="text-[10px] uppercase tracking-[0.12em] mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{m.lbl}</div>
                         <div className="flex items-baseline gap-1.5">
-                            <span style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 400, color: m.hi ? 'var(--brand-maroon)' : 'var(--brand-maroon-deep)', letterSpacing: '-0.02em', lineHeight: 1 }}>{m.val}</span>
-                            {m.hi && <span className="text-xs" style={{ color: 'var(--fg-tertiary)' }}>of {metrics?.total_resources}</span>}
+                            <motion.span
+                                key={String(m.val)}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                                style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 400, color: m.hi ? 'var(--brand-maroon)' : 'var(--brand-maroon-deep)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                                {m.val}
+                            </motion.span>
+                            {m.sub && <span className="text-xs" style={{ color: 'var(--fg-tertiary)' }}>{m.sub}</span>}
                         </div>
                     </div>
                 ))}
@@ -361,7 +385,14 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                                             <div className="text-[10px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{a.resource.id}{a.summary?.resource_specialization ? ` · ${a.summary.resource_specialization}` : ''}</div>
                                         </td>
                                         <td className="px-3 py-2">
-                                            <div className="text-xs" style={{ color: 'var(--fg-secondary)' }}>{a.summary?.target_name || a.target.id}</div>
+                                            <div className="text-xs flex items-center gap-1.5" style={{ color: 'var(--fg-secondary)' }}>
+                                                {a.summary?.target_name || a.target.id}
+                                                {targetCounts[a.target.id] > 1 && (
+                                                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--brand-bone-deep)', color: 'var(--brand-maroon)' }} title="Resources assigned to this target">
+                                                        {targetCounts[a.target.id]} assigned
+                                                    </span>
+                                                )}
+                                            </div>
                                             <div className="text-[10px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{a.target.id}{a.summary?.target_specialization ? ` · ${a.summary.target_specialization}` : ''}</div>
                                         </td>
                                         <td className="px-3 py-2 text-xs font-semibold">

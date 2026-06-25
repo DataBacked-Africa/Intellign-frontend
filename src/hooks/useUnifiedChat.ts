@@ -176,6 +176,34 @@ export const useUnifiedChat = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // intentionally runs once on mount only
 
+    // ── Live refetch on realtime ping ────────────────────────────────────────
+    // When another collaborator changes the session (goals, phase), the presence
+    // WS fires a session_updated ping → store nonce bumps → we refetch /state so
+    // the phase ladder + goals update live without a manual reload.
+    const updateNonce = useSessionStore(s => s.sessionUpdateNonce);
+    useEffect(() => {
+        if (updateNonce === 0) return; // initial value — nothing to refetch yet
+        const sid = state.sessionId;
+        if (!sid) return;
+        fetch(`${API_URL}/ingest/chat/${sid}/state`, { headers: authHeaders() })
+            .then(r => r.ok ? r.json() : null).catch(() => null)
+            .then((stateData) => {
+                if (!stateData) return;
+                setState(prev => ({
+                    ...prev,
+                    phase:        stateData.phase ?? prev.phase,
+                    isComplete:   stateData.is_complete ?? prev.isComplete,
+                    goalModel:    stateData.goal_model ?? prev.goalModel,
+                    dataContext:  stateData.data_context ?? prev.dataContext,
+                    goals:        Array.isArray(stateData.goals) ? stateData.goals : prev.goals,
+                    latestJobId:  stateData.job_id ?? prev.latestJobId,
+                    solverConfig: stateData.solver_config ?? prev.solverConfig,
+                }));
+            })
+            .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [updateNonce]);
+
     // ── Mirror shared state into the zustand store (single UI truth source).
     // The canvas and shell read from the store; they no longer mount their own
     // useUnifiedChat instance (which used to drift from this one).
@@ -209,14 +237,17 @@ export const useUnifiedChat = ({
             });
     }, []);
 
-    // Register the session up-front (signed-in users only) so sharing + realtime
-    // presence work immediately — not just after the first upload/send. Anonymous
-    // visitors stay lazy (the register call needs auth), avoiding empty-session spam.
+    // Register up-front ONLY for an EXISTING session we're opening (initialSessionId
+    // present) — so sharing + realtime presence work immediately on a session that
+    // already exists. A brand-new workspace session (no initialSessionId) stays lazy:
+    // it's registered on the first real send/upload, so we never spam empty rows for
+    // every /workspace mount.
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        if (!initialSessionId) return;            // new draft session → stay lazy
         if (!localStorage.getItem('token')) return;
-        registerSession(state.sessionId);
-    }, [state.sessionId, registerSession]);
+        registerSession(initialSessionId);
+    }, [initialSessionId, registerSession]);
 
     // ── Eager upload: process files the moment they're attached ───────────────
     const uploadedKeysRef = useRef<Set<string>>(new Set());
