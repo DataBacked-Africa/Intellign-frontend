@@ -59,7 +59,8 @@ const SignupForm = () => {
       const user = { ...rawUser, organizationId: rawUser.organization_id };
       login(user, tokens.access_token, tokens.refresh_token);
       showToast.success("Account created", `Welcome, ${user.name}!`);
-      router.push("/workspace");
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      router.push(redirect || "/workspace");
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       const msg = err.response?.data?.message ?? "Registration failed. Please try again.";

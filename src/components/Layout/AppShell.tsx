@@ -8,6 +8,11 @@ import { CanvasProvider, useCanvas } from '@/contexts/CanvasContext';
 import OptimizationCanvas from '@/components/AI-Components/OptimizationCanvas';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
+import ShareModal from '@/components/Sharing/ShareModal';
+import PresenceBar from '@/components/Sharing/PresenceBar';
+import CursorOverlay from '@/components/Sharing/CursorOverlay';
+import { useUserStore } from '@/store/useUserStore';
+import { useSessionPresence } from '@/hooks/useSessionPresence';
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -21,7 +26,10 @@ const AppShellInner: React.FC<AppShellProps> = ({ children }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [selectedMethod, setSelectedMethod] = useState<'Smart Chat' | 'Manual Method'>('Smart Chat');
+    const [shareOpen, setShareOpen] = useState(false);
     const { sessionId } = useSessionStore();
+    const authToken = useUserStore(s => s.token);
+    const { participants, cursors, sendCursor } = useSessionPresence({ sessionId, authToken });
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown on outside click
@@ -153,14 +161,18 @@ const AppShellInner: React.FC<AppShellProps> = ({ children }) => {
                             Canvas
                         </button>
                         <button
+                            onClick={() => sessionId && setShareOpen(true)}
+                            disabled={!sessionId}
+                            title={sessionId ? 'Share this session' : 'Start a session to share'}
                             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium"
-                            style={{ color: 'var(--fg-secondary)' }}
-                            onMouseEnter={e => (e.currentTarget.style.background = 'var(--brand-bone-deep)')}
+                            style={{ color: 'var(--fg-secondary)', opacity: sessionId ? 1 : 0.5, cursor: sessionId ? 'pointer' : 'not-allowed' }}
+                            onMouseEnter={e => { if (sessionId) e.currentTarget.style.background = 'var(--brand-bone-deep)'; }}
                             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
                             <Share className="w-4 h-4" />
                             Share
                         </button>
+                        {participants.length > 1 && <PresenceBar participants={participants} />}
                         <ThemeToggle />
                         <NotificationBell />
                     </div>
@@ -174,6 +186,12 @@ const AppShellInner: React.FC<AppShellProps> = ({ children }) => {
 
             {/* Optimization canvas — slides in from right */}
             {canvasVisible && <OptimizationCanvas />}
+
+            {/* Realtime cursors (only meaningful when others are present) */}
+            {participants.length > 1 && <CursorOverlay cursors={cursors} sendCursor={sendCursor} />}
+
+            {/* Share modal */}
+            {shareOpen && sessionId && <ShareModal sessionId={sessionId} onClose={() => setShareOpen(false)} />}
 
             {/* Minimized dock */}
             {canvasOpen && canvasMinimized && (

@@ -25,7 +25,8 @@ const LoginForm = () => {
       const user = { ...rawUser, organizationId: rawUser.organization_id };
       login(user, tokens.access_token, tokens.refresh_token);
       showToast.success("Welcome back!", "You have successfully logged in.");
-      router.push("/workspace");
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      router.push(redirect || "/workspace");
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       const msg = err.response?.data?.message || "Login failed. Please try again.";
