@@ -148,9 +148,10 @@ const ShareModal: React.FC<{ sessionId: string; onClose: () => void }> = ({ sess
             {/* Invite by email */}
             <div style={{ borderTop: "1px solid var(--brand-bone)", paddingTop: 18 }}>
               <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--fg-primary)", marginBottom: 10 }}>Invite people</div>
-              <form onSubmit={invite} style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              <form onSubmit={invite} style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
                 <input type="email" required placeholder="email@company.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
-                  className="flex-1 h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5c1427]/10 focus:border-[#5c1427]" />
+                  style={{ flex: "1 1 180px", minWidth: 0 }}
+                  className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5c1427]/10 focus:border-[#5c1427]" />
                 <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)} className={roleSelectCls}>
                   <option value="viewer">viewer</option>
                   <option value="editor">editor</option>

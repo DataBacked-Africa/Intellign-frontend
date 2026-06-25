@@ -45,8 +45,8 @@ const SettingsView: React.FC = () => {
 
   return (
     <div style={{ height: "100%", overflowY: "auto" }}>
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "32px 20px 64px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, letterSpacing: "-0.02em", color: "var(--brand-maroon-deep)", margin: "0 0 24px" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "clamp(20px, 5vw, 32px) clamp(14px, 4vw, 20px) 64px" }}>
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: "clamp(24px, 6vw, 30px)", letterSpacing: "-0.02em", color: "var(--brand-maroon-deep)", margin: "0 0 24px" }}>
           Settings
         </h1>
 

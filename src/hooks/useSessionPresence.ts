@@ -48,6 +48,12 @@ export function useSessionPresence({ sessionId, authToken, shareToken, onSession
     if (!enabled || !sessionId) return;
     let closed = false;
     let retry: ReturnType<typeof setTimeout> | null = null;
+    // Stop hammering when the handshake keeps being rejected (e.g. 403 for a
+    // stale/unknown session): a socket that closes WITHOUT ever opening counts as
+    // a rejection. Give up after a few of those. Transient drops (closed after a
+    // successful open) reset the counter and reconnect with backoff.
+    let rejectCount = 0;
+    const MAX_REJECTS = 4;
 
     const connect = () => {
       if (closed) return;
@@ -56,8 +62,9 @@ export function useSessionPresence({ sessionId, authToken, shareToken, onSession
       if (shareToken) qs.set("token", shareToken);
       const ws = new WebSocket(`${WS_BASE}/api/v1/sessions/${sessionId}/ws?${qs.toString()}`);
       wsRef.current = ws;
+      let opened = false;
 
-      ws.onopen = () => setConnected(true);
+      ws.onopen = () => { opened = true; rejectCount = 0; setConnected(true); };
       ws.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
@@ -71,7 +78,14 @@ export function useSessionPresence({ sessionId, authToken, shareToken, onSession
       };
       ws.onclose = () => {
         setConnected(false);
-        if (!closed) retry = setTimeout(connect, 2500); // auto-reconnect
+        if (closed) return;
+        if (!opened) {
+          // Handshake rejected — likely no access to this session. Back off, then stop.
+          rejectCount += 1;
+          if (rejectCount >= MAX_REJECTS) return; // give up silently
+        }
+        const delay = opened ? 2500 : Math.min(2000 * rejectCount, 15000);
+        retry = setTimeout(connect, delay);
       };
       ws.onerror = () => ws.close();
     };

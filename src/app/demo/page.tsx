@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bot, User, CheckCircle2, Database, Target, Zap, ChevronRight, Download,
     Sparkles, ChevronDown, Check, Edit3, X, Search, SquarePen, LogOut,
-    PanelLeftClose, Minimize2, Plus, Trash2, Save, Cpu, Settings,
+    PanelLeftClose, Minimize2, Plus, Trash2, Save, Cpu, Settings, Share2,
     TrendingUp, Play, BarChart2, ChevronLeft, ChevronUp,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -27,7 +27,7 @@ const T = {
     maroon:    '#5C1427',   // CTAs, active tabs, weight bars, badges — sparingly
     maroonDeep:'#3E0E1A',   // Display headlines only
     maroonRich:'#731931',
-    maroonMid: '#8A2B42',   // Softer accent for non-CTA uses
+    maroonMid: '#8A1E3A',   // matches --brand-maroon-bright in the workspace
     ink:       '#14110F',
     neutral50: '#FAFAF8',
     neutral100:'#F2F1ED',
@@ -51,35 +51,233 @@ interface MockGoal {
     target_columns: string[];
 }
 
-const INITIAL_GOALS: MockGoal[] = [
-    { id: 'g1', description: 'Match medical specialization to facility needs.', award_type: 'Reward', weight: 45, logic_type: 'categorical_match', resource_columns: ['specialization'], target_columns: ['centre_specialization'] },
-    { id: 'g2', description: 'Prioritise facilities with critical disease burden.', award_type: 'Reward', weight: 35, logic_type: 'weighted_scoring', resource_columns: [], target_columns: ['prevalent_diseases'] },
-    { id: 'g3', description: 'Respect facility personnel capacity.', award_type: 'Penalty', weight: 20, logic_type: 'numeric_threshold', resource_columns: [], target_columns: ['personnel_capacity'] },
-];
+interface MockAssignment {
+    assignment_id: string;
+    resource: { id: string };
+    target: { id: string };
+    score: number;
+    approval_status: 'approved' | 'pending' | 'rejected' | 'modified';
+    notes: string | null;
+}
 
-const MOCK_ASSIGNMENTS = [
-    { assignment_id: '1', resource: { id: 'HW-0042' }, target: { id: 'FAC-LAG-12' }, score: 0.962, approval_status: 'approved' as const, notes: 'Adaeze N. (RN, ICU) matched to Lagos PHC — ICU + emergency cover priority. Closest ICU-trained resource (5 km, in-state). No shift conflicts next week.' },
-    { assignment_id: '2', resource: { id: 'HW-0118' }, target: { id: 'FAC-KAN-03' }, score: 0.941, approval_status: 'approved' as const, notes: 'Yusuf I. (RN, Pediatrics) to Kano Cottage — same-state assignment, pediatric specialisation exact match.' },
-    { assignment_id: '3', resource: { id: 'HW-0067' }, target: { id: 'FAC-ENU-08' }, score: 0.912, approval_status: 'pending' as const, notes: 'Chiamaka O. (Midwife) to Enugu MCH — exact specialty fit. Score slightly reduced: 3× deployments in last 30 days (load-balancing penalty).' },
-    { assignment_id: '4', resource: { id: 'HW-0089' }, target: { id: 'FAC-ABU-21' }, score: 0.876, approval_status: 'modified' as const, notes: null },
-    { assignment_id: '5', resource: { id: 'HW-0014' }, target: { id: 'FAC-PHC-05' }, score: 0.854, approval_status: 'approved' as const, notes: null },
-    { assignment_id: '6', resource: { id: 'HW-0103' }, target: { id: 'FAC-IBA-02' }, score: 0.831, approval_status: 'pending' as const, notes: null },
-    { assignment_id: '7', resource: { id: 'HW-0029' }, target: { id: 'FAC-KAD-14' }, score: 0.791, approval_status: 'rejected' as const, notes: null },
-];
+interface Scenario {
+    id: string;
+    domain: string;        // sidebar label, e.g. "Healthcare"
+    task: string;          // task type, e.g. "Assignment"
+    solver: string;        // human label of routed solver
+    title: string;         // context-bar problem name
+    blurb: string;         // banner sub-line
+    resourceLabel: string; // "graduates"
+    targetLabel: string;   // "facilities"
+    resourceCount: number;
+    targetCount: number;
+    userPrompt: string;    // chat seed (the user's opening message)
+    goals: MockGoal[];
+    assignments: MockAssignment[];
+    resources: Record<string, string | number>[];
+    targets: Record<string, string | number>[];
+}
 
-const RESOURCES = [
-    { id: 'HW-0042', name: 'Adaeze N.',   specialization: 'ICU / Emergency', qualification: 'RN (BSc)',  deployed: 'Lagos' },
-    { id: 'HW-0118', name: 'Yusuf I.',    specialization: 'Pediatrics',      qualification: 'RN',        deployed: 'Kano' },
-    { id: 'HW-0067', name: 'Chiamaka O.', specialization: 'Maternal health', qualification: 'Midwife',   deployed: 'Enugu' },
-    { id: 'HW-0089', name: 'Tunde A.',    specialization: 'Community health',qualification: 'CHEW',      deployed: 'FCT' },
-    { id: 'HW-0014', name: 'Folake B.',   specialization: 'Cardiology',      qualification: 'RN (MSc)',  deployed: 'Rivers' },
-];
-const TARGETS = [
-    { id: 'FAC-LAG-12', name: 'Ajeromi PHC, Lagos',    need: 'ICU + emergency',      diseases: 'Malaria, hypertension', capacity: 4 },
-    { id: 'FAC-KAN-03', name: 'Kano Cottage Hospital', need: 'Pediatric + maternal', diseases: 'Measles, malnutrition', capacity: 6 },
-    { id: 'FAC-ENU-08', name: 'Enugu MCH',             need: 'Maternal health',      diseases: 'Maternal anaemia',      capacity: 3 },
-    { id: 'FAC-ABU-21', name: 'FCT Field Clinic',      need: 'Community health',     diseases: 'HIV/AIDS, TB',          capacity: 8 },
-    { id: 'FAC-PHC-05', name: 'PH Health Centre',      need: 'Cardio + general',     diseases: 'Hypertension',          capacity: 5 },
+const SCENARIOS: Scenario[] = [
+    {
+        id: 'healthcare', domain: 'Healthcare', task: 'Assignment', solver: 'Genetic algorithm',
+        title: 'NYSC Healthcare Deployment', blurb: '50 graduates → 20 facilities by specialization & disease burden',
+        resourceLabel: 'graduates', targetLabel: 'facilities', resourceCount: 50, targetCount: 20,
+        userPrompt: 'I need to deploy NYSC healthcare graduates to primary health facilities across Nigeria. Match their medical specializations to facility needs and prioritise facilities with critical disease burden.',
+        goals: [
+            { id: 'g1', description: 'Match medical specialization to facility needs.', award_type: 'Reward', weight: 45, logic_type: 'categorical_match', resource_columns: ['specialization'], target_columns: ['centre_specialization'] },
+            { id: 'g2', description: 'Prioritise facilities with critical disease burden.', award_type: 'Reward', weight: 35, logic_type: 'weighted_scoring', resource_columns: [], target_columns: ['prevalent_diseases'] },
+            { id: 'g3', description: 'Respect facility personnel capacity.', award_type: 'Penalty', weight: 20, logic_type: 'numeric_threshold', resource_columns: [], target_columns: ['personnel_capacity'] },
+        ],
+        assignments: [
+            { assignment_id: '1', resource: { id: 'HW-0042' }, target: { id: 'FAC-LAG-12' }, score: 0.962, approval_status: 'approved', notes: 'Adaeze N. (RN, ICU) matched to Lagos PHC — ICU + emergency cover priority. Closest ICU-trained resource (5 km, in-state). No shift conflicts next week.' },
+            { assignment_id: '2', resource: { id: 'HW-0118' }, target: { id: 'FAC-KAN-03' }, score: 0.941, approval_status: 'approved', notes: 'Yusuf I. (RN, Pediatrics) to Kano Cottage — same-state assignment, pediatric specialisation exact match.' },
+            { assignment_id: '3', resource: { id: 'HW-0067' }, target: { id: 'FAC-ENU-08' }, score: 0.912, approval_status: 'pending', notes: 'Chiamaka O. (Midwife) to Enugu MCH — exact specialty fit. Score reduced: 3× deployments in last 30 days (load-balancing penalty).' },
+            { assignment_id: '4', resource: { id: 'HW-0089' }, target: { id: 'FAC-ABU-21' }, score: 0.876, approval_status: 'modified', notes: null },
+            { assignment_id: '5', resource: { id: 'HW-0014' }, target: { id: 'FAC-PHC-05' }, score: 0.854, approval_status: 'approved', notes: null },
+            { assignment_id: '6', resource: { id: 'HW-0103' }, target: { id: 'FAC-IBA-02' }, score: 0.831, approval_status: 'pending', notes: null },
+            { assignment_id: '7', resource: { id: 'HW-0029' }, target: { id: 'FAC-KAD-14' }, score: 0.791, approval_status: 'rejected', notes: null },
+        ],
+        resources: [
+            { id: 'HW-0042', name: 'Adaeze N.', specialization: 'ICU / Emergency', qualification: 'RN (BSc)', deployed: 'Lagos' },
+            { id: 'HW-0118', name: 'Yusuf I.', specialization: 'Pediatrics', qualification: 'RN', deployed: 'Kano' },
+            { id: 'HW-0067', name: 'Chiamaka O.', specialization: 'Maternal health', qualification: 'Midwife', deployed: 'Enugu' },
+            { id: 'HW-0089', name: 'Tunde A.', specialization: 'Community health', qualification: 'CHEW', deployed: 'FCT' },
+            { id: 'HW-0014', name: 'Folake B.', specialization: 'Cardiology', qualification: 'RN (MSc)', deployed: 'Rivers' },
+        ],
+        targets: [
+            { id: 'FAC-LAG-12', name: 'Ajeromi PHC, Lagos', need: 'ICU + emergency', diseases: 'Malaria, hypertension', capacity: 4 },
+            { id: 'FAC-KAN-03', name: 'Kano Cottage Hospital', need: 'Pediatric + maternal', diseases: 'Measles, malnutrition', capacity: 6 },
+            { id: 'FAC-ENU-08', name: 'Enugu MCH', need: 'Maternal health', diseases: 'Maternal anaemia', capacity: 3 },
+            { id: 'FAC-ABU-21', name: 'FCT Field Clinic', need: 'Community health', diseases: 'HIV/AIDS, TB', capacity: 8 },
+            { id: 'FAC-PHC-05', name: 'PH Health Centre', need: 'Cardio + general', diseases: 'Hypertension', capacity: 5 },
+        ],
+    },
+    {
+        id: 'logistics', domain: 'Logistics', task: 'Routing', solver: 'OR-Tools routing',
+        title: 'Last-Mile Delivery Routing', blurb: '60 drivers → 240 stops minimising distance & honouring capacity',
+        resourceLabel: 'drivers', targetLabel: 'zones', resourceCount: 60, targetCount: 18,
+        userPrompt: 'Assign my delivery drivers to zones and sequence their stops. Minimise total distance, respect each van’s capacity, and keep every route under 8 hours.',
+        goals: [
+            { id: 'g1', description: 'Minimise total driving distance.', award_type: 'Reward', weight: 50, logic_type: 'distance_min', resource_columns: ['depot_x', 'depot_y'], target_columns: ['lat', 'lng'] },
+            { id: 'g2', description: 'Stay within van load capacity.', award_type: 'Penalty', weight: 30, logic_type: 'numeric_threshold', resource_columns: ['capacity_kg'], target_columns: ['demand_kg'] },
+            { id: 'g3', description: 'Keep each route under 8 hours.', award_type: 'Penalty', weight: 20, logic_type: 'time_window', resource_columns: [], target_columns: ['service_min'] },
+        ],
+        assignments: [
+            { assignment_id: '1', resource: { id: 'DRV-07' }, target: { id: 'ZN-IKEJA' }, score: 0.971, approval_status: 'approved', notes: 'Driver 07 (van, 800 kg) → Ikeja cluster: 14 stops, 62 km, 6h10m. Tightest route, fully within capacity.' },
+            { assignment_id: '2', resource: { id: 'DRV-12' }, target: { id: 'ZN-LEKKI' }, score: 0.948, approval_status: 'approved', notes: 'Driver 12 → Lekki corridor: 11 stops, 71 km. Bridge toll window respected.' },
+            { assignment_id: '3', resource: { id: 'DRV-03' }, target: { id: 'ZN-YABA' }, score: 0.917, approval_status: 'pending', notes: 'Driver 03 → Yaba/Surulere: dense 18-stop route, near capacity (760/800 kg).' },
+            { assignment_id: '4', resource: { id: 'DRV-21' }, target: { id: 'ZN-AJAH' }, score: 0.883, approval_status: 'approved', notes: null },
+            { assignment_id: '5', resource: { id: 'DRV-09' }, target: { id: 'ZN-APAPA' }, score: 0.857, approval_status: 'modified', notes: null },
+            { assignment_id: '6', resource: { id: 'DRV-15' }, target: { id: 'ZN-OSHODI' }, score: 0.822, approval_status: 'pending', notes: null },
+        ],
+        resources: [
+            { id: 'DRV-07', name: 'Emeka U.', vehicle: 'Van', capacity_kg: 800, depot: 'Ikeja' },
+            { id: 'DRV-12', name: 'Bola A.', vehicle: 'Van', capacity_kg: 800, depot: 'Lekki' },
+            { id: 'DRV-03', name: 'Sani M.', vehicle: 'Truck', capacity_kg: 1200, depot: 'Yaba' },
+            { id: 'DRV-21', name: 'Grace O.', vehicle: 'Bike', capacity_kg: 60, depot: 'Ajah' },
+            { id: 'DRV-09', name: 'Peter K.', vehicle: 'Van', capacity_kg: 800, depot: 'Apapa' },
+        ],
+        targets: [
+            { id: 'ZN-IKEJA', name: 'Ikeja cluster', stops: 14, demand_kg: 620, window: '08:00–16:00' },
+            { id: 'ZN-LEKKI', name: 'Lekki corridor', stops: 11, demand_kg: 540, window: '09:00–17:00' },
+            { id: 'ZN-YABA', name: 'Yaba / Surulere', stops: 18, demand_kg: 760, window: '08:00–15:00' },
+            { id: 'ZN-AJAH', name: 'Ajah belt', stops: 9, demand_kg: 210, window: '10:00–18:00' },
+            { id: 'ZN-APAPA', name: 'Apapa port zone', stops: 12, demand_kg: 690, window: '07:00–14:00' },
+        ],
+    },
+    {
+        id: 'education', domain: 'Education', task: 'Matching', solver: 'Genetic algorithm',
+        title: 'Teacher Placement — Greater Accra', blurb: '120 teachers → 40 schools by subject, level & proximity',
+        resourceLabel: 'teachers', targetLabel: 'schools', resourceCount: 120, targetCount: 40,
+        userPrompt: 'Place newly posted teachers into schools. Match subject and grade level, balance class sizes, and minimise how far each teacher relocates.',
+        goals: [
+            { id: 'g1', description: 'Match subject + grade level to vacancy.', award_type: 'Reward', weight: 50, logic_type: 'categorical_match', resource_columns: ['subject', 'level'], target_columns: ['vacancy_subject', 'vacancy_level'] },
+            { id: 'g2', description: 'Minimise relocation distance.', award_type: 'Reward', weight: 30, logic_type: 'distance_min', resource_columns: ['home_district'], target_columns: ['district'] },
+            { id: 'g3', description: 'Balance pupil-teacher ratio.', award_type: 'Penalty', weight: 20, logic_type: 'numeric_threshold', resource_columns: [], target_columns: ['pupils'] },
+        ],
+        assignments: [
+            { assignment_id: '1', resource: { id: 'TCH-204' }, target: { id: 'SCH-AC-11' }, score: 0.958, approval_status: 'approved', notes: 'Ama D. (Maths, JHS) → Accra Academy JHS: exact subject/level match, same district (0 relocation).' },
+            { assignment_id: '2', resource: { id: 'TCH-118' }, target: { id: 'SCH-TM-04' }, score: 0.933, approval_status: 'approved', notes: 'Kojo M. (Science, SHS) → Tema Secondary: subject match, 12 km relocation.' },
+            { assignment_id: '3', resource: { id: 'TCH-076' }, target: { id: 'SCH-AC-02' }, score: 0.905, approval_status: 'pending', notes: 'Efua B. (English, JHS) → Osu JHS: good fit; school slightly over ratio target.' },
+            { assignment_id: '4', resource: { id: 'TCH-159' }, target: { id: 'SCH-GA-07' }, score: 0.871, approval_status: 'modified', notes: null },
+            { assignment_id: '5', resource: { id: 'TCH-033' }, target: { id: 'SCH-AC-19' }, score: 0.842, approval_status: 'approved', notes: null },
+            { assignment_id: '6', resource: { id: 'TCH-201' }, target: { id: 'SCH-TM-12' }, score: 0.808, approval_status: 'pending', notes: null },
+        ],
+        resources: [
+            { id: 'TCH-204', name: 'Ama D.', subject: 'Mathematics', level: 'JHS', home: 'Accra Central' },
+            { id: 'TCH-118', name: 'Kojo M.', subject: 'Science', level: 'SHS', home: 'Tema' },
+            { id: 'TCH-076', name: 'Efua B.', subject: 'English', level: 'JHS', home: 'Osu' },
+            { id: 'TCH-159', name: 'Yaw O.', subject: 'Social Studies', level: 'JHS', home: 'Madina' },
+            { id: 'TCH-033', name: 'Akua S.', subject: 'ICT', level: 'SHS', home: 'Dansoman' },
+        ],
+        targets: [
+            { id: 'SCH-AC-11', name: 'Accra Academy JHS', vacancy: 'Maths · JHS', district: 'Accra Central', pupils: 420 },
+            { id: 'SCH-TM-04', name: 'Tema Secondary', vacancy: 'Science · SHS', district: 'Tema', pupils: 680 },
+            { id: 'SCH-AC-02', name: 'Osu JHS', vacancy: 'English · JHS', district: 'Osu', pupils: 310 },
+            { id: 'SCH-GA-07', name: 'Madina Cluster JHS', vacancy: 'Social · JHS', district: 'Madina', pupils: 390 },
+            { id: 'SCH-AC-19', name: 'Dansoman SHS', vacancy: 'ICT · SHS', district: 'Dansoman', pupils: 540 },
+        ],
+    },
+    {
+        id: 'workforce', domain: 'Workforce', task: 'Scheduling', solver: 'Schedule solver',
+        title: 'Hospital Nurse Roster — Week 32', blurb: '90 nurses → 7-day shift grid honouring skills & rest rules',
+        resourceLabel: 'nurses', targetLabel: 'shifts', resourceCount: 90, targetCount: 42,
+        userPrompt: 'Build next week’s nurse roster. Cover every shift with the right skill mix, cap each nurse at 5 shifts, and respect rest periods between nights and mornings.',
+        goals: [
+            { id: 'g1', description: 'Cover each shift’s required skill mix.', award_type: 'Reward', weight: 45, logic_type: 'categorical_match', resource_columns: ['skills'], target_columns: ['required_skills'] },
+            { id: 'g2', description: 'Cap nurses at 5 shifts per week.', award_type: 'Penalty', weight: 30, logic_type: 'numeric_threshold', resource_columns: [], target_columns: [] },
+            { id: 'g3', description: 'Enforce rest between night & morning.', award_type: 'Penalty', weight: 25, logic_type: 'time_window', resource_columns: ['last_shift'], target_columns: ['slot'] },
+        ],
+        assignments: [
+            { assignment_id: '1', resource: { id: 'N-031' }, target: { id: 'MON-AM-ICU' }, score: 0.967, approval_status: 'approved', notes: 'Ngozi (ICU) → Mon AM ICU: skill exact, 1st of 4 shifts this week, 16h rest before.' },
+            { assignment_id: '2', resource: { id: 'N-112' }, target: { id: 'MON-PM-ER' }, score: 0.944, approval_status: 'approved', notes: 'Ibrahim (ER) → Mon PM ER: covers trauma requirement.' },
+            { assignment_id: '3', resource: { id: 'N-058' }, target: { id: 'TUE-NT-WARD' }, score: 0.918, approval_status: 'pending', notes: 'Funmi (General) → Tue night ward: ok, but 5th shift — at weekly cap.' },
+            { assignment_id: '4', resource: { id: 'N-090' }, target: { id: 'WED-AM-MAT' }, score: 0.882, approval_status: 'modified', notes: null },
+            { assignment_id: '5', resource: { id: 'N-014' }, target: { id: 'WED-PM-ICU' }, score: 0.86, approval_status: 'approved', notes: null },
+            { assignment_id: '6', resource: { id: 'N-077' }, target: { id: 'THU-NT-ER' }, score: 0.825, approval_status: 'pending', notes: null },
+        ],
+        resources: [
+            { id: 'N-031', name: 'Ngozi A.', skills: 'ICU, Triage', max_shifts: 5, contract: 'Full-time' },
+            { id: 'N-112', name: 'Ibrahim S.', skills: 'ER, Trauma', max_shifts: 5, contract: 'Full-time' },
+            { id: 'N-058', name: 'Funmi O.', skills: 'General', max_shifts: 4, contract: 'Part-time' },
+            { id: 'N-090', name: 'Chidi E.', skills: 'Maternity', max_shifts: 5, contract: 'Full-time' },
+            { id: 'N-014', name: 'Hauwa B.', skills: 'ICU, Cardio', max_shifts: 5, contract: 'Full-time' },
+        ],
+        targets: [
+            { id: 'MON-AM-ICU', name: 'Mon · AM · ICU', required_skills: 'ICU', headcount: 3, slot: 'Morning' },
+            { id: 'MON-PM-ER', name: 'Mon · PM · ER', required_skills: 'ER, Trauma', headcount: 4, slot: 'Afternoon' },
+            { id: 'TUE-NT-WARD', name: 'Tue · Night · Ward', required_skills: 'General', headcount: 5, slot: 'Night' },
+            { id: 'WED-AM-MAT', name: 'Wed · AM · Maternity', required_skills: 'Maternity', headcount: 2, slot: 'Morning' },
+            { id: 'WED-PM-ICU', name: 'Wed · PM · ICU', required_skills: 'ICU, Cardio', headcount: 3, slot: 'Afternoon' },
+        ],
+    },
+    {
+        id: 'government', domain: 'Government / NGO', task: 'Assignment', solver: 'Greedy + GA refine',
+        title: 'Field Enumerator Deployment', blurb: '300 enumerators → 75 communities by language & terrain access',
+        resourceLabel: 'enumerators', targetLabel: 'communities', resourceCount: 300, targetCount: 75,
+        userPrompt: 'Deploy census enumerators to communities. Match local language, account for terrain and travel access, and balance workload evenly across the team.',
+        goals: [
+            { id: 'g1', description: 'Match local language to community.', award_type: 'Reward', weight: 45, logic_type: 'categorical_match', resource_columns: ['languages'], target_columns: ['main_language'] },
+            { id: 'g2', description: 'Prefer enumerators near reachable terrain.', award_type: 'Reward', weight: 30, logic_type: 'distance_min', resource_columns: ['base'], target_columns: ['access'] },
+            { id: 'g3', description: 'Balance households per enumerator.', award_type: 'Penalty', weight: 25, logic_type: 'numeric_threshold', resource_columns: [], target_columns: ['households'] },
+        ],
+        assignments: [
+            { assignment_id: '1', resource: { id: 'EN-1042' }, target: { id: 'CM-BORNO-7' }, score: 0.954, approval_status: 'approved', notes: 'Musa (Kanuri, Hausa) → Borno cluster 7: language match + nearest reachable base.' },
+            { assignment_id: '2', resource: { id: 'EN-2210' }, target: { id: 'CM-KANO-3' }, score: 0.929, approval_status: 'approved', notes: 'Aisha (Hausa) → Kano ward 3: dense urban, language exact.' },
+            { assignment_id: '3', resource: { id: 'EN-0871' }, target: { id: 'CM-RIVERS-9' }, score: 0.901, approval_status: 'pending', notes: 'Tamuno (Ijaw, English) → riverine community: terrain penalty (boat access only).' },
+            { assignment_id: '4', resource: { id: 'EN-1530' }, target: { id: 'CM-OYO-2' }, score: 0.874, approval_status: 'modified', notes: null },
+            { assignment_id: '5', resource: { id: 'EN-0345' }, target: { id: 'CM-BENUE-5' }, score: 0.848, approval_status: 'approved', notes: null },
+            { assignment_id: '6', resource: { id: 'EN-1988' }, target: { id: 'CM-KADUNA-1' }, score: 0.812, approval_status: 'pending', notes: null },
+        ],
+        resources: [
+            { id: 'EN-1042', name: 'Musa B.', languages: 'Kanuri, Hausa', base: 'Maiduguri', vehicle: 'Motorbike' },
+            { id: 'EN-2210', name: 'Aisha L.', languages: 'Hausa', base: 'Kano', vehicle: 'On foot' },
+            { id: 'EN-0871', name: 'Tamuno P.', languages: 'Ijaw, English', base: 'Port Harcourt', vehicle: 'Boat' },
+            { id: 'EN-1530', name: 'Bisi A.', languages: 'Yoruba', base: 'Ibadan', vehicle: 'Car' },
+            { id: 'EN-0345', name: 'Terna I.', languages: 'Tiv, English', base: 'Makurdi', vehicle: 'Motorbike' },
+        ],
+        targets: [
+            { id: 'CM-BORNO-7', name: 'Borno cluster 7', main_language: 'Kanuri', access: 'Road (escort)', households: 540 },
+            { id: 'CM-KANO-3', name: 'Kano ward 3', main_language: 'Hausa', access: 'Urban', households: 880 },
+            { id: 'CM-RIVERS-9', name: 'Rivers riverine 9', main_language: 'Ijaw', access: 'Boat only', households: 220 },
+            { id: 'CM-OYO-2', name: 'Oyo rural 2', main_language: 'Yoruba', access: 'Road', households: 410 },
+            { id: 'CM-BENUE-5', name: 'Benue cluster 5', main_language: 'Tiv', access: 'Road', households: 360 },
+        ],
+    },
+    {
+        id: 'events', domain: 'Hospitality / Events', task: 'Allocation', solver: 'Genetic algorithm',
+        title: 'Event Staff Allocation — Conference', blurb: '80 staff → 24 stations by role, certification & peak demand',
+        resourceLabel: 'staff', targetLabel: 'stations', resourceCount: 80, targetCount: 24,
+        userPrompt: 'Allocate event staff to stations for a 2-day conference. Match roles and certifications, cover peak-hour demand, and keep teams balanced across halls.',
+        goals: [
+            { id: 'g1', description: 'Match role + certification to station.', award_type: 'Reward', weight: 45, logic_type: 'categorical_match', resource_columns: ['role', 'certs'], target_columns: ['needed_role'] },
+            { id: 'g2', description: 'Cover peak-hour demand.', award_type: 'Reward', weight: 35, logic_type: 'weighted_scoring', resource_columns: [], target_columns: ['peak_demand'] },
+            { id: 'g3', description: 'Balance headcount across halls.', award_type: 'Penalty', weight: 20, logic_type: 'numeric_threshold', resource_columns: [], target_columns: ['hall'] },
+        ],
+        assignments: [
+            { assignment_id: '1', resource: { id: 'ST-21' }, target: { id: 'STN-REG-A' }, score: 0.961, approval_status: 'approved', notes: 'Lara (Lead, First-aid) → Registration A: role + cert match, covers 9am peak.' },
+            { assignment_id: '2', resource: { id: 'ST-08' }, target: { id: 'STN-AV-1' }, score: 0.939, approval_status: 'approved', notes: 'Daniel (AV tech) → Main hall AV: certified, sole AV specialist for keynote.' },
+            { assignment_id: '3', resource: { id: 'ST-44' }, target: { id: 'STN-CAT-2' }, score: 0.907, approval_status: 'pending', notes: 'Zainab (Catering) → Lunch station 2: fine; hall slightly over headcount target.' },
+            { assignment_id: '4', resource: { id: 'ST-17' }, target: { id: 'STN-SEC-B' }, score: 0.878, approval_status: 'modified', notes: null },
+            { assignment_id: '5', resource: { id: 'ST-30' }, target: { id: 'STN-INFO' }, score: 0.851, approval_status: 'approved', notes: null },
+            { assignment_id: '6', resource: { id: 'ST-12' }, target: { id: 'STN-REG-B' }, score: 0.819, approval_status: 'pending', notes: null },
+        ],
+        resources: [
+            { id: 'ST-21', name: 'Lara N.', role: 'Team lead', certs: 'First-aid', avail: 'Both days' },
+            { id: 'ST-08', name: 'Daniel K.', role: 'AV tech', certs: 'AV', avail: 'Day 1' },
+            { id: 'ST-44', name: 'Zainab M.', role: 'Catering', certs: 'Food safety', avail: 'Both days' },
+            { id: 'ST-17', name: 'Femi O.', role: 'Security', certs: 'Crowd ctrl', avail: 'Both days' },
+            { id: 'ST-30', name: 'Ruth A.', role: 'Usher', certs: '—', avail: 'Day 2' },
+        ],
+        targets: [
+            { id: 'STN-REG-A', name: 'Registration A', needed_role: 'Lead', peak_demand: 'High (9am)', hall: 'Foyer' },
+            { id: 'STN-AV-1', name: 'Main hall AV', needed_role: 'AV tech', peak_demand: 'Keynote', hall: 'Hall 1' },
+            { id: 'STN-CAT-2', name: 'Lunch station 2', needed_role: 'Catering', peak_demand: 'High (1pm)', hall: 'Hall 2' },
+            { id: 'STN-SEC-B', name: 'Entrance B', needed_role: 'Security', peak_demand: 'Medium', hall: 'Foyer' },
+            { id: 'STN-INFO', name: 'Info desk', needed_role: 'Usher', peak_demand: 'Low', hall: 'Foyer' },
+        ],
+    },
 ];
 
 const FITNESS_HISTORY = Array.from({ length: 60 }, (_, i) =>
@@ -89,14 +287,25 @@ const AVG_HISTORY = Array.from({ length: 60 }, (_, i) =>
     parseFloat(Math.min(0.92, 0.4 + 0.42 * (1 - Math.exp(-i / 22))).toFixed(3))
 );
 
-const SESSIONS = [
-    { id: 's1', name: 'Q4 nurse roster · Lagos University Hospital' },
-    { id: 's2', name: 'Logistics — multi-stop delivery routes' },
-    { id: 's3', name: 'Teacher placement, Greater Accra' },
-    { id: 's4', name: 'Field worker assignment, Northern region' },
-];
-
 // ── Shared components ──────────────────────────────────────────────────────────
+
+// Mock share control — showcases session sharing without a backend.
+const ShareButton: React.FC<{ slug: string }> = ({ slug }) => {
+    const [copied, setCopied] = useState(false);
+    const copy = () => {
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        navigator.clipboard?.writeText(`${origin}/share/demo-${slug}`).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1600);
+        });
+    };
+    return (
+        <button onClick={copy} title="Share this session (demo)"
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: 'transparent', border: `1px solid ${T.neutral200}`, borderRadius: 8, fontSize: 13, color: T.neutral600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {copied ? <Check size={13} /> : <Share2 size={13} />} {copied ? 'Link copied' : 'Share'}
+        </button>
+    );
+};
 
 const StatusBadge = ({ status }: { status: string }) => {
     const s: Record<string, string> = {
@@ -149,9 +358,9 @@ const FitnessChart = () => {
 // ── Canvas tabs ────────────────────────────────────────────────────────────────
 
 const TIMELINE = [
-    { stage: 'ingest',    label: 'Data validated',            sub: '50 graduates · 20 facilities' },
+    { stage: 'ingest',    label: 'Data validated',            sub: 'Resources & targets checked' },
     { stage: 'translate', label: 'Goals compiled',            sub: '3 goals → executable fitness function' },
-    { stage: 'init',      label: 'Solver selected',           sub: 'Assignment problem → genetic algorithm' },
+    { stage: 'init',      label: 'Solver selected',           sub: 'Router picked best-fit solver for this problem' },
     { stage: 'solve',     label: 'Solver running',            sub: 'Evaluating candidate assignments' },
     { stage: 'converge',  label: 'Convergence detected',      sub: 'Fitness plateau reached' },
     { stage: 'explain',   label: 'Rationale generated',       sub: 'Per-assignment notes ready' },
@@ -239,10 +448,10 @@ const ResultsTab = () => (
     </div>
 );
 
-const AssignmentsTab = () => {
+const AssignmentsTab = ({ assignments }: { assignments: MockAssignment[] }) => {
     const [expanded, setExpanded] = useState<string | null>(null);
-    const [statuses, setStatuses] = useState(
-        Object.fromEntries(MOCK_ASSIGNMENTS.map(a => [a.assignment_id, a.approval_status]))
+    const [statuses, setStatuses] = useState<Record<string, string>>(
+        Object.fromEntries(assignments.map(a => [a.assignment_id, a.approval_status]))
     );
     return (
         <div style={{ background: '#fff', border: `1px solid ${T.neutral200}`, borderRadius: 10, overflow: 'hidden' }}>
@@ -256,7 +465,7 @@ const AssignmentsTab = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {MOCK_ASSIGNMENTS.map(a => {
+                    {assignments.map(a => {
                         const isExp = expanded === a.assignment_id;
                         const status = statuses[a.assignment_id];
                         return (
@@ -486,8 +695,9 @@ const ConfigTab = () => {
     const [maxGens, setMaxGens] = useState(2000);
     const solvers = [
         { id: 'ga', name: 'Genetic algorithm', desc: 'Best for large assignment problems.' },
+        { id: 'ga_vec', name: 'Vectorized GA', desc: 'Faster GA for bigger instances.' },
         { id: 'greedy', name: 'Greedy solver', desc: 'Fast, good for initial estimates.' },
-        { id: 'ortools', name: 'OR-Tools CP', desc: 'When constraints dominate search.' },
+        { id: 'ortools', name: 'OR-Tools routing', desc: 'When constraints dominate search.' },
         { id: 'schedule', name: 'Schedule solver', desc: 'Shift/time-window problems.' },
     ];
     return (
@@ -526,10 +736,10 @@ const ConfigTab = () => {
     );
 };
 
-const DatasetsTab = () => {
+const DatasetsTab = ({ scenario }: { scenario: Scenario }) => {
     const [active, setActive] = useState<'resources' | 'targets'>('resources');
-    const rows = active === 'resources' ? RESOURCES : TARGETS;
-    const cols = active === 'resources' ? ['ID', 'Name', 'Specialization', 'Qualification', 'Deployed state'] : ['ID', 'Facility', 'Specialization need', 'Prevalent diseases', 'Capacity'];
+    const rows = active === 'resources' ? scenario.resources : scenario.targets;
+    const cols = Object.keys(rows[0] ?? {}).map(k => k.replace(/_/g, ' '));
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -537,7 +747,9 @@ const DatasetsTab = () => {
                     {(['resources', 'targets'] as const).map(t => (
                         <button key={t} onClick={() => setActive(t)}
                             style={{ padding: '4px 12px', borderRadius: 999, border: 0, fontSize: 11, fontWeight: 500, cursor: 'pointer', background: active === t ? T.maroon : 'transparent', color: active === t ? T.bone : T.neutral600 }}>
-                            {t === 'resources' ? 'Graduates · 50' : 'Facilities · 20'}
+                            {t === 'resources'
+                                ? `${scenario.resourceLabel} · ${scenario.resourceCount}`
+                                : `${scenario.targetLabel} · ${scenario.targetCount}`}
                         </button>
                     ))}
                 </div>
@@ -565,7 +777,7 @@ const DatasetsTab = () => {
                     </tbody>
                 </table>
                 <div style={{ padding: '8px 12px', fontSize: 11, color: T.neutral400, fontFamily: 'var(--font-mono)', borderTop: `1px solid ${T.neutral100}` }}>
-                    Showing {rows.length} of {active === 'resources' ? 50 : 20} · source: generated sample (NYSC healthcare deployment)
+                    Showing {rows.length} of {active === 'resources' ? scenario.resourceCount : scenario.targetCount} · source: generated sample ({scenario.title})
                 </div>
             </div>
         </div>
@@ -586,21 +798,22 @@ interface CanvasProps {
     onTabChange: (t: CanvasTab) => void;
     onClose: () => void;
     onMinimize: () => void;
+    scenario: Scenario;
 }
 
-const Canvas: React.FC<CanvasProps> = ({ runStage, goals, onGoalAdd, onGoalUpdate, onGoalDelete, tab, onTabChange, onClose, onMinimize }) => {
+const Canvas: React.FC<CanvasProps> = ({ scenario, runStage, goals, onGoalAdd, onGoalUpdate, onGoalDelete, tab, onTabChange, onClose, onMinimize }) => {
     const isDone = runStage === 'done';
     const tabs: { id: CanvasTab; label: string; badge?: number }[] = [
         { id: 'monitor', label: 'Monitor' },
         { id: 'results', label: 'Results' },
-        { id: 'assignments', label: 'Assignments', badge: MOCK_ASSIGNMENTS.length },
+        { id: 'assignments', label: 'Assignments', badge: scenario.assignments.length },
         { id: 'goals', label: 'Goals', badge: goals.length },
         { id: 'config', label: 'Config' },
         { id: 'datasets', label: 'Datasets' },
     ];
     return (
         <aside style={{
-            width: 720, flexShrink: 0, background: '#fff',
+            width: "min(720px, 100%)", flexShrink: 1, minWidth: 0, background: '#fff',
             borderLeft: `1px solid ${T.neutral200}`,
             display: 'flex', flexDirection: 'column',
             animation: 'canvas-in 280ms cubic-bezier(0.2,0,0,1)',
@@ -609,7 +822,7 @@ const Canvas: React.FC<CanvasProps> = ({ runStage, goals, onGoalAdd, onGoalUpdat
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', borderBottom: `1px solid ${T.neutral200}`, background: T.neutral50, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: isDone ? '#10B981' : runStage !== 'idle' ? '#F59E0B' : T.maroon, boxShadow: runStage !== 'idle' && !isDone ? '0 0 0 4px rgba(245,158,11,0.18)' : undefined, display: 'inline-block' }} />
-                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: T.maroonDeep, letterSpacing: '-0.015em', margin: 0 }}>Healthcare deployment</h2>
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: T.maroonDeep, letterSpacing: '-0.015em', margin: 0 }}>{scenario.title}</h2>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: T.neutral400 }}>· 0a8f3c</span>
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
@@ -648,7 +861,7 @@ const Canvas: React.FC<CanvasProps> = ({ runStage, goals, onGoalAdd, onGoalUpdat
                         <p style={{ fontSize: 13, marginTop: 6 }}>Watch the Monitor tab live. We'll switch you over automatically.</p>
                     </div>
                 ))}
-                {tab === 'assignments' && (isDone ? <AssignmentsTab /> : (
+                {tab === 'assignments' && (isDone ? <AssignmentsTab assignments={scenario.assignments} /> : (
                     <div style={{ padding: '48px 24px', textAlign: 'center', color: T.neutral400 }}>
                         <p style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: T.maroonDeep }}>No assignments yet.</p>
                         <p style={{ fontSize: 13, marginTop: 6 }}>Once converged, every resource → target pairing lands here for review.</p>
@@ -656,7 +869,7 @@ const Canvas: React.FC<CanvasProps> = ({ runStage, goals, onGoalAdd, onGoalUpdat
                 ))}
                 {tab === 'goals' && <GoalsTab goals={goals} onAdd={onGoalAdd} onUpdate={onGoalUpdate} onDelete={onGoalDelete} />}
                 {tab === 'config' && <ConfigTab />}
-                {tab === 'datasets' && <DatasetsTab />}
+                {tab === 'datasets' && <DatasetsTab scenario={scenario} />}
             </div>
         </aside>
     );
@@ -715,14 +928,22 @@ const renderMd = (text: string): React.ReactNode[] => {
     return result;
 };
 
-const MOCK_MESSAGES_LIST = [
-    { id: '1', role: 'user' as const, content: 'I need to deploy NYSC healthcare graduates to primary health facilities across Nigeria. Match their medical specializations to facility needs and prioritise facilities with critical disease burden.', ts: '09:41' },
-    { id: '2', role: 'assistant' as const, content: "Got it — here's what I understand:\n\n- **Graduates** → **Primary health facilities**\n- **Objectives:** Match specializations to facility needs · Prioritise critical disease burden\n\nPick a data source and confirm the goals you care about:", ts: '09:41', action: null, chips: ['Generate a sample for me', "I'll upload my data", 'Match specializations', 'Prioritise disease burden'] },
-    { id: '3', role: 'user' as const, content: 'Generate a sample for me · Match specializations · Prioritise disease burden', ts: '09:42' },
-    { id: '4', role: 'assistant' as const, content: "Generating a realistic sample now — **50 healthcare graduates** and **20 primary facilities**.\n\n| ID | Name | Specialization | Deployed |\n|---|---|---|---|\n| HW-0042 | Adaeze N. | ICU / Emergency | Lagos |\n| HW-0118 | Yusuf I. | Pediatrics | Kano |\n| HW-0067 | Chiamaka O. | Maternal health | Enugu |\n\nI've compiled your goals (you can tune weights in the **Goals** tab):\n\n- Match specialization → facility need · **45%**\n- Prioritise critical disease burden · **35%**\n- Respect personnel capacity · **20%**\n\n**Shall I run the optimization now?**", ts: '09:42', action: 'generate_sample_dataset', goals: true },
-    { id: '5', role: 'user' as const, content: 'Yes, run it.', ts: '09:43' },
-    { id: '6', role: 'assistant' as const, content: "Optimization dispatched — the canvas shows live progress. Every assignment will come back with a per-decision rationale you can review, approve, or modify.", ts: '09:43', action: 'optimization_started', run: true },
-];
+// Build the demo conversation from the active scenario so chat always matches it.
+const buildMessages = (s: Scenario) => {
+    const goalLines = s.goals.map(g => `- ${g.description} · **${g.weight}%**`).join('\n');
+    const sample = s.resources.slice(0, 3);
+    const cols = Object.keys(sample[0] ?? {}).slice(0, 4);
+    const head = `| ${cols.join(' | ')} |\n|${cols.map(() => '---').join('|')}|`;
+    const tableRows = sample.map(r => `| ${cols.map(c => r[c]).join(' | ')} |`).join('\n');
+    return [
+        { id: '1', role: 'user' as const, content: s.userPrompt, ts: '09:41' },
+        { id: '2', role: 'assistant' as const, content: `Got it — here's what I understand:\n\n- **${s.resourceLabel}** → **${s.targetLabel}**\n- **Objectives:** ${s.goals.map(g => g.description.replace(/\.$/, '')).join(' · ')}\n\nPick a data source and confirm the goals you care about:`, ts: '09:41', action: null, chips: ['Generate a sample for me', "I'll upload my data", ...s.goals.slice(0, 2).map(g => g.description.replace(/\.$/, ''))] },
+        { id: '3', role: 'user' as const, content: `Generate a sample for me · ${s.goals.slice(0, 2).map(g => g.description.replace(/\.$/, '')).join(' · ')}`, ts: '09:42' },
+        { id: '4', role: 'assistant' as const, content: `Generating a realistic sample now — **${s.resourceCount} ${s.resourceLabel}** and **${s.targetCount} ${s.targetLabel}**.\n\n${head}\n${tableRows}\n\nI've compiled your goals (tune weights in the **Goals** tab):\n\n${goalLines}\n\n**Shall I run the optimization now?**`, ts: '09:42', action: 'generate_sample_dataset', goals: true },
+        { id: '5', role: 'user' as const, content: 'Yes, run it.', ts: '09:43' },
+        { id: '6', role: 'assistant' as const, content: `Optimization dispatched via the **${s.solver}** — the canvas shows live progress. Every assignment comes back with a per-decision rationale you can review, approve, or modify.`, ts: '09:43', action: 'optimization_started', run: true },
+    ];
+};
 
 const MessageBubble = ({ msg, onOpenCanvas, onStartRun, runStage }: { msg: any; onOpenCanvas: (tab: CanvasTab) => void; onStartRun: () => void; runStage: string }) => {
     const isUser = msg.role === 'user';
@@ -785,8 +1006,9 @@ export default function DemoPage() {
     const [canvasMinimized, setCanvasMinimized] = useState(false);
     const [canvasTab, setCanvasTab] = useState<CanvasTab>('monitor');
     const [runStage, setRunStage] = useState('idle');
-    const [goals, setGoals] = useState<MockGoal[]>(INITIAL_GOALS);
-    const [activeSid, setActiveSid] = useState('s1');
+    const [scenarioId, setScenarioId] = useState(SCENARIOS[0].id);
+    const scenario = SCENARIOS.find(s => s.id === scenarioId) ?? SCENARIOS[0];
+    const [goals, setGoals] = useState<MockGoal[]>(SCENARIOS[0].goals);
     const [input, setInput] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
     const runTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -825,6 +1047,16 @@ export default function DemoPage() {
     const handleGoalUpdate = (id: string, patch: Partial<MockGoal>) => setGoals(prev => prev.map(g => g.id === id ? { ...g, ...patch } : g));
     const handleGoalDelete = (id: string) => setGoals(prev => prev.filter(g => g.id !== id));
 
+    // Switching the active scenario (from the history list) swaps the whole demo dataset.
+    const switchScenario = useCallback((id: string) => {
+        const sc = SCENARIOS.find(s => s.id === id) ?? SCENARIOS[0];
+        if (runTimer.current) clearInterval(runTimer.current);
+        setScenarioId(id);
+        setGoals(sc.goals);
+        setRunStage('idle');
+        setCanvasOpen(false);
+    }, []);
+
     const canvasVisible = canvasOpen && !canvasMinimized;
     const isDone = runStage === 'done';
 
@@ -832,8 +1064,8 @@ export default function DemoPage() {
         <div data-theme="light" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', overflow: 'hidden' }}>
             {/* Guided-demo banner */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '7px 16px', background: T.maroonDeep, color: T.bone, fontSize: 12.5, flexShrink: 0, flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.7 }}>Guided demo</span>
-                <span>NYSC healthcare deployment — 50 graduates → 20 facilities, sample data, fully interactive.</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.7 }}>Guided demo · {scenario.domain}</span>
+                <span>{scenario.blurb} · sample data, fully interactive.</span>
                 <Link href="/workspace" style={{ color: T.bone, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}>
                     Launch the app to solve your own →
                 </Link>
@@ -860,15 +1092,19 @@ export default function DemoPage() {
                     </div>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '4px 12px' }}>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: T.ink, padding: '6px 8px', marginBottom: 2 }}>Recents</p>
-                    {SESSIONS.map(s => (
-                        <div key={s.id} onClick={() => setActiveSid(s.id)}
-                            style={{ display: 'flex', alignItems: 'center', padding: '9px 10px', borderRadius: 8, fontSize: 13, color: T.neutral700, cursor: 'pointer', background: activeSid === s.id ? T.boneDeep : 'transparent', marginBottom: 1 }}
-                            onMouseEnter={e => { if (activeSid !== s.id) (e.currentTarget as HTMLDivElement).style.background = T.boneDeep; }}
-                            onMouseLeave={e => { if (activeSid !== s.id) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}>
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
-                        </div>
-                    ))}
+                    <p style={{ fontSize: 11, fontWeight: 600, color: T.ink, padding: '6px 8px', marginBottom: 2 }}>Sample scenarios</p>
+                    {SCENARIOS.map(s => {
+                        const activeS = scenarioId === s.id;
+                        return (
+                            <div key={s.id} onClick={() => switchScenario(s.id)}
+                                style={{ padding: '8px 10px', borderRadius: 8, cursor: 'pointer', background: activeS ? T.boneDeep : 'transparent', marginBottom: 1 }}
+                                onMouseEnter={e => { if (!activeS) (e.currentTarget as HTMLDivElement).style.background = T.boneDeep; }}
+                                onMouseLeave={e => { if (!activeS) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}>
+                                <div style={{ fontSize: 13, color: T.ink, fontWeight: activeS ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                                <div style={{ fontSize: 10.5, color: T.neutral500, marginTop: 1 }}>{s.domain} · {s.task}</div>
+                            </div>
+                        );
+                    })}
                 </div>
                 <div style={{ borderTop: `1px solid ${T.boneDeep}`, padding: '8px 12px 10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 8, cursor: 'pointer' }}>
@@ -895,6 +1131,7 @@ export default function DemoPage() {
                         </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <ShareButton slug={scenario.id} />
                         {!canvasOpen && (
                             <button onClick={() => openCanvas('goals')}
                                 style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: 'transparent', border: `1px solid ${T.neutral200}`, borderRadius: 8, fontSize: 13, color: T.neutral600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -913,12 +1150,12 @@ export default function DemoPage() {
                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 12px', padding: '9px 14px', background: T.boneDeep, border: `1px solid ${T.neutral200}`, borderRadius: 14, fontSize: 12 }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.maroon, paddingRight: 12, borderRight: `1px solid rgba(0,0,0,0.08)` }}>Active problem</span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.neutral600 }}>
-                            <b style={{ color: T.ink, fontFamily: 'var(--font-sans)' }}>NYSC Healthcare Deployment</b>
+                            <b style={{ color: T.ink, fontFamily: 'var(--font-sans)' }}>{scenario.title}</b>
                         </span>
                         <span style={{ width: 1, height: 13, background: 'rgba(0,0,0,0.08)' }} />
                         <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.neutral600 }}>
                             <Database size={12} style={{ color: T.neutral500 }} />
-                            <b style={{ color: T.ink }}>50</b> graduates · <b style={{ color: T.ink }}>20</b> facilities
+                            <b style={{ color: T.ink }}>{scenario.resourceCount}</b> {scenario.resourceLabel} · <b style={{ color: T.ink }}>{scenario.targetCount}</b> {scenario.targetLabel}
                         </span>
                         <span style={{ width: 1, height: 13, background: 'rgba(0,0,0,0.08)' }} />
                         <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: T.neutral600 }}>
@@ -963,7 +1200,7 @@ export default function DemoPage() {
 
                 {/* Messages */}
                 <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 24px 16px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-                    {MOCK_MESSAGES_LIST.map(msg => <MessageBubble key={msg.id} msg={msg} onOpenCanvas={openCanvas} onStartRun={startRun} runStage={runStage} />)}
+                    {buildMessages(scenario).map(msg => <MessageBubble key={msg.id} msg={msg} onOpenCanvas={openCanvas} onStartRun={startRun} runStage={runStage} />)}
                 </div>
 
                 {/* Composer */}
@@ -975,7 +1212,6 @@ export default function DemoPage() {
                             <Zap size={15} />
                         </button>
                     </div>
-                    <p style={{ textAlign: 'center', fontSize: 11, color: T.neutral400, marginTop: 5 }}>Intellign AI can make mistakes. Consider verifying important information.</p>
                 </div>
 
                 {/* Minimized canvas dock */}
@@ -995,6 +1231,7 @@ export default function DemoPage() {
                     <motion.div initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }} transition={{ type: 'spring', stiffness: 320, damping: 30 }}
                         style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                         <Canvas
+                            scenario={scenario}
                             runStage={runStage}
                             goals={goals}
                             onGoalAdd={handleGoalAdd}

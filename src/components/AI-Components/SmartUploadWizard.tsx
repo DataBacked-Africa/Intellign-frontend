@@ -1230,7 +1230,6 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                             onChange={e => e.target.files && addFiles(Array.from(e.target.files))}
                         />
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-2 text-center">Intellign AI can make mistakes. Consider verifying important information.</p>
                 </div>
             )}
 
