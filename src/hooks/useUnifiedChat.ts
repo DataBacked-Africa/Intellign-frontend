@@ -209,6 +209,15 @@ export const useUnifiedChat = ({
             });
     }, []);
 
+    // Register the session up-front (signed-in users only) so sharing + realtime
+    // presence work immediately — not just after the first upload/send. Anonymous
+    // visitors stay lazy (the register call needs auth), avoiding empty-session spam.
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (!localStorage.getItem('token')) return;
+        registerSession(state.sessionId);
+    }, [state.sessionId, registerSession]);
+
     // ── Eager upload: process files the moment they're attached ───────────────
     const uploadedKeysRef = useRef<Set<string>>(new Set());
     const uploadPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
