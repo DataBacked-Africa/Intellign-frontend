@@ -1131,7 +1131,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
 
             {/* ── Input Area (when NOT idle, docked to bottom) ─────────────────────────────── */}
             {!isLoadingHistory && !isIdle && (
-                <div className="flex-shrink-0 pt-2 border-t border-transparent relative z-10 w-full max-w-3xl mx-auto" style={{ background: 'rgba(249,249,249,0.92)', backdropFilter: 'blur(12px)' }}>
+                <div className="flex-shrink-0 pt-2 pb-2 border-t border-transparent relative z-10 w-full max-w-3xl mx-auto" style={{ background: 'var(--bg-header)', backdropFilter: 'blur(12px)' }}>
                     <div className="w-full relative rounded-[24px] p-1 shadow-sm transition-all" style={{ background: 'var(--product-panel)', border: '1px solid var(--border-subtle)' }}>
                         {/* Attached files */}
                         {attachedFiles.length > 0 && (

@@ -707,7 +707,15 @@ const OptimizationResultsView = () => {
                                         <span className="text-sm text-gray-600">{assignment.target.id}</span>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className="text-sm font-semibold text-emerald-600">{assignment.score}</span>
+                                        {(() => {
+                                            const zero = !assignment.score || Number(assignment.score) === 0;
+                                            return (
+                                                <div className="flex flex-col leading-tight">
+                                                    <span className={`text-sm font-semibold ${zero ? 'text-gray-400' : 'text-emerald-600'}`}>{assignment.score}</span>
+                                                    {zero && <span className="text-[10px] text-gray-400">neutral · no penalty</span>}
+                                                </div>
+                                            );
+                                        })()}
                                     </td>
                                     <td className="px-4 py-3">
                                         <StatusBadge status={assignment.approval_status} />

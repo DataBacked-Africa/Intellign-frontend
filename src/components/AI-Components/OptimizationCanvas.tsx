@@ -364,7 +364,18 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                                             <div className="text-xs" style={{ color: 'var(--fg-secondary)' }}>{a.summary?.target_name || a.target.id}</div>
                                             <div className="text-[10px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{a.target.id}{a.summary?.target_specialization ? ` · ${a.summary.target_specialization}` : ''}</div>
                                         </td>
-                                        <td className="px-3 py-2 text-xs font-semibold" style={{ color: 'light-dark(#047857, #34D399)' }}>{typeof a.score === 'number' ? a.score.toFixed(3) : a.score}</td>
+                                        <td className="px-3 py-2 text-xs font-semibold">
+                                            {(() => {
+                                                const n = typeof a.score === 'number' ? a.score : Number(a.score);
+                                                const zero = !n || n === 0;
+                                                return (
+                                                    <div className="leading-tight">
+                                                        <span style={{ color: zero ? 'var(--fg-tertiary)' : 'light-dark(#047857, #34D399)' }}>{typeof a.score === 'number' ? a.score.toFixed(3) : a.score}</span>
+                                                        {zero && <div className="text-[9px] font-normal" style={{ color: 'var(--fg-tertiary)' }}>neutral</div>}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </td>
                                         <td className="px-3 py-2">
                                             <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize', {
                                                 'bg-amber-100 text-amber-700': a.approval_status === 'pending',

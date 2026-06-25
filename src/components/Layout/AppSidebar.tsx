@@ -61,13 +61,22 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
     }, [sessions]);
 
     // ── Share ─────────────────────────────────────────────────────────────────
-    const handleShare = useCallback((sid: string) => {
-        const url = `${window.location.origin}/sessions/${sid}`;
-        navigator.clipboard.writeText(url).then(() => {
-            showToast.success('Link copied', 'Session link copied to clipboard.');
-        }).catch(() => {
-            showToast.error('Failed', 'Could not copy link.');
-        });
+    // Copy the SAME public link the Share modal produces (/share/{token}), creating
+    // a viewer link if one doesn't exist yet — so both entry points stay in sync.
+    const handleShare = useCallback(async (sid: string) => {
+        try {
+            const existing = await axiosInstance.get(`/api/v1/me/sessions/${sid}/share`);
+            let url: string | null = existing.data?.url ?? null;
+            if (!url) {
+                const created = await axiosInstance.put(`/api/v1/me/sessions/${sid}/share`, { public_role: 'viewer' });
+                url = created.data?.url ?? null;
+            }
+            if (!url) throw new Error('no url');
+            await navigator.clipboard.writeText(url);
+            showToast.success('Link copied', 'Public share link copied to clipboard.');
+        } catch {
+            showToast.error('Failed', 'Could not create share link.');
+        }
     }, []);
 
     // ── Delete ────────────────────────────────────────────────────────────────
