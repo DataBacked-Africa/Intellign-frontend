@@ -2,8 +2,8 @@ import SignupForm from "@/components/AuthComponents/SignupForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Sign Up | Data Ingestion Portal",
-    description: "Create your account",
+    title: "Sign Up | Intellign",
+    description: "Create your Intellign account",
 };
 
 export default function SignupPage() {

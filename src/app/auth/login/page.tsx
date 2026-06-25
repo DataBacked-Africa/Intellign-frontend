@@ -2,8 +2,8 @@ import LoginForm from "@/components/AuthComponents/LoginForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Login | Data Ingestion Portal",
-    description: "Sign in to your account",
+    title: "Login | Intellign",
+    description: "Sign in to your Intellign account",
 };
 
 export default function LoginPage() {

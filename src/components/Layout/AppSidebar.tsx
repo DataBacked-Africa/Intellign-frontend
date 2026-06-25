@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
     SquarePen, Search, LogOut, Loader2,
-    PanelLeftClose, Link2, Trash2,
+    PanelLeftClose, Link2, Trash2, Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserStore } from '@/store/useUserStore';
@@ -235,6 +235,13 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isOpen, setIsOpen }) => {
                             <p className="text-xs text-[var(--fg-muted)] truncate">{user?.email ?? ''}</p>
                         </div>
                     )}
+                    <Link
+                        href="/settings"
+                        title="Settings"
+                        className="p-1 hover:text-[var(--fg-primary)] text-[var(--fg-muted)] transition-colors shrink-0"
+                    >
+                        <Settings className="w-4 h-4" />
+                    </Link>
                     <button
                         onClick={async () => { await logout(); router.push('/auth/login'); }}
                         title="Sign out"
