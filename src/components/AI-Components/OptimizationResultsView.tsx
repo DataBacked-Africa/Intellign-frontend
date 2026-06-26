@@ -235,8 +235,7 @@ const ModifyAssignmentModal = ({
             await resultsService.modifyAssignment(
                 jobId,
                 assignment.assignment_id,
-                newTargetId,
-                reason
+                { newTargetId, reason }
             );
             showToast.success('Assignment Modified', `Reassigned to target ${newTargetId}`);
             onSuccess();

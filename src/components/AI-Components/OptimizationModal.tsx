@@ -125,7 +125,7 @@ const ModifyModal = ({ isOpen, onClose, assignment, jobId, onSuccess }: {
         if (!newTargetId.trim() || !reason.trim()) return;
         setLoading(true);
         try {
-            await resultsService.modifyAssignment(jobId, assignment.assignment_id, newTargetId, reason);
+            await resultsService.modifyAssignment(jobId, assignment.assignment_id, { newTargetId, reason });
             showToast.success('Modified', `Reassigned to target ${newTargetId}`);
             onSuccess(); onClose(); setNewTargetId(''); setReason('');
         } catch { showToast.error('Failed', 'Could not modify assignment.'); }
