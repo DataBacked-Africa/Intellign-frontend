@@ -165,18 +165,21 @@ export const resultsService = {
     },
 
     /**
-     * Modify a single assignment (reassign to new target)
+     * Modify a single assignment — reassign by target and/or resource.
+     * Pass newTargetId, newResourceId, or both. Score recalculates server-side.
      */
     modifyAssignment: async (
         jobId: string,
         assignmentId: string,
-        newTargetId: string,
-        reason: string
+        opts: { newTargetId?: string; newResourceId?: string; reason: string }
     ): Promise<Assignment> => {
+        const params: Record<string, string> = { reason: opts.reason };
+        if (opts.newTargetId) params.new_target_id = opts.newTargetId;
+        if (opts.newResourceId) params.new_resource_id = opts.newResourceId;
         const response = await axiosInstance.put(
             `/results/${jobId}/assignment/${assignmentId}/modify`,
             null,
-            { params: { new_target_id: newTargetId, reason } }
+            { params }
         );
         return response.data;
     },

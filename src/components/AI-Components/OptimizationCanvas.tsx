@@ -251,6 +251,23 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
         try { const r = await resultsService.approveAll(jobId); showToast.success('All Approved', `${r.approved_count} assignments`); loadData(); }
         catch { showToast.error('Failed', ''); } finally { setActionLoading(null); }
     };
+
+    // ── Reassign (modify) ─────────────────────────────────────────────────────
+    const [reassignFor, setReassignFor] = useState<Assignment | null>(null);
+    const handleReassign = async (
+        assignmentId: string,
+        opts: { newTargetId?: string; newResourceId?: string; reason: string }
+    ) => {
+        setActionLoading(assignmentId);
+        try {
+            await resultsService.modifyAssignment(jobId, assignmentId, opts);
+            showToast.success('Reassigned', 'Assignment updated & re-scored.');
+            setReassignFor(null);
+            loadData();
+        } catch {
+            showToast.error('Failed', 'Could not reassign.');
+        } finally { setActionLoading(null); }
+    };
     const handleExport = async () => {
         try { await resultsService.downloadExportedCSV(jobId); showToast.success('Exported', ''); }
         catch { showToast.error('Export Failed', ''); }
@@ -267,6 +284,20 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
         m[a.target.id] = (m[a.target.id] || 0) + 1;
         return m;
     }, {});
+
+    // Distinct targets + resources in play — feed the reassign picker (both sides).
+    const uniqueTargets = Object.values(
+        assignments.reduce<Record<string, { id: string; name: string }>>((m, a) => {
+            if (!m[a.target.id]) m[a.target.id] = { id: a.target.id, name: a.summary?.target_name || a.target.id };
+            return m;
+        }, {})
+    );
+    const uniqueResources = Object.values(
+        assignments.reduce<Record<string, { id: string; name: string }>>((m, a) => {
+            if (!m[a.resource.id]) m[a.resource.id] = { id: a.resource.id, name: a.summary?.resource_name || a.resource.id };
+            return m;
+        }, {})
+    );
 
     const filtered = assignments.filter(a => {
         const q = searchQuery.toLowerCase();
@@ -423,6 +454,9 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                                                 <button onClick={() => handleReject(a.assignment_id)} disabled={!!actionLoading} className="p-1.5 rounded hover:bg-red-50 text-red-500 disabled:opacity-40" style={{ border: 0, background: 'transparent', cursor: 'pointer' }} title="Reject">
                                                     <X size={12} />
                                                 </button>
+                                                <button onClick={() => setReassignFor(a)} disabled={!!actionLoading} className="p-1.5 rounded hover:bg-[var(--brand-bone-deep)] disabled:opacity-40" style={{ border: 0, background: 'transparent', cursor: 'pointer', color: 'var(--brand-maroon)' }} title="Reassign to a different target">
+                                                    <RefreshCcw size={12} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -478,11 +512,90 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                     </div>
                 )}
             </div>
+
+            {reassignFor && (
+                <ReassignModal
+                    assignment={reassignFor}
+                    targets={uniqueTargets}
+                    resources={uniqueResources}
+                    busy={actionLoading === reassignFor.assignment_id}
+                    onClose={() => setReassignFor(null)}
+                    onSubmit={(opts) => handleReassign(reassignFor.assignment_id, opts)}
+                />
+            )}
         </div>
     );
 };
 
+// ── Reassign modal ────────────────────────────────────────────────────────────
+const ReassignModal: React.FC<{
+    assignment: Assignment;
+    targets: { id: string; name: string }[];
+    resources: { id: string; name: string }[];
+    busy: boolean;
+    onClose: () => void;
+    onSubmit: (opts: { newTargetId?: string; newResourceId?: string; reason: string }) => void;
+}> = ({ assignment, targets, resources, busy, onClose, onSubmit }) => {
+    // Which side to reassign: change the target this resource serves, or the
+    // resource serving this target.
+    const [side, setSide] = useState<'target' | 'resource'>('target');
+    const [newId, setNewId] = useState('');
+    const [reason, setReason] = useState('');
 
+    const list = side === 'target' ? targets : resources;
+    const currentId = side === 'target' ? assignment.target.id : assignment.resource.id;
+    const options = list.filter(o => o.id !== currentId);
+    const canSubmit = newId && reason.trim().length > 0 && !busy;
+
+    const switchSide = (s: 'target' | 'resource') => { setSide(s); setNewId(''); };
+    const submit = () => {
+        if (!canSubmit) return;
+        onSubmit(side === 'target'
+            ? { newTargetId: newId, reason: reason.trim() }
+            : { newResourceId: newId, reason: reason.trim() });
+    };
+
+    return (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 460, background: 'var(--neutral-0)', borderRadius: 16, border: '1px solid var(--border-subtle)', padding: 22 }}>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 20, color: 'var(--brand-maroon-deep)', margin: '0 0 6px' }}>Reassign</h3>
+                <p style={{ fontSize: 13, color: 'var(--fg-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
+                    Current pairing: <b style={{ color: 'var(--fg-primary)' }}>{assignment.summary?.resource_name || assignment.resource.id}</b> → <b style={{ color: 'var(--fg-primary)' }}>{assignment.summary?.target_name || assignment.target.id}</b>. The score is recalculated against your goals.
+                </p>
+
+                {/* Side toggle */}
+                <div style={{ display: 'inline-flex', padding: 3, background: 'var(--product-panel)', border: '1px solid var(--border-subtle)', borderRadius: 999, gap: 2, marginBottom: 16 }}>
+                    {(['target', 'resource'] as const).map(s => (
+                        <button key={s} onClick={() => switchSide(s)}
+                            style={{ padding: '5px 14px', borderRadius: 999, border: 0, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: side === s ? 'var(--brand-maroon)' : 'transparent', color: side === s ? 'var(--brand-bone)' : 'var(--fg-secondary)' }}>
+                            {s === 'target' ? 'Change target' : 'Change resource'}
+                        </button>
+                    ))}
+                </div>
+
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--fg-secondary)', marginBottom: 6 }}>New {side}</label>
+                <select value={newId} onChange={e => setNewId(e.target.value)}
+                    className="w-full h-10 rounded-lg border px-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-[#5c1427]/10 focus:border-[#5c1427]"
+                    style={{ borderColor: 'var(--border-default)', background: 'var(--neutral-0)', color: 'var(--fg-primary)' }}>
+                    <option value="">Select a {side}…</option>
+                    {options.map(o => <option key={o.id} value={o.id}>{o.name} ({o.id})</option>)}
+                </select>
+
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--fg-secondary)', marginBottom: 6 }}>Reason</label>
+                <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Why this reassignment?"
+                    className="w-full rounded-lg border px-3 py-2 text-sm mb-5 resize-none focus:outline-none focus:ring-2 focus:ring-[#5c1427]/10 focus:border-[#5c1427]"
+                    style={{ borderColor: 'var(--border-default)', background: 'var(--neutral-0)', color: 'var(--fg-primary)' }} />
+
+                <div className="flex justify-end gap-2">
+                    <button onClick={onClose} className="px-4 h-10 rounded-lg text-sm font-medium" style={{ border: '1px solid var(--border-default)', background: 'transparent', color: 'var(--fg-secondary)', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={submit} disabled={!canSubmit} className="btn btn-primary px-4 h-10 rounded-lg text-sm" style={{ justifyContent: 'center', opacity: canSubmit ? 1 : 0.5 }}>
+                        {busy ? <Loader2 size={16} className="animate-spin" /> : 'Reassign & recalculate'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // ── Datasets tab ──────────────────────────────────────────────────────────────
 
