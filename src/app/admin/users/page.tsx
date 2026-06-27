@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ADMIN_BASE } from "@/lib/adminApi";
+import { adminPath } from "@/lib/adminPath";
 import { useAdminData, PageHeader, Table, StateBlock } from "@/components/admin/ui";
 
 interface UserRow {
     id: string; name: string; email: string; role: string;
-    organization_id: string | null; is_active: boolean; email_verified: boolean;
+    organization_id: string | null; organization_name?: string | null;
+    is_active: boolean; email_verified: boolean;
     is_superuser: boolean; is_platform_admin: boolean;
     created_at: string | null; last_login_at: string | null; session_count?: number;
 }
@@ -55,10 +57,11 @@ export default function AdminUsersPage() {
             <StateBlock loading={loading} error={error} />
             {data && (
                 <Table
-                    columns={["Email", "Name", "Role", "Status", "Verified", "Admin", "Last login"]}
+                    columns={["Email", "Name", "Organization", "Role", "Status", "Verified", "Admin", "Last login"]}
                     rows={data.map((u) => [
-                        <Link key={u.id} href={`/admin/users/${u.id}`} className="text-blue-600 hover:underline">{u.email}</Link>,
+                        <Link key={u.id} href={adminPath(`/users/${u.id}`)} className="text-blue-600 hover:underline">{u.email}</Link>,
                         u.name,
+                        u.organization_name || (u.organization_id ? "—" : "—"),
                         u.role,
                         u.is_active ? "Active" : <span className="text-red-600">Disabled</span>,
                         u.email_verified ? "✓" : "—",

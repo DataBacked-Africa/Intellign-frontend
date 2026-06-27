@@ -118,16 +118,28 @@ function AcceptInner() {
                         <form onSubmit={authThenAccept} className="space-y-4">
                             {mode === "signup" && (
                                 <>
-                                    <input type="text" required placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)}
-                                        className="w-full rounded-lg border border-neutral-300 px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--brand-maroon)] focus:ring-2 focus:ring-[var(--brand-maroon)]/15" />
-                                    <input type="text" placeholder="Organization name (optional)" value={orgName} onChange={(e) => setOrgName(e.target.value)}
-                                        className="w-full rounded-lg border border-neutral-300 px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--brand-maroon)] focus:ring-2 focus:ring-[var(--brand-maroon)]/15" />
+                                    <div>
+                                        <label className="block text-xs font-medium text-neutral-600 mb-1.5">Full name</label>
+                                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Doe"
+                                            className="w-full rounded-lg border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--brand-maroon)] focus:ring-2 focus:ring-[var(--brand-maroon)]/15" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-neutral-600 mb-1.5">Organization <span className="text-neutral-400">(optional)</span></label>
+                                        <input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="Acme Inc."
+                                            className="w-full rounded-lg border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--brand-maroon)] focus:ring-2 focus:ring-[var(--brand-maroon)]/15" />
+                                    </div>
                                 </>
                             )}
-                            <input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--brand-maroon)] focus:ring-2 focus:ring-[var(--brand-maroon)]/15" />
-                            <input type="password" required placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--brand-maroon)] focus:ring-2 focus:ring-[var(--brand-maroon)]/15" />
+                            <div>
+                                <label className="block text-xs font-medium text-neutral-600 mb-1.5">Email</label>
+                                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
+                                    className="w-full rounded-lg border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--brand-maroon)] focus:ring-2 focus:ring-[var(--brand-maroon)]/15" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-neutral-600 mb-1.5">Password</label>
+                                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
+                                    className="w-full rounded-lg border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 px-3.5 py-2.5 text-sm focus:outline-none focus:border-[var(--brand-maroon)] focus:ring-2 focus:ring-[var(--brand-maroon)]/15" />
+                            </div>
                             <button type="submit" disabled={busy}
                                 className="w-full rounded-lg bg-[var(--brand-maroon)] text-[var(--brand-bone)] text-sm font-medium py-2.5 hover:opacity-90 disabled:opacity-60">
                                 {busy ? "Accepting…" : mode === "signup" ? "Create account & accept" : "Sign in & accept"}
