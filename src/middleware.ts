@@ -8,12 +8,17 @@ export function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
     if (isAdminHost) {
-        if (!pathname.startsWith("/admin")) {
+        // Canonicalize: the /admin prefix never appears in the URL on the admin
+        // subdomain. Any /admin/* request redirects to its bare path…
+        if (pathname.startsWith("/admin")) {
             const url = req.nextUrl.clone();
-            url.pathname = `/admin${pathname === "/" ? "" : pathname}`;
-            return NextResponse.rewrite(url);
+            url.pathname = pathname.replace(/^\/admin/, "") || "/";
+            return NextResponse.redirect(url);
         }
-        return NextResponse.next();
+        // …and bare paths are served by the /admin/* routes via an internal rewrite.
+        const url = req.nextUrl.clone();
+        url.pathname = `/admin${pathname === "/" ? "" : pathname}`;
+        return NextResponse.rewrite(url);
     }
 
     // Non-admin production host must not serve /admin pages directly.

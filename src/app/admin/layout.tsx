@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import AdminNav from "@/components/admin/AdminNav";
 import adminApi from "@/lib/adminApi";
+import { adminPath } from "@/lib/adminPath";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const isLogin = pathname === "/admin/login";
+    // Robust across host rewrite: matches "/login" and "/admin/login".
+    const isLogin = pathname.endsWith("/login");
     const [checked, setChecked] = useState(false);
 
     useEffect(() => {
@@ -17,7 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         // Probe an admin-gated endpoint; 403/401 → not an admin → login.
         adminApi.get("/overview")
             .then(() => { if (!cancelled) setChecked(true); })
-            .catch(() => { if (!cancelled) router.replace("/admin/login"); });
+            .catch(() => { if (!cancelled) router.replace(adminPath("/login")); });
         return () => { cancelled = true; };
     }, [isLogin, router]);
 

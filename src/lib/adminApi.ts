@@ -1,4 +1,5 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
+import { adminPath } from "@/lib/adminPath";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://intellign.up.railway.app").replace(/\/$/, "");
 export const ADMIN_BASE = `${API_URL}/api/v1/admin`;
@@ -24,7 +25,7 @@ adminApi.interceptors.response.use(
             localStorage.removeItem("token");
             localStorage.removeItem("refreshToken");
             if (!window.location.pathname.endsWith("/login")) {
-                window.location.href = "/admin/login";
+                window.location.href = adminPath("/login");
             }
         }
         return Promise.reject(error);
