@@ -27,10 +27,14 @@ export default function AdminNav() {
 
     return (
         <aside className="w-60 shrink-0 border-r border-[var(--brand-maroon)]/12 bg-[var(--brand-bone)] flex flex-col h-screen sticky top-0">
-            <div className="px-5 py-5 border-b border-[var(--brand-maroon)]/12">
-                <div className="text-xs tracking-[0.18em] uppercase text-[var(--brand-maroon)]">Intellign</div>
-                <div className="text-[11px] text-neutral-400 mt-0.5">
-                    {tier === "is_superuser" ? "Superuser" : "Platform admin"}
+            <div className="px-5 py-5 border-b border-[var(--brand-maroon)]/12 flex items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/intellign-mark.svg" alt="Intellign" className="h-7 w-7 rounded-md" />
+                <div>
+                    <div className="text-xs tracking-[0.16em] uppercase text-[var(--brand-maroon)] leading-none">Intellign</div>
+                    <div className="text-[11px] text-neutral-400 mt-1">
+                        {tier === "is_superuser" ? "Superuser" : "Platform admin"}
+                    </div>
                 </div>
             </div>
             <nav className="flex-1 overflow-y-auto py-3 px-2">

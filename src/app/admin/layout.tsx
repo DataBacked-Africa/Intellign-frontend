@@ -9,19 +9,24 @@ import { adminPath } from "@/lib/adminPath";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    // Robust across host rewrite: matches "/login" and "/admin/login".
-    const isLogin = pathname.endsWith("/login");
+    // Public admin routes (no admin session required): login + invite acceptance.
+    // Robust across host rewrite (matches "/login" and "/admin/login").
+    const isPublic = pathname.endsWith("/login") || pathname.includes("/accept-invite");
     const [checked, setChecked] = useState(false);
 
     useEffect(() => {
-        if (isLogin) { setChecked(true); return; }
+        document.title = "Intellign Admin Section";
+    }, []);
+
+    useEffect(() => {
+        if (isPublic) { setChecked(true); return; }
         let cancelled = false;
         // Probe an admin-gated endpoint; 403/401 → not an admin → login.
         adminApi.get("/overview")
             .then(() => { if (!cancelled) setChecked(true); })
             .catch(() => { if (!cancelled) router.replace(adminPath("/login")); });
         return () => { cancelled = true; };
-    }, [isLogin, router]);
+    }, [isPublic, router]);
 
     // Force a clean light brand theme for the whole admin section, regardless of
     // the app's active (dark) theme, and apply the marketing fonts.
@@ -30,7 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         style: { fontFamily: "var(--font-sans)", colorScheme: "light" as const },
     };
 
-    if (isLogin) return <div {...themeProps}>{children}</div>;
+    if (isPublic) return <div {...themeProps}>{children}</div>;
 
     if (!checked) {
         return (

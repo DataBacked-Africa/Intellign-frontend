@@ -46,9 +46,13 @@ export default function AdminLoginPage() {
                         backgroundSize: "22px 22px",
                     }}
                 />
-                <div className="relative">
-                    <div className="text-sm tracking-[0.2em] uppercase text-[#E8C9A0]/80">Intellign</div>
-                    <div className="mt-1 text-xs text-[#FBF8F4]/50">Platform Administration</div>
+                <div className="relative flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/intellign-mark.svg" alt="Intellign" className="h-9 w-9 rounded-lg ring-1 ring-[#FBF8F4]/15" />
+                    <div>
+                        <div className="text-sm tracking-[0.2em] uppercase text-[#E8C9A0]/80">Intellign</div>
+                        <div className="mt-0.5 text-xs text-[#FBF8F4]/50">Platform Administration</div>
+                    </div>
                 </div>
 
                 <div className="relative max-w-md">
