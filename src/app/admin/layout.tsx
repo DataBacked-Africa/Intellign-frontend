@@ -23,14 +23,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return () => { cancelled = true; };
     }, [isLogin, router]);
 
-    if (isLogin) return <>{children}</>;
+    // Force a clean light brand theme for the whole admin section, regardless of
+    // the app's active (dark) theme, and apply the marketing fonts.
+    const themeProps = {
+        "data-theme": "light",
+        style: { fontFamily: "var(--font-sans)", colorScheme: "light" as const },
+    };
+
+    if (isLogin) return <div {...themeProps}>{children}</div>;
 
     if (!checked) {
-        return <div className="min-h-screen flex items-center justify-center text-neutral-400 text-sm">Checking access…</div>;
+        return (
+            <div {...themeProps} className="min-h-screen flex items-center justify-center bg-[var(--brand-bone)] text-neutral-400 text-sm">
+                Checking access…
+            </div>
+        );
     }
 
     return (
-        <div className="flex min-h-screen bg-neutral-100 text-neutral-900">
+        <div {...themeProps} className="flex min-h-screen bg-[var(--brand-bone)] text-neutral-900">
             <AdminNav />
             <main className="flex-1 p-8 overflow-y-auto">{children}</main>
         </div>

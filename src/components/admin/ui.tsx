@@ -39,7 +39,7 @@ export function PageHeader({ title, subtitle, right }: { title: string; subtitle
     return (
         <div className="flex items-start justify-between mb-6">
             <div>
-                <h1 className="text-xl font-semibold text-neutral-900">{title}</h1>
+                <h1 className="text-2xl text-neutral-900" style={{ fontFamily: "var(--font-display)" }}>{title}</h1>
                 {subtitle && <p className="text-sm text-neutral-500 mt-1">{subtitle}</p>}
             </div>
             {right}
@@ -49,17 +49,17 @@ export function PageHeader({ title, subtitle, right }: { title: string; subtitle
 
 export function StatTile({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
     return (
-        <div className="rounded-lg border border-neutral-200 bg-white p-4">
-            <div className="text-xs uppercase tracking-wide text-neutral-500">{label}</div>
-            <div className="text-2xl font-semibold text-neutral-900 mt-1">{value}</div>
-            {sub && <div className="text-xs text-neutral-400 mt-1">{sub}</div>}
+        <div className="rounded-xl border border-[#5C1427]/12 bg-white p-4 shadow-[0_1px_2px_rgba(92,20,39,0.05)]">
+            <div className="text-[11px] uppercase tracking-wide text-neutral-500">{label}</div>
+            <div className="text-3xl text-neutral-900 mt-1.5" style={{ fontFamily: "var(--font-display)" }}>{value}</div>
+            {sub && <div className="text-xs text-neutral-400 mt-1.5">{sub}</div>}
         </div>
     );
 }
 
 export function Card({ title, children }: { title?: string; children: React.ReactNode }) {
     return (
-        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+        <div className="rounded-xl border border-[#5C1427]/12 bg-white p-4 shadow-[0_1px_2px_rgba(92,20,39,0.05)]">
             {title && <div className="text-sm font-medium text-neutral-700 mb-3">{title}</div>}
             {children}
         </div>

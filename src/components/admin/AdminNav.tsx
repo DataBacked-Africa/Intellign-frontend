@@ -26,9 +26,9 @@ export default function AdminNav() {
     const { admin, tier, logout } = useAdminStore();
 
     return (
-        <aside className="w-60 shrink-0 border-r border-[#3E0E1A]/10 bg-[#FBF8F4] flex flex-col h-screen sticky top-0">
-            <div className="px-5 py-5 border-b border-[#3E0E1A]/10">
-                <div className="text-xs tracking-[0.18em] uppercase text-[#3E0E1A]">Intellign</div>
+        <aside className="w-60 shrink-0 border-r border-[var(--brand-maroon)]/12 bg-[var(--brand-bone)] flex flex-col h-screen sticky top-0">
+            <div className="px-5 py-5 border-b border-[var(--brand-maroon)]/12">
+                <div className="text-xs tracking-[0.18em] uppercase text-[var(--brand-maroon)]">Intellign</div>
                 <div className="text-[11px] text-neutral-400 mt-0.5">
                     {tier === "is_superuser" ? "Superuser" : "Platform admin"}
                 </div>
@@ -41,8 +41,8 @@ export default function AdminNav() {
                             key={item.path}
                             href={adminPath(item.path)}
                             className={`block rounded-md px-3 py-2 text-sm mb-0.5 transition ${active
-                                ? "bg-[#3E0E1A] text-[#FBF8F4] font-medium"
-                                : "text-neutral-600 hover:bg-[#3E0E1A]/5"
+                                ? "bg-[var(--brand-maroon)] text-[var(--brand-bone)] font-medium"
+                                : "text-neutral-600 hover:bg-[var(--brand-maroon)]/8"
                                 }`}
                         >
                             {item.label}
@@ -50,11 +50,11 @@ export default function AdminNav() {
                     );
                 })}
             </nav>
-            <div className="px-5 py-4 border-t border-[#3E0E1A]/10">
+            <div className="px-5 py-4 border-t border-[var(--brand-maroon)]/12">
                 <div className="text-xs text-neutral-500 truncate">{admin?.email}</div>
                 <button
                     onClick={logout}
-                    className="mt-2 text-xs text-[#3E0E1A] hover:underline"
+                    className="mt-2 text-xs text-[var(--brand-maroon)] hover:underline"
                 >
                     Sign out
                 </button>
