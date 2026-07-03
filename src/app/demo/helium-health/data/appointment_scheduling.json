@@ -1,0 +1,962 @@
+{
+  "domain": "appointment_scheduling",
+  "resources": [
+    {
+      "id": 10012,
+      "name": "Dr. Chinedu Eze",
+      "specialty": "Cardiology",
+      "contracted_hours": 40.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10025,
+      "name": "Dr. Aisha Bello",
+      "specialty": "Paediatrics",
+      "contracted_hours": 36.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10038,
+      "name": "Dr. Tunde Adeyemi",
+      "specialty": "General Medicine",
+      "contracted_hours": 39.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10051,
+      "name": "Dr. Fatima Musa",
+      "specialty": "Obstetrics",
+      "contracted_hours": 35.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10064,
+      "name": "Dr. Emeka Nwachukwu",
+      "specialty": "Orthopaedics",
+      "contracted_hours": 42.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10077,
+      "name": "Dr. Amina Ibrahim",
+      "specialty": "ICU",
+      "contracted_hours": 48.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10090,
+      "name": "Dr. Segun Olawale",
+      "specialty": "General Medicine",
+      "contracted_hours": 37.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10103,
+      "name": "Dr. Adaobi Obi",
+      "specialty": "Cardiology",
+      "contracted_hours": 38.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10116,
+      "name": "Dr. Yusuf Abubakar",
+      "specialty": "Paediatrics",
+      "contracted_hours": 36.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10129,
+      "name": "Dr. Kemi Alabi",
+      "specialty": "General Medicine",
+      "contracted_hours": 35.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10142,
+      "name": "Dr. David Okon",
+      "specialty": "Obstetrics",
+      "contracted_hours": 40.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10155,
+      "name": "Dr. Gloria Eze",
+      "specialty": "Orthopaedics",
+      "contracted_hours": 39.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10168,
+      "name": "Dr. Musa Bello",
+      "specialty": "ICU",
+      "contracted_hours": 45.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10181,
+      "name": "Dr. Ifeanyi Okafor",
+      "specialty": "General Medicine",
+      "contracted_hours": 38.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10194,
+      "name": "Dr. Sarah Adebayo",
+      "specialty": "Cardiology",
+      "contracted_hours": 37.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10207,
+      "name": "Dr. Nneka Okeke",
+      "specialty": "Paediatrics",
+      "contracted_hours": 36.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10220,
+      "name": "Dr. Kunle Adewale",
+      "specialty": "General Medicine",
+      "contracted_hours": 40.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10233,
+      "name": "Dr. Zainab Ahmed",
+      "specialty": "Obstetrics",
+      "contracted_hours": 35.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10246,
+      "name": "Dr. Chikezie Ibe",
+      "specialty": "Orthopaedics",
+      "contracted_hours": 41.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10259,
+      "name": "Dr. Bola Ajayi",
+      "specialty": "General Medicine",
+      "contracted_hours": 39.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10272,
+      "name": "Dr. Obinna Eke",
+      "specialty": "Cardiology",
+      "contracted_hours": 38.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10285,
+      "name": "Dr. Funke Ojo",
+      "specialty": "Paediatrics",
+      "contracted_hours": 37.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10298,
+      "name": "Dr. Jide Bakare",
+      "specialty": "General Medicine",
+      "contracted_hours": 36.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10311,
+      "name": "Dr. Uchechukwu Okoro",
+      "specialty": "ICU",
+      "contracted_hours": 44.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10324,
+      "name": "Dr. Hadiza Usman",
+      "specialty": "Obstetrics",
+      "contracted_hours": 35.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10337,
+      "name": "Dr. Dele Johnson",
+      "specialty": "Orthopaedics",
+      "contracted_hours": 40.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10350,
+      "name": "Dr. Chioma Nduka",
+      "specialty": "General Medicine",
+      "contracted_hours": 38.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10363,
+      "name": "Dr. Philip Ezenwa",
+      "specialty": "Cardiology",
+      "contracted_hours": 39.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10376,
+      "name": "Dr. Grace Adekunle",
+      "specialty": "Paediatrics",
+      "contracted_hours": 36.0,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    },
+    {
+      "id": 10389,
+      "name": "Dr. Ngozi Okoro",
+      "specialty": "Paediatrics",
+      "contracted_hours": 41.25,
+      "shift_preferences": "{}",
+      "availability": "[]"
+    }
+  ],
+  "targets": [
+    {
+      "id": 1,
+      "name": "Dr. Musa Bello",
+      "capacity": 3,
+      "demand_by_slot": "{\"Mon_AM\": 2, \"Mon_PM\": 1, \"Tue_AM\": 2, \"Tue_PM\": 3, \"Wed_AM\": 1, \"Wed_PM\": 1, \"Thu_AM\": 3, \"Thu_PM\": 1, \"Fri_AM\": 2, \"Fri_PM\": 3}",
+      "operating_slots": "[\"Mon_AM\", \"Mon_PM\", \"Tue_AM\", \"Tue_PM\", \"Wed_AM\", \"Wed_PM\", \"Thu_AM\", \"Thu_PM\", \"Fri_AM\", \"Fri_PM\"]"
+    },
+    {
+      "id": 2,
+      "name": "Pediatrics",
+      "capacity": 5,
+      "demand_by_slot": "{\"Mon_AM\": 1, \"Mon_PM\": 3, \"Tue_AM\": 1, \"Tue_PM\": 1, \"Wed_AM\": 1, \"Wed_PM\": 2, \"Thu_AM\": 2, \"Thu_PM\": 1, \"Fri_AM\": 1, \"Fri_PM\": 1}",
+      "operating_slots": "[\"Mon_AM\", \"Mon_PM\", \"Tue_AM\", \"Tue_PM\", \"Wed_AM\", \"Wed_PM\", \"Thu_AM\", \"Thu_PM\", \"Fri_AM\", \"Fri_PM\"]"
+    },
+    {
+      "id": 3,
+      "name": "General Surgery",
+      "capacity": 7,
+      "demand_by_slot": "{\"Mon_AM\": 3, \"Mon_PM\": 2, \"Tue_AM\": 1, \"Tue_PM\": 3, \"Wed_AM\": 1, \"Wed_PM\": 1, \"Thu_AM\": 3, \"Thu_PM\": 3, \"Fri_AM\": 3, \"Fri_PM\": 1}",
+      "operating_slots": "[\"Mon_AM\", \"Mon_PM\", \"Tue_AM\", \"Tue_PM\", \"Wed_AM\", \"Wed_PM\", \"Thu_AM\", \"Thu_PM\", \"Fri_AM\", \"Fri_PM\"]"
+    },
+    {
+      "id": 4,
+      "name": "Dr. Ngozi Okoro",
+      "capacity": 4,
+      "demand_by_slot": "{\"Mon_AM\": 3, \"Mon_PM\": 3, \"Tue_AM\": 2, \"Tue_PM\": 1, \"Wed_AM\": 1, \"Wed_PM\": 1, \"Thu_AM\": 3, \"Thu_PM\": 1, \"Fri_AM\": 2, \"Fri_PM\": 2}",
+      "operating_slots": "[\"Mon_AM\", \"Mon_PM\", \"Tue_AM\", \"Tue_PM\", \"Wed_AM\", \"Wed_PM\", \"Thu_AM\", \"Thu_PM\", \"Fri_AM\", \"Fri_PM\"]"
+    },
+    {
+      "id": 5,
+      "name": "Dr. Bola Ajayi",
+      "capacity": 9,
+      "demand_by_slot": "{\"Mon_AM\": 1, \"Mon_PM\": 3, \"Tue_AM\": 1, \"Tue_PM\": 3, \"Wed_AM\": 2, \"Wed_PM\": 3, \"Thu_AM\": 3, \"Thu_PM\": 1, \"Fri_AM\": 1, \"Fri_PM\": 3}",
+      "operating_slots": "[\"Mon_AM\", \"Mon_PM\", \"Tue_AM\", \"Tue_PM\", \"Wed_AM\", \"Wed_PM\", \"Thu_AM\", \"Thu_PM\", \"Fri_AM\", \"Fri_PM\"]"
+    },
+    {
+      "id": 6,
+      "name": "Dr. Dele Johnson",
+      "capacity": 6,
+      "demand_by_slot": "{\"Mon_AM\": 3, \"Mon_PM\": 3, \"Tue_AM\": 1, \"Tue_PM\": 2, \"Wed_AM\": 1, \"Wed_PM\": 3, \"Thu_AM\": 3, \"Thu_PM\": 1, \"Fri_AM\": 3, \"Fri_PM\": 1}",
+      "operating_slots": "[\"Mon_AM\", \"Mon_PM\", \"Tue_AM\", \"Tue_PM\", \"Wed_AM\", \"Wed_PM\", \"Thu_AM\", \"Thu_PM\", \"Fri_AM\", \"Fri_PM\"]"
+    },
+    {
+      "id": 7,
+      "name": "Pathology",
+      "capacity": 2,
+      "demand_by_slot": "{\"Mon_AM\": 3, \"Mon_PM\": 1, \"Tue_AM\": 2, \"Tue_PM\": 3, \"Wed_AM\": 3, \"Wed_PM\": 2, \"Thu_AM\": 2, \"Thu_PM\": 2, \"Fri_AM\": 3, \"Fri_PM\": 2}",
+      "operating_slots": "[\"Mon_AM\", \"Mon_PM\", \"Tue_AM\", \"Tue_PM\", \"Wed_AM\", \"Wed_PM\", \"Thu_AM\", \"Thu_PM\", \"Fri_AM\", \"Fri_PM\"]"
+    },
+    {
+      "id": 8,
+      "name": "Pharmacy",
+      "capacity": 8,
+      "demand_by_slot": "{\"Mon_AM\": 2, \"Mon_PM\": 2, \"Tue_AM\": 1, \"Tue_PM\": 1, \"Wed_AM\": 3, \"Wed_PM\": 1, \"Thu_AM\": 1, \"Thu_PM\": 3, \"Fri_AM\": 2, \"Fri_PM\": 3}",
+      "operating_slots": "[\"Mon_AM\", \"Mon_PM\", \"Tue_AM\", \"Tue_PM\", \"Wed_AM\", \"Wed_PM\", \"Thu_AM\", \"Thu_PM\", \"Fri_AM\", \"Fri_PM\"]"
+    }
+  ],
+  "goals": [
+    {
+      "id": "621f02b8-b859-4cc1-9921-6a2ca81adeab",
+      "description": "Match doctor specialty to clinic department.",
+      "resource_columns": [
+        "specialty"
+      ],
+      "target_columns": [
+        "id"
+      ],
+      "logic_config": {
+        "logic_type": "categorical_match",
+        "aggregation_method": null,
+        "comparison_column": null,
+        "threshold_value": null,
+        "numeric_operator": "le",
+        "mapping_rules": {
+          "1": [
+            "1"
+          ],
+          "2": [
+            "2"
+          ],
+          "3": [
+            "3"
+          ],
+          "4": [
+            "4"
+          ],
+          "5": [
+            "5"
+          ],
+          "6": [
+            "6"
+          ],
+          "7": [
+            "7"
+          ],
+          "8": [
+            "8"
+          ]
+        },
+        "exact_match": false,
+        "max_distance_value": null,
+        "distance_unit": "km",
+        "minimize_distance": false,
+        "distance_decay": "linear",
+        "set_operation": null,
+        "min_intersection_size": 1,
+        "time_unit": "hours",
+        "buffer_time": 0.0,
+        "scoring_rules": null,
+        "value_splitter": null,
+        "comparison_operator": null,
+        "invert_score": false,
+        "custom_expression": null,
+        "custom_code": null,
+        "min_rest_hours": 11.0,
+        "violation_penalty": 50.0,
+        "reward_per_unit": 10.0,
+        "overstaff_penalty": 3.0,
+        "max_consecutive": 3,
+        "penalty_per_extra": 15.0,
+        "slot_type_filter": null,
+        "preference_weight": 5.0,
+        "operating_slots_column": null
+      },
+      "weight": 55.0,
+      "award_type": "Reward",
+      "enabled": true,
+      "priority": 0,
+      "logic_primitive": null
+    },
+    {
+      "id": "97c020bd-6e70-45c1-890d-4cea69b4594b",
+      "description": "Cover patient appointment slot demand.",
+      "resource_columns": [],
+      "target_columns": [
+        "demand_by_slot"
+      ],
+      "logic_config": {
+        "logic_type": "shift_coverage",
+        "aggregation_method": null,
+        "comparison_column": null,
+        "threshold_value": null,
+        "numeric_operator": "le",
+        "mapping_rules": null,
+        "exact_match": true,
+        "max_distance_value": null,
+        "distance_unit": "km",
+        "minimize_distance": false,
+        "distance_decay": "linear",
+        "set_operation": null,
+        "min_intersection_size": 1,
+        "time_unit": "hours",
+        "buffer_time": 0.0,
+        "scoring_rules": null,
+        "value_splitter": null,
+        "comparison_operator": null,
+        "invert_score": false,
+        "custom_expression": null,
+        "custom_code": null,
+        "min_rest_hours": 11.0,
+        "violation_penalty": 50.0,
+        "reward_per_unit": 10.0,
+        "overstaff_penalty": 3.0,
+        "max_consecutive": 3,
+        "penalty_per_extra": 15.0,
+        "slot_type_filter": null,
+        "preference_weight": 5.0,
+        "operating_slots_column": null
+      },
+      "weight": 45.0,
+      "award_type": "Reward",
+      "enabled": true,
+      "priority": 0,
+      "logic_primitive": null
+    }
+  ],
+  "assignments": [
+    {
+      "assignment_id": "768a1c1f-ab84-4501-8974-5936af8aea6a",
+      "resource_id": "10012",
+      "target_id": "8",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.820189",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "b105cb1a-e59b-49f0-8737-fddbf92de021",
+      "resource_id": "10038",
+      "target_id": "3",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.820557",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "14ba5310-ed9c-4447-89fa-760d8b2cad2a",
+      "resource_id": "10077",
+      "target_id": "8",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.820901",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "d1f59d21-1d39-43b2-a897-2f6b5a4cdd42",
+      "resource_id": "10103",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.821197",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "7873973d-efc3-403d-ae79-711595fd4c09",
+      "resource_id": "10116",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.821498",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "1a82b12a-a364-42bc-ac7a-558a4b5ba58a",
+      "resource_id": "10142",
+      "target_id": "6",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.821817",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "17eb53ce-132a-496b-8f9b-c57ba0e8cd50",
+      "resource_id": "10168",
+      "target_id": "8",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.822088",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "3d94704c-3933-4f37-a7b9-76a87b46c9fb",
+      "resource_id": "10181",
+      "target_id": "6",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.822345",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "48f10fd5-ce42-4797-affd-718a777180e9",
+      "resource_id": "10207",
+      "target_id": "2",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.822601",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "59a68612-7af9-4b1d-a5d4-8c1c0e9e37ab",
+      "resource_id": "10246",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.822935",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "10e6d89b-2339-40fc-adec-c1f6bd2c4502",
+      "resource_id": "10259",
+      "target_id": "3",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.823192",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "f055eea7-26bc-4013-bff1-658c0cd7deaf",
+      "resource_id": "10298",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.823445",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "e432b9d7-bda5-4f60-8f53-36bc08016f18",
+      "resource_id": "10298",
+      "target_id": "6",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.823724",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "0393c5bb-9dd3-48f1-b213-befc75d1bdbd",
+      "resource_id": "10311",
+      "target_id": "4",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.824194",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "94229bb7-06d1-430a-9611-265176d73f2e",
+      "resource_id": "10324",
+      "target_id": "2",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.824738",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "30f51600-ab2a-4cf4-91a2-70e0076f30c7",
+      "resource_id": "10324",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.825243",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "79b936ff-6673-4cbc-9b8f-80f2471d98dc",
+      "resource_id": "10324",
+      "target_id": "8",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.825754",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "d0ff6c17-19f3-413e-bfff-0e731258ac9e",
+      "resource_id": "10337",
+      "target_id": "4",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.826364",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "f7eabf70-ae6a-4397-a385-a37d4d051df2",
+      "resource_id": "10337",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.826914",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "ce2182e9-1a18-41a3-a510-8da73a2ee966",
+      "resource_id": "10337",
+      "target_id": "6",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.827393",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "1950e70f-25f3-4f8d-a882-9bf04983e710",
+      "resource_id": "10350",
+      "target_id": "1",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.827920",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "68d58140-763d-46dc-98aa-ad61ef3b3551",
+      "resource_id": "10350",
+      "target_id": "2",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.828471",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "1ea5f5b4-e93f-4e72-aa78-43ec772f886f",
+      "resource_id": "10350",
+      "target_id": "3",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.829072",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "147c82eb-f63a-47e9-8f92-571c5cfc6c02",
+      "resource_id": "10350",
+      "target_id": "4",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.829578",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "f25e479e-b979-4b1d-aff4-efdf38f607f8",
+      "resource_id": "10350",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.830154",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "b08168be-6026-424e-a401-dea95393e778",
+      "resource_id": "10350",
+      "target_id": "8",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.830771",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "d792ba17-7ef7-4618-a884-4d9020ae0916",
+      "resource_id": "10363",
+      "target_id": "1",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.831331",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "2ead717b-e703-486c-b37a-ec57cd4904c5",
+      "resource_id": "10363",
+      "target_id": "2",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.831925",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "0c0a7400-d421-4059-b856-3739cbee9a8d",
+      "resource_id": "10363",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.832506",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "1990d98b-32eb-4b18-8223-2cd6bc93c14e",
+      "resource_id": "10376",
+      "target_id": "1",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.833096",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "2451f7d6-89a1-43ba-bab7-9be2a9d337c0",
+      "resource_id": "10376",
+      "target_id": "2",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.833613",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "b27b82e6-bcfe-4598-bb93-9b39f37a2ae2",
+      "resource_id": "10376",
+      "target_id": "4",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.834170",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "86ecf837-7a75-421d-9b5d-e99a2338e87c",
+      "resource_id": "10376",
+      "target_id": "5",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.834679",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "574c69d4-79a1-42ee-8071-3f12688f15eb",
+      "resource_id": "10376",
+      "target_id": "6",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.835186",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "7590c0aa-e9a0-4e15-be68-0c133499f1bc",
+      "resource_id": "10376",
+      "target_id": "7",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.835644",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "af46ca77-5f18-4141-9bc1-080309389f0c",
+      "resource_id": "10376",
+      "target_id": "8",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.836106",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "c6754c18-c588-4cb9-adb3-a06ec9eac10d",
+      "resource_id": "10389",
+      "target_id": "3",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.836418",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "88fa3dca-0c02-48ba-a28b-a69c8de53f40",
+      "resource_id": "10389",
+      "target_id": "6",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.836713",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "ac49d163-bdc4-4454-823d-ff698a08914a",
+      "resource_id": "10389",
+      "target_id": "7",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.837080",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    },
+    {
+      "assignment_id": "179335e2-dd8a-44f7-abeb-133ae44082ed",
+      "resource_id": "10389",
+      "target_id": "8",
+      "distance": null,
+      "score": 0.0,
+      "rationale": "Overall fit score 0.00.",
+      "approval_status": "approved",
+      "modified_by": null,
+      "modified_at": "2026-07-03T03:00:06.837341",
+      "notes": "{\"Match doctor specialty to clinic department.\": {\"raw_value\": 0.0, \"weight\": 0.55, \"type\": \"Reward\", \"contribution\": 0.0}, \"Cover patient appointment slot demand.\": {\"raw_value\": 0.0, \"weight\": 0.45, \"type\": \"Reward\", \"contribution\": 0.0}, \"_total\": 0.0, \"_fit_pct\": 0, \"_raw_score\": 0.0, \"_max_pair\": 1.0, \"_approx\": false}"
+    }
+  ],
+  "metrics": {
+    "total_resources": 30,
+    "total_targets": 8,
+    "assigned_count": 40,
+    "quality_label": "Good (71/100)",
+    "avg_fit_pct": 0,
+    "assigned_targets": 8,
+    "unassigned_targets": 0,
+    "coverage_pct": 100,
+    "solution_quality": 71,
+    "best_fitness": 0.0,
+    "average_final_fitness": 0.0,
+    "generations_run": 15,
+    "population_size": 100,
+    "elapsed_time_seconds": 65.23114166100004,
+    "solver_used": "schedule",
+    "solver_notes": "quality=70.8/100, violations=21",
+    "degraded": false,
+    "fallback_errors": null,
+    "all_off_collapse": false,
+    "degenerate_data": false
+  },
+  "fitness_history": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "average_history": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "best_fitness": 0.0,
+  "solver_used": "schedule"
+}

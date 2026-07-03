@@ -1106,6 +1106,13 @@ export default function DemoPage() {
                         );
                     })}
                 </div>
+                <div style={{ padding: '0 12px 10px' }}>
+                    <Link href="/demo/helium-health"
+                        style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'rgba(92,20,39,0.06)', border: `1px solid rgba(92,20,39,0.15)` }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.maroon, fontWeight: 700 }}>Featured partner demo</span>
+                        <span style={{ fontSize: 12.5, color: T.ink, fontWeight: 600 }}>Helium Health &times; Intellign →</span>
+                    </Link>
+                </div>
                 <div style={{ borderTop: `1px solid ${T.boneDeep}`, padding: '8px 12px 10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 8, cursor: 'pointer' }}>
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(92,20,39,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: T.maroon, flexShrink: 0 }}>A</div>
