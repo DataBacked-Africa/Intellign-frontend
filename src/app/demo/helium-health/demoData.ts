@@ -14,8 +14,8 @@ export interface MockGoal {
 
 export interface MockAssignment {
     assignment_id: string;
-    resource: { id: string };
-    target: { id: string };
+    resource: { id: string; name: string };
+    target: { id: string; name: string };
     score: number;
     approval_status: 'approved' | 'pending' | 'rejected' | 'modified';
     notes: string | null;
@@ -99,18 +99,42 @@ export const toGoals = (goals: RawGoal[]): MockGoal[] =>
         target_columns: g.target_columns ?? [],
     }));
 
+// Different domains name their "display name" column differently (name,
+// ward_name, ...) — try the common candidates before falling back to the id.
+const NAME_FIELD_CANDIDATES = ['name', 'ward_name', 'title', 'label', 'full_name'];
+
+const displayName = (record: Record<string, unknown> | undefined, id: string): string => {
+    if (!record) return id;
+    for (const field of NAME_FIELD_CANDIDATES) {
+        const v = record[field];
+        if (typeof v === 'string' && v.trim()) return v;
+    }
+    return id;
+};
+
+const idIndex = (rows: Record<string, unknown>[]): Map<string, Record<string, unknown>> =>
+    new Map(rows.map(r => [String(r.id), r]));
+
 // The schedule solver reports one overall schedule-quality score (see solver_notes
 // in the metrics), not a meaningful per-assignment fit — so per-row "score" is
 // flattened to that quality figure rather than showing a misleading 0.000 per row.
-export const toAssignments = (assignments: RawAssignment[], flatScoreOverride?: number): MockAssignment[] =>
-    assignments.map(a => ({
+export const toAssignments = (
+    assignments: RawAssignment[],
+    resources: Record<string, unknown>[],
+    targets: Record<string, unknown>[],
+    flatScoreOverride?: number,
+): MockAssignment[] => {
+    const resById = idIndex(resources);
+    const tgtById = idIndex(targets);
+    return assignments.map(a => ({
         assignment_id: a.assignment_id,
-        resource: { id: a.resource_id },
-        target: { id: a.target_id },
+        resource: { id: a.resource_id, name: displayName(resById.get(String(a.resource_id)), a.resource_id) },
+        target: { id: a.target_id, name: displayName(tgtById.get(String(a.target_id)), a.target_id) },
         score: flatScoreOverride ?? a.score,
         approval_status: (a.approval_status as MockAssignment['approval_status']) ?? 'approved',
         notes: null,
     }));
+};
 
 export function bundleToScenario(
     raw: RawBundle,
@@ -124,7 +148,7 @@ export function bundleToScenario(
         resourceCount: raw.resources.length,
         targetCount: raw.targets.length,
         goals: toGoals(raw.goals),
-        assignments: toAssignments(raw.assignments, isSchedule ? m.solution_quality : undefined),
+        assignments: toAssignments(raw.assignments, raw.resources, raw.targets, isSchedule ? m.solution_quality : undefined),
         resources: raw.resources,
         targets: raw.targets,
         fitnessHistory: raw.fitness_history,

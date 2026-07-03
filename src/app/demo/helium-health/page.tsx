@@ -273,8 +273,18 @@ const AssignmentsTab = ({ assignments }: { assignments: MockAssignment[] }) => {
                                             <ChevronDown size={13} style={{ transform: isExp ? 'rotate(180deg)' : undefined, transition: 'transform 140ms' }} />
                                         </button>
                                     </td>
-                                    <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: T.neutral700 }}>{a.resource.id}</td>
-                                    <td style={{ padding: '8px 12px', color: T.neutral600 }}>{a.target.id}</td>
+                                    <td style={{ padding: '8px 12px' }}>
+                                        <div style={{ fontSize: 12.5, fontWeight: 600, color: T.neutral700 }}>{a.resource.name}</div>
+                                        {a.resource.name !== a.resource.id && (
+                                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: T.neutral400, marginTop: 1 }}>#{a.resource.id}</div>
+                                        )}
+                                    </td>
+                                    <td style={{ padding: '8px 12px' }}>
+                                        <div style={{ fontSize: 12.5, color: T.neutral600 }}>{a.target.name}</div>
+                                        {a.target.name !== a.target.id && (
+                                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: T.neutral400, marginTop: 1 }}>#{a.target.id}</div>
+                                        )}
+                                    </td>
                                     <td style={{ padding: '8px 12px', fontWeight: 600, color: '#047857' }}>{a.score.toFixed(a.score > 3 ? 0 : 3)}</td>
                                     <td style={{ padding: '8px 12px' }}><StatusBadge status={status} /></td>
                                     <td style={{ padding: '8px 12px' }}>
@@ -294,7 +304,7 @@ const AssignmentsTab = ({ assignments }: { assignments: MockAssignment[] }) => {
                                         <td colSpan={6} style={{ background: T.neutral50, borderBottom: `1px solid ${T.neutral200}`, padding: '10px 14px 14px 14px' }}>
                                             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.neutral500, margin: '0 0 6px' }}>Why this pairing</p>
                                             <p style={{ fontSize: 12.5, lineHeight: 1.55, color: T.neutral700, margin: '0 0 10px' }}>
-                                                {a.notes ?? `Resource ${a.resource.id} assigned to Target ${a.target.id}. Score reflects the weighted objective function across all defined goals.`}
+                                                {a.notes ?? `${a.resource.name} assigned to ${a.target.name}. Score reflects the weighted objective function across all defined goals.`}
                                             </p>
                                             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.neutral500, margin: '0 0 6px' }}>Match score</p>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
