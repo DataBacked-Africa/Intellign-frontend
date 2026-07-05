@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 function ChatMock() {
   return (
@@ -30,7 +31,7 @@ function ChatMock() {
           </div>
           <div className="mock__readiness">
             <span className="ck done">✓ Data</span>
-            <span className="ck done">✓ Solver</span>
+            <span className="ck done">✓ Rules</span>
             <span className="ck done">✓ Goals</span>
             <span className="ck done">✓ Ready</span>
           </div>
@@ -46,8 +47,8 @@ function ChatMock() {
           </div>
           <div className="mock__msg">
             <div className="av bot" />
-            <div className="bub" style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, padding: "4px 8px", background: "var(--brand-maroon-50)", borderRadius: 6, color: "var(--brand-maroon-deep)", maxWidth: 160 }}>
-              <b>Selected solver:</b> Genetic algorithm · pop 256 · max 2,000 gens
+            <div className="bub">
+              Working on it, balancing qualifications, overtime caps, and fairness across every ward.
             </div>
           </div>
         </div>
@@ -80,7 +81,7 @@ function ChatWithCanvasMock() {
           </div>
           <div className="mock__msg">
             <div className="av bot" />
-            <div className="bub">Running the optimization now. Watch the canvas →</div>
+            <div className="bub">Working it out now, watch it live →</div>
           </div>
         </div>
       </div>
@@ -89,15 +90,15 @@ function ChatWithCanvasMock() {
           <span className="dot" />Healthcare
         </div>
         <div className="mock__canvas-tabs">
-          <span className="is-active">Monitor</span>
+          <span className="is-active">Progress</span>
           <span>Results</span>
           <span>Assignments</span>
         </div>
         <div className="mock__canvas-body">
-          <div className="mock__metric-lbl">Generation</div>
-          <div className="mock__metric">1,847</div>
-          <div className="mock__metric-lbl" style={{ marginTop: 10 }}>Best fitness</div>
-          <div className="mock__metric">0.987</div>
+          <div className="mock__metric-lbl">Assignments placed</div>
+          <div className="mock__metric">46 / 50</div>
+          <div className="mock__metric-lbl" style={{ marginTop: 10 }}>Plan quality</div>
+          <div className="mock__metric">98%</div>
           <svg width="100%" height="50" viewBox="0 0 160 50" preserveAspectRatio="none" style={{ marginTop: 12 }}>
             <defs>
               <linearGradient id="cm-g" x1="0" x2="0" y1="0" y2="1">
@@ -187,12 +188,12 @@ const PANELS: PanelConfig[] = [
     label: "Smart Chat",
     who: "For operators and enterprises",
     title: <>Move <em>existing</em> optimization tasks into a chat.</>,
-    body: "Hospital schedulers, logistics ops, public-sector planners — describe the goal, drop in your CSVs, and Intellign builds the problem with you. No solver syntax, no modelling expertise, but every step shows its work: the data it ingested, the columns it inferred, the solver it picked and why.",
+    body: "Hospital schedulers, logistics ops, public-sector planners, describe the goal, drop in your CSVs, and Intellign builds the problem with you. No syntax, no modelling expertise, but every step shows its work: the data it read, the columns it understood, and how it worked out the plan.",
     bullets: [
-      "Active-problem context bar — readiness checks tell you exactly what's missing.",
-      "Optimization runs in a sliding canvas: monitor live, expand goals, review assignments without losing your place.",
-      "Every assignment row carries a rationale — auditable by ops, defensible to compliance.",
-      "Dataset preview and solver pick are inline in the conversation, never behind a modal.",
+      "Active-problem context bar, readiness checks tell you exactly what's missing.",
+      "Optimization runs in a live view: watch progress, expand goals, review assignments without losing your place.",
+      "Every assignment row carries a rationale, auditable by ops, defensible to compliance.",
+      "Dataset preview and progress are inline in the conversation, never behind a modal.",
     ],
     Mock: ChatMock,
     CanvasMock: ChatWithCanvasMock,
@@ -206,8 +207,8 @@ const PANELS: PanelConfig[] = [
     bullets: [
       "Pick the LLM (Claude, GPT-4, Gemini, custom endpoint) and the solver (GA, CP, LP, simulated annealing).",
       "Tune hyperparameters live: population, generations, crossover, mutation.",
-      "Per-shift rationale with factor-level scoring — qualification fit, hours under cap, fairness rotation.",
-      "Same workspace and recents as Smart Chat — switch any time without losing context.",
+      "Per-shift rationale with factor-level scoring, qualification fit, hours under cap, fairness rotation.",
+      "Same workspace and recents as Smart Chat, switch any time without losing context.",
     ],
     Mock: PlaygroundMock,
     CanvasMock: null,
@@ -225,14 +226,14 @@ export default function InterfaceShowcase() {
 
   return (
     <section id="product" className="showcase">
-      <div className="mk-container">
+      <div className="mk-container mk-container--wide">
         <div className="section-header">
           <div className="eyebrow">The product</div>
           <h2>Two ways<br />to work.</h2>
           <p>
-            Same engine underneath. Pick the surface that matches the user — a
-            chat for operators moving existing tasks in, a structured playground
-            for engineers wiring the solver by hand.
+            Same engine underneath. Pick the surface that matches you, a
+            chat for teams moving existing tasks in, a structured playground
+            for developers who want to wire it by hand.
           </p>
         </div>
 
@@ -243,45 +244,73 @@ export default function InterfaceShowcase() {
                 key={p.id}
                 className={activeId === p.id ? "is-active" : ""}
                 onClick={() => { setActiveId(p.id); setShowCanvas(false); }}
+                style={{ position: "relative" }}
               >
-                {p.label}
+                {activeId === p.id && (
+                  <motion.span
+                    layoutId="showcase-tab-pill"
+                    className="showcase__tab-pill"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <span style={{ position: "relative", zIndex: 1 }}>{p.label}</span>
               </button>
             ))}
           </div>
         </div>
 
         <div className="showcase__panel">
-          <div className="showcase__copy" style={{ minWidth: 0 }}>
-            <div className="who">{panel.who}</div>
-            <h3>{panel.title}</h3>
-            <p>{panel.body}</p>
-            <ul>
-              {panel.bullets.map((b, i) => <li key={i}>{b}</li>)}
-            </ul>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link href="/auth/signup" className="btn btn-primary">
-                Try {panel.label.toLowerCase()}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </Link>
-              {panel.id === "chat" && panel.CanvasMock && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowCanvas((c) => !c)}
-                >
-                  {showCanvas ? "Hide optimization canvas" : "See optimization canvas"}
-                </button>
-              )}
-            </div>
-          </div>
-          <MockToRender />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeId}
+              className="showcase__copy"
+              style={{ minWidth: 0 }}
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 16 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="who">{panel.who}</div>
+              <h3>{panel.title}</h3>
+              <p>{panel.body}</p>
+              <ul>
+                {panel.bullets.map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Link href="/auth/signup" className="btn btn-primary">
+                  Try {panel.label.toLowerCase()}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </Link>
+                {panel.id === "chat" && panel.CanvasMock && (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowCanvas((c) => !c)}
+                  >
+                    {showCanvas ? "Hide live view" : "Watch it solve"}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${activeId}-${showCanvas}`}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -12 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <MockToRender />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
-          <p style={{ textAlign: "center", fontSize: 12, color: "var(--neutral-500)", marginTop: 18, fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
-        Illustrative interface — explore the real thing in the <a href="/demo" style={{ color: "var(--brand-maroon)", textDecoration: "underline" }}>live demo</a>.
+      <p style={{ textAlign: "center", fontSize: 12, color: "var(--neutral-500)", marginTop: 18, fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+        Illustrative interface, explore the real thing in the <a href="/demo" style={{ color: "var(--brand-maroon)", textDecoration: "underline" }}>live demo</a>.
       </p>
-</section>
+    </section>
   );
 }

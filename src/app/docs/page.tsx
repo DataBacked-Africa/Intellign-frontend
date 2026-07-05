@@ -22,6 +22,24 @@ const QUICKSTART = `1. Launch the app and describe your problem in plain English
 That's the whole flow — three turns from question to an
 explained, auditable assignment.`;
 
+const PYTHON_SDK = `pip install intellign
+
+from intellign import Intellign
+
+client = Intellign(api_key="...")
+
+result = client.solve(
+    goal="Minimize total nurse overtime",
+    constraints=[
+        "Each ward needs at least 3 nurses per shift",
+        "No nurse exceeds 48 hours per week",
+    ],
+    resources=nurses,
+    targets=wards,
+)
+
+result.assignments   # -> 50/50 assigned, every decision explained`;
+
 const API_SHAPE = `POST /ingest/chat/{session_id}        # converse, upload, generate
 POST /ingest/files/{session_id}       # upload datasets (csv, xlsx,
                                       # json, parquet, gpkg, ...)
@@ -88,6 +106,7 @@ export default function DocsPage() {
           </p>
 
           <DocBlock title="Quickstart — three turns to a solve" code={QUICKSTART} />
+          <DocBlock title="Python SDK" code={PYTHON_SDK} />
           <DocBlock title="API shape" code={API_SHAPE} />
           <DocBlock title="Calling Intellign from your AI (MCP)" code={MCP_NOTE} />
 

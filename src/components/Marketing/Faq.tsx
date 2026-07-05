@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { FAQ_ITEMS } from "./faq-data";
+import { staggerContainer, fadeUpItem, viewportOnce } from "./motionVariants";
 
 export default function Faq() {
   const [open, setOpen] = useState<number | null>(0);
@@ -12,11 +14,21 @@ export default function Faq() {
         <div className="eyebrow">FAQ</div>
         <h2>Questions, <em>answered</em>.</h2>
       </div>
-      <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 10 }}>
+      <motion.div
+        style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 10 }}
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="show"
+        viewport={viewportOnce}
+      >
         {FAQ_ITEMS.map((item, i) => {
           const isOpen = open === i;
           return (
-            <div key={i} style={{ background: "var(--neutral-0)", border: "1px solid var(--brand-bone-deep)", borderRadius: 12, overflow: "hidden" }}>
+            <motion.div
+              key={i}
+              variants={fadeUpItem}
+              style={{ background: "var(--neutral-0)", border: "1px solid var(--brand-bone-deep)", borderRadius: 12, overflow: "hidden" }}
+            >
               <button
                 onClick={() => setOpen(isOpen ? null : i)}
                 aria-expanded={isOpen}
@@ -29,20 +41,34 @@ export default function Faq() {
                 }}
               >
                 {item.q}
-                <span aria-hidden="true" style={{
-                  fontSize: 20, color: "var(--brand-maroon)", flexShrink: 0,
-                  transform: isOpen ? "rotate(45deg)" : "none", transition: "transform 180ms ease",
-                }}>+</span>
+                <motion.span
+                  aria-hidden="true"
+                  animate={{ rotate: isOpen ? 45 : 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  style={{ fontSize: 20, color: "var(--brand-maroon)", flexShrink: 0, display: "inline-block" }}
+                >
+                  +
+                </motion.span>
               </button>
-              {isOpen && (
-                <p style={{ margin: 0, padding: "0 20px 18px", fontSize: 14.5, lineHeight: 1.6, color: "var(--neutral-700)" }}>
-                  {item.a}
-                </p>
-              )}
-            </div>
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <p style={{ margin: 0, padding: "0 20px 18px", fontSize: 14.5, lineHeight: 1.6, color: "var(--neutral-700)" }}>
+                      {item.a}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
     </section>
   );
 }

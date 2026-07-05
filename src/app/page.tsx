@@ -30,7 +30,7 @@ const JSON_LD = {
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
-        "Optimization as a service — describe assignment, scheduling or routing problems in plain English and get explained, auditable solutions.",
+        "Optimization as a service, describe assignment, scheduling or routing problems in plain English and get explained, auditable solutions.",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Free tier" },
       url: "https://intellign.databackedafrica.com",
     },
@@ -47,7 +47,7 @@ const JSON_LD = {
 
 export default function MarketingPage() {
   return (
-    <div className="mk-page">
+    <div className="mk-page px-[5%]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}

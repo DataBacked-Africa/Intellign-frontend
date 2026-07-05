@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-// Static, hand-tokenized JSX — replaces the dangerouslySetInnerHTML HTML string.
+// Static, hand-tokenized JSX, replaces the dangerouslySetInnerHTML HTML string.
 // c = comment, k = keyword, v = name, s = string (styled via .code-block classes).
 const C = ({ children }: { children: React.ReactNode }) => <span className="c">{children}</span>;
 const K = ({ children }: { children: React.ReactNode }) => <span className="k">{children}</span>;
@@ -28,7 +28,7 @@ export default function CodeSample() {
         </div>
       </div>
       <pre className="code-block">
-        <C># pip install intellign — call it from any LLM or agent framework.</C>{"\n"}
+        <C># pip install intellign, call it from any LLM or agent framework.</C>{"\n"}
         <K>from</K> intellign <K>import</K> Intellign{"\n\n"}
         client = Intellign(){"\n\n"}
         result = client.<V>solve</V>({"\n"}
