@@ -42,7 +42,7 @@ export default function MarketingFooter() {
         <a href="#">Careers</a>
       </div>
       <div className="mk-footer__base">
-        <span>© {new Date().getFullYear()} DataBacked Africa</span>
+        <span>© {new Date().getFullYear()} Intellign AI</span>
         <span className="links">
           <a href="#">Privacy</a>
           <a href="#">Terms</a>
