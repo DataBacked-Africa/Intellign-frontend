@@ -991,7 +991,7 @@ const SmartUploadWizard: React.FC<SmartUploadWizardProps> = ({ initialSessionId,
                                 Hi {user?.name?.split(' ')[0] || 'there'}
                             </span>
                         </h1>
-                        <h2 className="text-4xl md:text-[56px] leading-tight font-semibold text-gray-300 tracking-tight">
+                        <h2 className="text-4xl md:text-[56px] leading-tight font-semibold text-[var(--brand-maroon)]/70 tracking-tight">
                             Where should we start?
                         </h2>
                     </div>
