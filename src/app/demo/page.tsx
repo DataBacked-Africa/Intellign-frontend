@@ -13,7 +13,7 @@ import {
     Bot, User, CheckCircle2, Database, Target, Zap, ChevronRight, Download,
     Sparkles, ChevronDown, Check, Edit3, X, Search, SquarePen, LogOut,
     PanelLeftClose, Minimize2, Plus, Trash2, Save, Cpu, Settings, Share2,
-    TrendingUp, Play, BarChart2, ChevronLeft, ChevronUp,
+    TrendingUp, Play, BarChart2, ChevronLeft, ChevronUp, Menu,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -1007,6 +1007,7 @@ export default function DemoPage() {
     const [canvasTab, setCanvasTab] = useState<CanvasTab>('monitor');
     const [runStage, setRunStage] = useState('idle');
     const [scenarioId, setScenarioId] = useState(SCENARIOS[0].id);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const scenario = SCENARIOS.find(s => s.id === scenarioId) ?? SCENARIOS[0];
     const [goals, setGoals] = useState<MockGoal[]>(SCENARIOS[0].goals);
     const [input, setInput] = useState('');
@@ -1055,6 +1056,7 @@ export default function DemoPage() {
         setGoals(sc.goals);
         setRunStage('idle');
         setCanvasOpen(false);
+        setSidebarOpen(false);
     }, []);
 
     const canvasVisible = canvasOpen && !canvasMinimized;
@@ -1070,14 +1072,19 @@ export default function DemoPage() {
                     Launch the app to solve your own →
                 </Link>
             </div>
-        <div style={{ display: 'flex', flex: 1, minHeight: 0, width: '100%', background: T.bone, overflow: 'hidden', fontFamily: 'var(--font-sans)' }}>
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, width: '100%', background: T.bone, overflow: 'hidden', fontFamily: 'var(--font-sans)', position: 'relative' }}>
+            {/* Mobile Overlay */}
+            {sidebarOpen && (
+                <div className="md:hidden absolute inset-0 z-20 bg-black/20 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+            )}
+
             {/* Sidebar */}
-            <aside style={{ width: 260, background: T.bone, borderRight: `1px solid ${T.boneDeep}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+            <aside className={cn("absolute md:relative z-30 inset-y-0 left-0 transition-transform duration-300 md:translate-x-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")} style={{ width: 260, background: T.bone, borderRight: `1px solid ${T.boneDeep}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 <div style={{ padding: '14px 12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 8, fontFamily: 'var(--font-display)', fontSize: 22, color: T.maroonDeep }}>
                         Intellign
                     </div>
-                    <button style={{ width: 30, height: 30, border: 0, background: 'transparent', color: T.neutral500, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, cursor: 'pointer' }}>
+                    <button onClick={() => setSidebarOpen(false)} className="md:hidden" style={{ width: 30, height: 30, border: 0, background: 'transparent', color: T.neutral500, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, cursor: 'pointer' }}>
                         <PanelLeftClose size={17} />
                     </button>
                 </div>
@@ -1132,6 +1139,9 @@ export default function DemoPage() {
                 {/* TopBar */}
                 <header style={{ height: 54, padding: '0 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(244,239,231,0.85)', backdropFilter: 'blur(12px)', borderBottom: `1px solid transparent`, flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <button className="md:hidden" onClick={() => setSidebarOpen(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, border: 0, background: 'transparent', color: T.neutral600, cursor: 'pointer' }}>
+                            <Menu size={18} />
+                        </button>
                         <span style={{ fontSize: 15, fontWeight: 600, color: T.maroonDeep, padding: '5px 8px' }}>Intellign AI</span>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: T.neutral400 }}>
                             <ChevronDown size={13} />

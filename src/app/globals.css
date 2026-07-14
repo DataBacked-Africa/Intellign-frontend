@@ -1089,6 +1089,60 @@ html { scroll-behavior: smooth; }
 /* ── Chat bubbles: wide markdown tables scroll inside the bubble ── */
 .msg-bubble table, .prose table { display: block; max-width: 100%; overflow-x: auto; }
 
+/* ── Docs page ── */
+.docs-hero { padding: 120px 0 0; }
+.docs-surfaces { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 8px; }
+.docs-surfaces a {
+  font-family: var(--font-mono); font-size: 12px; padding: 7px 12px;
+  border-radius: var(--r-pill); border: 1px solid var(--border-default);
+  color: var(--fg-secondary); text-decoration: none; transition: all 160ms;
+}
+.docs-surfaces a:hover { border-color: var(--brand-maroon-200); color: var(--brand-maroon-deep); background: var(--brand-maroon-50); }
+.docs-meta { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); margin-top: 4px; }
+
+.docs-layout { display: grid; grid-template-columns: 216px 1fr; gap: 64px; align-items: start; padding: 56px 0 120px; }
+.docs-sidebar { position: sticky; top: 100px; display: flex; flex-direction: column; font-size: 13px; max-height: calc(100vh - 140px); overflow-y: auto; }
+.docs-sidebar__group { margin-bottom: 4px; }
+.docs-sidebar__group-title { display: block; margin: 18px 0 6px; }
+.docs-sidebar__group:first-child .docs-sidebar__group-title { margin-top: 0; }
+.docs-sidebar a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--fg-secondary); text-decoration: none; line-height: 1.4; }
+.docs-sidebar a:hover { background: var(--neutral-100); color: var(--brand-maroon-deep); }
+.docs-sidebar a.is-sub { padding-left: 20px; font-size: 12.5px; color: var(--fg-tertiary); }
+
+.docs-content section { padding-bottom: 56px; margin-bottom: 56px; border-bottom: 1px solid var(--border-subtle); }
+.docs-content section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.docs-content h2 { font-family: var(--font-display); font-weight: 400; font-size: 32px; letter-spacing: -0.02em; color: var(--brand-maroon-deep); margin: 0 0 6px; scroll-margin-top: 100px; }
+.docs-content h3 { font-family: var(--font-sans); font-size: 18px; font-weight: 600; color: var(--neutral-800); margin: 36px 0 10px; scroll-margin-top: 100px; }
+.docs-content p { font-size: 15px; line-height: 1.7; color: var(--fg-secondary); margin: 0 0 14px; }
+.docs-content ul, .docs-content ol { margin: 0 0 16px; padding-left: 20px; font-size: 15px; line-height: 1.7; color: var(--fg-secondary); }
+.docs-content li { margin-bottom: 6px; }
+.docs-content a { color: var(--brand-maroon); text-decoration: underline; text-underline-offset: 2px; }
+
+.docs-code { margin: 16px 0 22px; }
+.docs-code__label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 8px; }
+
+.docs-table-wrap { overflow-x: auto; margin: 16px 0 22px; border: 1px solid var(--border-subtle); border-radius: 10px; }
+.docs-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.docs-table th, .docs-table td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+.docs-table thead th { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); font-weight: 500; background: var(--neutral-50); }
+.docs-table tbody tr:last-child td { border-bottom: none; }
+
+.docs-content code, .docs-table code {
+  font-family: var(--font-mono); font-size: 0.88em; background: var(--neutral-100);
+  padding: 2px 6px; border-radius: 5px; color: var(--brand-maroon-deep);
+}
+.docs-content pre code { background: none; padding: 0; color: inherit; }
+
+.docs-faq dt { font-weight: 600; color: var(--neutral-800); font-size: 15px; margin-top: 20px; }
+.docs-faq dd { margin: 6px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--fg-secondary); }
+
+@media (max-width: 900px) {
+  .docs-layout { grid-template-columns: 1fr; gap: 8px; }
+  .docs-sidebar { position: static; flex-direction: row; flex-wrap: wrap; max-height: none; gap: 4px 2px; margin-bottom: 24px; }
+  .docs-sidebar__group-title { display: none; }
+  .docs-sidebar a.is-sub { display: none; }
+}
+
 /* ── Touch targets: suggestion chips + icon buttons reach 44px on touch devices ── */
 @media (pointer: coarse) {
   button { min-height: 44px; }
@@ -1145,3 +1199,5 @@ html { scroll-behavior: smooth; }
 /* Re-assert the emphasised step: the rule above ties specificity with
    `.how__step.is-emph` and would otherwise clobber its accent background. */
 [data-theme="dark"] .how__step.is-emph { background: var(--brand-maroon-deep); border-color: var(--brand-maroon-deep); }
+[data-theme="dark"] .docs-table thead th { background: var(--neutral-100); }
+[data-theme="dark"] .docs-content code, [data-theme="dark"] .docs-table code { background: var(--neutral-100); color: var(--brand-maroon-200); }
