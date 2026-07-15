@@ -1090,7 +1090,7 @@ html { scroll-behavior: smooth; }
 .msg-bubble table, .prose table { display: block; max-width: 100%; overflow-x: auto; }
 
 /* ── Docs page ── */
-.docs-hero { padding: 120px 0 0; }
+.docs-hero { padding: 20px 0  0; }
 .docs-surfaces { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 8px; }
 .docs-surfaces a {
   font-family: var(--font-mono); font-size: 12px; padding: 7px 12px;
