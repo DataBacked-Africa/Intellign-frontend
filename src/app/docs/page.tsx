@@ -204,7 +204,7 @@ export default function DocsPage() {
   return (
     <div className="mk-page">
       <MarketingNav />
-      <main>
+      <main className="px-5">
         <section className="mk-container docs-hero">
           <div className="eyebrow">Documentation</div>
           <h1
