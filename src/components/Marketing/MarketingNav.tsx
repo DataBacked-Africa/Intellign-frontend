@@ -26,7 +26,7 @@ export default function MarketingNav() {
       className={`mk-nav ${scrolled ? "is-scrolled" : ""}`}
     >
       <Link href="/" className="mk-nav__brand">
-        <Image src="/intellign-logo.png" alt="Intellign" width={28} height={28} style={{ height: 28, width: "auto" }} />
+        {/* <Image src="/intellign-logo.png" alt="Intellign" width={28} height={28} style={{ height: 28, width: "auto" }} /> */}
         <span>Intellign<span className="dot" /></span>
       </Link>
       <div className="mk-nav__items">
