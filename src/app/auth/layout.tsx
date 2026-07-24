@@ -37,7 +37,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Brand */}
         <div style={{ position: "relative", zIndex: 1 }}>
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-            <Image src="/intellign-logo.png" alt="Intellign" width={28} height={28} style={{ height: 28, width: "auto", filter: "brightness(0) invert(1)" }} />
+            {/* <Image src="/intellign-logo.png" alt="Intellign" width={28} height={28} style={{ height: 28, width: "auto", filter: "brightness(0) invert(1)" }} /> */}
             <span style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--brand-bone)", letterSpacing: "-0.5px" }}>
               Intellign
             </span>
@@ -89,7 +89,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Mobile logo */}
         <div style={{ position: "absolute", top: 24, left: 24 }} className="auth-mobile-logo">
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-            <Image src="/intellign-logo.png" alt="Intellign" width={24} height={24} style={{ height: 24, width: "auto" }} />
+            {/* <Image src="/intellign-logo.png" alt="Intellign" width={24} height={24} style={{ height: 24, width: "auto" }} /> */}
             <span style={{ fontFamily: "var(--font-display)", fontSize: 18, color: "var(--brand-maroon-deep)" }}>Intellign</span>
           </Link>
         </div>
