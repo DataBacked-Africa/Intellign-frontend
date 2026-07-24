@@ -21,7 +21,7 @@ const JSON_LD = {
     {
       "@type": "Organization",
       name: "DataBacked Africa",
-      url: "https://intellign.databackedafrica.com",
+      url: "https://intellign.ai",
       email: "hello@databackedafrica.com",
     },
     {
@@ -32,7 +32,7 @@ const JSON_LD = {
       description:
         "Optimization as a service, describe assignment, scheduling or routing problems in plain English and get explained, auditable solutions.",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Free tier" },
-      url: "https://intellign.databackedafrica.com",
+      url: "https://intellign.ai",
     },
     {
       "@type": "FAQPage",

@@ -135,7 +135,7 @@ function PlaygroundMock() {
           <div className="mock__pg-head">
             <div>
               <div className="pg-eb">Problem · 0a8f3c</div>
-              <h1>Q4 nurse roster</h1>
+              <div className="pg-title">Q4 nurse roster</div>
             </div>
           </div>
           <div className="mock__pg-cfg">

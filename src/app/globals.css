@@ -636,7 +636,7 @@
   letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--brand-maroon); margin-bottom: 4px;
 }
-.mock__pg-head h1 {
+.mock__pg-head .pg-title {
   font-family: var(--font-display); font-size: 22px; line-height: 1; letter-spacing: -0.02em;
   font-weight: 400; color: var(--brand-maroon-deep); margin: 0;
 }

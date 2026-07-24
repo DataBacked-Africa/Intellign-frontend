@@ -33,7 +33,7 @@ export default function OgImage() {
           Plain English in — explained, auditable assignments out. Three chat turns.
         </div>
         <div style={{ position: "absolute", bottom: 48, right: 80, fontSize: 24, color: "#5C1427", display: "flex" }}>
-          intellign.databackedafrica.com
+          intellign.ai
         </div>
       </div>
     ),
