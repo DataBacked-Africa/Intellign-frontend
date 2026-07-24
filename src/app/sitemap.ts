@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://intellign.ai";
+const BASE = "https://www.intellign.ai";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

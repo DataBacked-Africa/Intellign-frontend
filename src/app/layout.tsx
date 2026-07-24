@@ -37,12 +37,12 @@ const jetbrainsMono = localFont({
 export const metadata: Metadata = {
   title: "Intellign — The math layer within AI",
   description: "Describe the goal in plain English. Intellign formalises it, runs the solve, and hands back an assignment your team can defend.",
-  metadataBase: new URL("https://intellign.ai"),
+  metadataBase: new URL("https://www.intellign.ai"),
   alternates: { canonical: "/" },
   openGraph: {
     title: "Intellign — The math layer within AI",
     description: "Plain English in, explained optimization out — three chat turns from question to assignment.",
-    url: "https://intellign.ai",
+    url: "https://www.intellign.ai",
     siteName: "Intellign",
     type: "website",
   },

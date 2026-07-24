@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       // /join and /share are per-invite, per-recipient pages, not content either.
       { userAgent: "*", allow: "/", disallow: ["/workspace", "/auth", "/sessions", "/dev-login", "/admin", "/join", "/share", "/api"] },
     ],
-    sitemap: "https://intellign.ai/sitemap.xml",
+    sitemap: "https://www.intellign.ai/sitemap.xml",
   };
 }
