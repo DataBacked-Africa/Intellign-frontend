@@ -21,11 +21,14 @@ import { useSessionOrchestrator } from '@/hooks/useSessionOrchestrator';
 import { resultsService } from '@/services/resultsService';
 import { showToast } from '@/components/ui/CustomToast';
 import { GoalDefinition, DataContext } from '@/types/models';
+import { ParetoFront } from '@/services/resultsService';
 import axiosInstance from '@/lib/axiosConfig';
 import { InsightsTab } from './InsightsTab';
 import { DatasetPanel } from './DatasetPanel';
 import { SolverConfigPanel } from './SolverConfigPanel';
 import { CanvasGoalsTab } from './CanvasGoalsTab';
+import { ConfidenceHero } from './ConfidenceHero';
+import { ParetoExplorer } from './ParetoExplorer';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,33 +52,55 @@ interface Assignment {
 interface OptimizationData {
     job_id: string;
     status: string;
-    metrics: { best_fitness: number; total_targets: number; assigned_count: number; generations_run: number; population_size: number; total_resources: number; elapsed_time_seconds: number; average_final_fitness: number; solution_quality?: number; coverage_pct?: number };
+    metrics: {
+        best_fitness: number; total_targets: number; assigned_count: number; generations_run: number;
+        population_size: number; total_resources: number; elapsed_time_seconds: number; average_final_fitness: number;
+        solution_quality?: number; coverage_pct?: number;
+        // ── Proof/confidence contract (proposed — optional until backend ships it) ──
+        solver_used?: string;
+        quality_state?: 'proven' | 'within_gap' | 'best_found';
+        gap_percentage?: number | null;
+        solver_badge?: string;
+        routing_reason?: string | null;
+        backup_solver?: string | null;
+        fallback_solver?: string | null;
+        license_cost?: number | null;
+        comparison?: { speedup_x: number; label?: string } | null;
+        bound_history?: number[];
+    };
     assignments: Assignment[];
     pagination: { page: number; page_size: number; total_items: number; total_pages: number };
     status_counts: { pending: number; approved: number; modified: number; rejected: number };
     fitness_history: number[];
     average_history: number[];
+    /** Present only when the run's goals conflict — multi-objective / Pareto-optimal set. */
+    pareto_front?: ParetoFront | null;
 }
 
 // ── Fitness chart ──────────────────────────────────────────────────────────────
 
-const FitnessChart: React.FC<{ history: number[]; average: number[] }> = ({ history, average }) => {
+const FitnessChart: React.FC<{ history: number[]; average: number[]; bound?: number[] }> = ({ history, average, bound }) => {
     if (!history?.length) return null;
+    // When a best-possible-bound series is available (exact/bounded solvers), show
+    // "bound closing over time" instead of population average — a different story
+    // (the proof narrowing in) than GA population average.
+    const secondary = bound?.length ? bound : average;
+    const secondaryLabel = bound?.length ? 'Best possible bound' : 'Average';
     const w = 520; const h = 140; const pad = 26;
-    const all = [...history, ...average];
+    const all = [...history, ...secondary];
     const max = Math.max(...all); const min = Math.min(...all); const range = max - min || 1;
     const gx = (i: number) => pad + (i / (history.length - 1 || 1)) * (w - 2 * pad);
     const gy = (v: number) => h - pad - ((v - min) / range) * (h - 2 * pad);
     const fitPath = history.map((v, i) => `${i === 0 ? 'M' : 'L'}${gx(i).toFixed(1)} ${gy(v).toFixed(1)}`).join(' ');
-    const avgPath = average.map((v, i) => `${i === 0 ? 'M' : 'L'}${gx(i).toFixed(1)} ${gy(v).toFixed(1)}`).join(' ');
+    const avgPath = secondary.map((v, i) => `${i === 0 ? 'M' : 'L'}${gx(i).toFixed(1)} ${gy(v).toFixed(1)}`).join(' ');
     const last = [gx(history.length - 1), gy(history[history.length - 1])];
     return (
         <div className="bg-[#14110F] rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-                <span className="text-white text-sm font-semibold">Fitness convergence</span>
+                <span className="text-white text-sm font-semibold">{bound?.length ? 'Search progress' : 'Fitness convergence'}</span>
                 <div className="flex gap-3 text-xs text-gray-400">
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#D49AAA] inline-block" /> Best</span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-gray-500 opacity-50 inline-block" /> Average</span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#D49AAA] inline-block" /> Best found</span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-gray-500 opacity-50 inline-block" /> {secondaryLabel}</span>
                 </div>
             </div>
             <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-32">
@@ -84,7 +109,7 @@ const FitnessChart: React.FC<{ history: number[]; average: number[] }> = ({ hist
                 {/* Area fades in under the curve */}
                 <motion.path d={`${fitPath} L${last[0].toFixed(1)} ${(h - pad).toFixed(1)} L${pad} ${(h - pad).toFixed(1)} Z`} fill="url(#cv-cg)"
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, ease: 'easeOut' }} />
-                {/* Average line draws in */}
+                {/* Secondary (average or bound) line draws in */}
                 <motion.path d={avgPath} fill="none" stroke="rgba(107,114,128,0.4)" strokeWidth="1.5"
                     initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: 'easeInOut' }} />
                 {/* Best-fitness line draws in over the average */}
@@ -202,6 +227,39 @@ const MonitorTab: React.FC = () => {
     );
 };
 
+// Compact solver-info card — names the actual solver and (when supplied) explains
+// the router's plain-language reasoning, not just raw params. Renders nothing extra
+// when the new fields are absent, so it degrades to just the solver badge.
+const SolverInfoCard: React.FC<{
+    solverUsed?: string; routingReason?: string | null;
+    backupSolver?: string | null; fallbackSolver?: string | null; qualityMode?: string;
+}> = ({ solverUsed, routingReason, backupSolver, fallbackSolver, qualityMode }) => {
+    if (!solverUsed) return null;
+    return (
+        <div className="rounded-xl p-4" style={{ background: 'var(--neutral-0)', border: '1px solid var(--border-subtle)' }}>
+            <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--fg-primary)' }}>Solver configuration</h3>
+            <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold mb-2"
+                style={{ fontFamily: 'var(--font-mono)', background: 'rgba(92,20,39,0.08)', color: 'var(--brand-maroon)' }}>
+                {solverUsed}
+            </span>
+            {routingReason && (
+                <p className="text-xs leading-relaxed italic mb-3" style={{ color: 'var(--fg-secondary)' }}>&ldquo;{routingReason}&rdquo;</p>
+            )}
+            <div className="space-y-1.5 text-xs">
+                {backupSolver && (
+                    <div className="flex items-center justify-between"><span style={{ color: 'var(--fg-tertiary)' }}>Backup if unavailable</span><span style={{ color: 'var(--fg-primary)' }}>{backupSolver}</span></div>
+                )}
+                {fallbackSolver && (
+                    <div className="flex items-center justify-between"><span style={{ color: 'var(--fg-tertiary)' }}>Fallback (large scale)</span><span style={{ color: 'var(--fg-primary)' }}>{fallbackSolver}</span></div>
+                )}
+                {qualityMode && (
+                    <div className="flex items-center justify-between"><span style={{ color: 'var(--fg-tertiary)' }}>Quality mode</span><span className="capitalize" style={{ color: 'var(--fg-primary)' }}>{qualityMode}</span></div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 // ── Results tab ────────────────────────────────────────────────────────────────
 
 const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
@@ -215,6 +273,9 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
     // Grounded AI explanations, keyed by assignment_id
     const [explanations, setExplanations] = useState<Record<string, string>>({});
     const [explainLoading, setExplainLoading] = useState<string | null>(null);
+    // Goals feed the Pareto explorer's chips (already flowing through the canvas, no new field needed)
+    const { goals } = useCanvas();
+    const qualityMode = useSessionStore(s => s.qualityMode);
 
     const handleExplain = async (id: string, refresh = false) => {
         setExplainLoading(id);
@@ -276,7 +337,13 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
     if (loading && !data) return <div className="flex items-center justify-center py-12 text-sm" style={{ color: 'var(--fg-tertiary)' }}><Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading results…</div>;
     if (!data) return <div className="py-12 text-center text-sm" style={{ color: 'var(--fg-tertiary)' }}>No optimization data yet.</div>;
 
-    const { metrics, assignments = [], status_counts, fitness_history = [], average_history = [] } = data;
+    const { metrics, assignments = [], status_counts, fitness_history = [], average_history = [], pareto_front } = data;
+
+    // Goals genuinely conflicted — no single assignment dominates. Show the trade-off
+    // explorer instead of a single result; nothing below this applies until one is picked.
+    if (pareto_front?.options && pareto_front.options.length > 1) {
+        return <ParetoExplorer jobId={jobId} data={pareto_front} goals={goals} onSelected={() => loadData(page)} />;
+    }
 
     // How many resources landed on each target — useful for assignment tasks where
     // multiple resources can share a target (up to its capacity).
@@ -308,16 +375,33 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
     const totalPages = Math.ceil(filtered.length / PER_PAGE);
     const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
+    // Base tiles always shown; "vs previous method" / "License cost" only appear when
+    // the backend actually supplies them (mockup note #2 — omit rather than show empty).
+    const metricTiles: { lbl: string; val: string | number; sub?: string; hi?: boolean }[] = [
+        { lbl: 'Resources assigned', val: metrics?.assigned_count ?? 0, sub: `of ${metrics?.total_resources ?? 0}` },
+        { lbl: 'Target pool', val: metrics?.total_targets ?? 0 },
+        { lbl: 'Solve time', val: typeof metrics?.elapsed_time_seconds === 'number' ? `${metrics.elapsed_time_seconds.toFixed(1)}s` : '—' },
+    ];
+    if (metrics?.comparison) {
+        metricTiles.push({ lbl: 'vs. previous method', val: `${metrics.comparison.speedup_x}×`, sub: metrics.comparison.label ?? 'faster, same run', hi: true });
+    }
+    if (metrics?.license_cost != null) {
+        metricTiles.push({ lbl: 'License cost', val: metrics.license_cost === 0 ? '$0' : `$${metrics.license_cost}`, sub: metrics.license_cost === 0 ? 'open solver' : undefined });
+    }
+
     return (
         <div className="space-y-4">
+            <ConfidenceHero
+                qualityState={metrics?.quality_state}
+                gapPercentage={metrics?.gap_percentage}
+                solverBadge={metrics?.solver_badge}
+                solverUsed={metrics?.solver_used}
+                elapsedSeconds={metrics?.elapsed_time_seconds}
+            />
+
             {/* Metrics */}
             <div className="grid grid-cols-2 gap-3">
-                {[
-                    { lbl: 'Solution quality', val: typeof metrics?.solution_quality === 'number' ? `${metrics.solution_quality}%` : '—', hi: true },
-                    { lbl: 'Resources assigned', val: metrics?.assigned_count ?? 0, sub: `of ${metrics?.total_resources ?? 0}` },
-                    { lbl: 'Target pool', val: metrics?.total_targets ?? 0 },
-                    { lbl: 'Best fitness', val: typeof metrics?.best_fitness === 'number' ? metrics.best_fitness.toFixed(3) : '—' },
-                ].map(m => (
+                {metricTiles.map(m => (
                     <div key={m.lbl} className="rounded-xl p-4" style={{ background: 'var(--neutral-0)', border: `1px solid ${m.hi ? 'rgba(92,20,39,0.22)' : 'var(--border-subtle)'}` }}>
                         <div className="text-[10px] uppercase tracking-[0.12em] mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-tertiary)' }}>{m.lbl}</div>
                         <div className="flex items-baseline gap-1.5">
@@ -335,7 +419,7 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                 ))}
             </div>
 
-            <FitnessChart history={fitness_history} average={average_history} />
+            <FitnessChart history={fitness_history} average={average_history} bound={metrics?.bound_history} />
 
             {/* Approval status */}
             <div className="rounded-xl p-4" style={{ background: 'var(--neutral-0)', border: '1px solid var(--border-subtle)' }}>
@@ -359,6 +443,14 @@ const ResultsTab: React.FC<{ jobId: string }> = ({ jobId }) => {
                     </div>
                 )}
             </div>
+
+            <SolverInfoCard
+                solverUsed={metrics?.solver_used}
+                routingReason={metrics?.routing_reason}
+                backupSolver={metrics?.backup_solver}
+                fallbackSolver={metrics?.fallback_solver}
+                qualityMode={qualityMode}
+            />
 
             {/* Assignments table */}
             <div className="rounded-xl overflow-hidden" style={{ background: 'var(--neutral-0)', border: '1px solid var(--border-subtle)' }}>

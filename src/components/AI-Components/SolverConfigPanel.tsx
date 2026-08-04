@@ -47,7 +47,7 @@ const QualityModeToggle: React.FC = () => {
 };
 
 interface SolverConfig {
-  solver_type: "ga" | "ortools" | "schedule" | "greedy";
+  solver_type: "ga" | "ortools" | "schedule" | "greedy" | "highs" | "cp_sat" | "ga_vec" | "ga_pareto";
   params: Record<string, number | string | boolean>;
   tuned: boolean;
   last_run_at?: string;
@@ -60,10 +60,14 @@ interface SolverConfigPanelProps {
 }
 
 const SOLVER_LABELS: Record<string, { label: string; color: string }> = {
-  ga:       { label: "Genetic Algorithm", color: "bg-violet-100 text-violet-700 border-violet-200" },
-  ortools:  { label: "OR-Tools",          color: "bg-blue-100 text-blue-700 border-blue-200" },
-  schedule: { label: "Schedule Engine",   color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  greedy:   { label: "Greedy Heuristic",  color: "bg-amber-100 text-amber-700 border-amber-200" },
+  ga:        { label: "Genetic Algorithm",  color: "bg-violet-100 text-violet-700 border-violet-200" },
+  ortools:   { label: "OR-Tools",           color: "bg-blue-100 text-blue-700 border-blue-200" },
+  schedule:  { label: "Schedule Engine",    color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  greedy:    { label: "Greedy Heuristic",   color: "bg-amber-100 text-amber-700 border-amber-200" },
+  highs:     { label: "HiGHS (exact MIP)",  color: "bg-blue-100 text-blue-700 border-blue-200" },
+  cp_sat:    { label: "CP-SAT",             color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
+  ga_vec:    { label: "Vectorized GA",      color: "bg-violet-100 text-violet-700 border-violet-200" },
+  ga_pareto: { label: "GA (multi-objective)", color: "bg-pink-100 text-pink-700 border-pink-200" },
 };
 
 const PARAM_LABELS: Record<string, string> = {

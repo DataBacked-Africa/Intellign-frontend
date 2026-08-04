@@ -12,6 +12,25 @@ export interface Assignment {
     modified_by: string | null;
 }
 
+export interface ParetoObjective {
+    goal_description: string;
+    value: number;
+    display: string;
+}
+
+export interface ParetoOption {
+    option_id: string;
+    label: string;
+    is_recommended?: boolean;
+    objectives: ParetoObjective[];
+}
+
+export interface ParetoFront {
+    options: ParetoOption[];
+    /** Raw individuals before dedup by objective vector, e.g. 60 → 12 distinct trade-offs */
+    population_size?: number;
+}
+
 export interface OptimizationMetrics {
     best_fitness: number;
     total_targets: number;
@@ -21,6 +40,17 @@ export interface OptimizationMetrics {
     total_resources: number;
     elapsed_time_seconds: number;
     average_final_fitness: number;
+    // ── Proof/confidence contract (proposed — optional until backend ships it) ──
+    solver_used?: string;
+    quality_state?: 'proven' | 'within_gap' | 'best_found';
+    gap_percentage?: number | null;
+    solver_badge?: string;
+    routing_reason?: string | null;
+    backup_solver?: string | null;
+    fallback_solver?: string | null;
+    license_cost?: number | null;
+    comparison?: { speedup_x: number; label?: string } | null;
+    bound_history?: number[];
 }
 
 export interface StatusCounts {
@@ -47,6 +77,8 @@ export interface ResultsResponse {
     fitness_history: number[];
     average_history: number[];
     optimization_status: string;
+    /** Present only when the run's goals conflict — multi-objective / Pareto-optimal set. */
+    pareto_front?: ParetoFront | null;
 }
 
 export interface SummaryResponse {
@@ -212,6 +244,22 @@ export const resultsService = {
             `/results/${jobId}/assignment/${assignmentId}/explain`,
             null,
             { params: refresh ? { refresh: true } : undefined }
+        );
+        return response.data;
+    },
+
+    /**
+     * Commit to one option from a Pareto trade-off front — the run's goals conflicted,
+     * so this finalizes the assignments for the chosen option.
+     * NOTE: endpoint is a proposed contract, not yet confirmed on the backend.
+     */
+    selectParetoOption: async (
+        jobId: string,
+        optionId: string
+    ): Promise<{ job_id: string; status: string }> => {
+        const response = await axiosInstance.post(
+            `/results/${jobId}/pareto-front/select`,
+            { option_id: optionId }
         );
         return response.data;
     },
