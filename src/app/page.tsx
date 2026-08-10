@@ -15,27 +15,40 @@ import { FAQ_ITEMS } from "@/components/Marketing/faq-data";
 import MarketingFooter from "@/components/Marketing/MarketingFooter";
 import { motion } from "framer-motion";
 
+const SITE_URL = "https://www.intellign.ai";
+
+// References the Organization/WebSite declared once in src/app/layout.tsx via
+// @id, rather than redeclaring them here — avoids duplicate/conflicting
+// Organization entities across pages.
 const JSON_LD = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Organization",
-      name: "DataBacked Africa",
-      url: "https://www.intellign.ai",
-      email: "hello@databackedafrica.com",
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/#webpage`,
+      url: SITE_URL,
+      name: "Intellign — The Math Layer Within AI",
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      about: { "@id": `${SITE_URL}/#organization` },
+      description:
+        "Intellign turns plain-English optimization problems into formal mathematical models, solves them, and returns explainable assignments your team can defend.",
+      inLanguage: "en",
     },
     {
       "@type": "SoftwareApplication",
+      "@id": `${SITE_URL}/#software`,
       name: "Intellign",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
-        "Optimization as a service, describe assignment, scheduling or routing problems in plain English and get explained, auditable solutions.",
+        "Optimization as a service: describe assignment, scheduling, routing, allocation or matching problems in plain English and get explained, auditable solutions.",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Free tier" },
-      url: "https://www.intellign.ai",
+      url: SITE_URL,
+      publisher: { "@id": `${SITE_URL}/#organization` },
     },
     {
       "@type": "FAQPage",
+      "@id": `${SITE_URL}/#faq`,
       mainEntity: FAQ_ITEMS.map((f) => ({
         "@type": "Question",
         name: f.q,

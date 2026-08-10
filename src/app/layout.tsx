@@ -34,16 +34,20 @@ const jetbrainsMono = localFont({
   display: "swap",
 });
 
+const SITE_URL = "https://www.intellign.ai";
+const SITE_TITLE = "Intellign — The Math Layer Within AI";
+const SITE_DESCRIPTION =
+  "Intellign turns plain-English optimization problems into formal mathematical models, solves them, and returns explainable assignments your team can defend.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.intellign.ai"),
+  metadataBase: new URL(SITE_URL),
 
   title: {
-    default: "Intellign — The Math Layer Within AI",
+    default: SITE_TITLE,
     template: "%s | Intellign",
   },
 
-  description:
-    "Intellign turns plain-English optimization problems into formal mathematical models, solves them, and returns explainable assignments your team can defend.",
+  description: SITE_DESCRIPTION,
 
   applicationName: "Intellign",
 
@@ -54,26 +58,19 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Intellign",
-    title: "Intellign — The Math Layer Within AI",
-    description:
-      "Intellign turns plain-English optimization problems into formal mathematical models, solves them, and returns explainable assignments your team can defend.",
-    url: "https://www.intellign.ai/",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Intellign — The Math Layer Within AI",
-      },
-    ],
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: `${SITE_URL}/`,
+    // No `images` override here — Next.js picks up the generated
+    // src/app/opengraph-image.tsx (1200x630) automatically for every route
+    // that doesn't define its own. Do not hardcode a static image path
+    // unless a matching file actually exists in /public.
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Intellign — The Math Layer Within AI",
-    description:
-      "Intellign turns plain-English optimization problems into formal mathematical models, solves them, and returns explainable assignments your team can defend.",
-    images: ["/og-image.png"],
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
 
   robots: {
@@ -82,18 +79,40 @@ export const metadata: Metadata = {
   },
 };
 
+// Site-wide entities. Page-level JSON-LD (e.g. src/app/page.tsx) should
+// reference these via @id rather than redeclaring Organization/WebSite —
+// duplicate/conflicting Organization nodes actively hurt entity resolution.
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Intellign",
-  url: "https://www.intellign.ai",
-  logo: "https://www.intellign.ai/logo.png",
-  description:
-    "Intellign is the math layer within AI, turning plain-English optimization problems into formal mathematical models, solving them, and returning explainable assignments.",
-  sameAs: [
-    // Add only real Intellign profiles
-    "https://www.linkedin.com/company/...",
-    "https://x.com/...",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: "Intellign",
+      alternateName: "Intellign AI",
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        "@id": `${SITE_URL}/#logo`,
+        url: `${SITE_URL}/intellign-mark.svg`,
+      },
+      image: { "@id": `${SITE_URL}/#logo` },
+      description: SITE_DESCRIPTION,
+      sameAs: [
+        "https://github.com/DataBacked-Africa",
+        // TODO: add LinkedIn / X / Crunchbase once official profiles exist.
+        // Do not invent URLs — verified none exist as of this implementation.
+      ],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: "Intellign",
+      description: SITE_TITLE,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+      inLanguage: "en",
+    },
   ],
 };
 

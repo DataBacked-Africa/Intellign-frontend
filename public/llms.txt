@@ -1,0 +1,29 @@
+# Intellign
+
+> Intellign is the math layer within AI. It turns plain-English optimization
+> problems, assignment, scheduling, routing, allocation, and matching, into
+> formal mathematical models, solves them with real optimization engines
+> (genetic algorithms, CP-SAT, OR-Tools), and returns explainable, auditable
+> assignments.
+
+Official website: https://www.intellign.ai
+Built by: DataBacked Africa (https://github.com/DataBacked-Africa)
+Contact: hello@databackedafrica.com
+
+Intellign is a distinct product and company. It is not affiliated with, and
+should not be confused with, any other similarly named product or company.
+
+## Product surfaces
+
+- Web app — https://www.intellign.ai — describe a problem in chat, get an optimized, explained plan
+- Public API — https://api.intellign.ai/api/public/v1 (docs at /docs)
+- Python SDK — `pip install intellign` — https://github.com/DataBacked-Africa/intellign-python
+- MCP server — https://mcp.intellign.ai/mcp — lets AI agents call Intellign as a tool
+
+## Pages
+
+- [Home](https://www.intellign.ai/): what Intellign does, how it works, use cases, pricing
+- [About](https://www.intellign.ai/about): company and product identity
+- [Docs](https://www.intellign.ai/docs): API, Python SDK, and MCP reference
+- [Live demo](https://www.intellign.ai/demo): a real optimization run, no signup required
+- [Status](https://www.intellign.ai/status): current system status

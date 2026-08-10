@@ -36,17 +36,14 @@ export default function MarketingFooter() {
       </div>
       <div className="mk-footer__col">
         <h5>Company</h5>
-        <a href="#">About</a>
-        <a href="#">DataBacked Africa</a>
+        <Link href="/about">About</Link>
+        <Link href="/about">DataBacked Africa</Link>
         <a href="mailto:hello@databackedafrica.com">hello@databackedafrica.com</a>
-        <a href="#">Careers</a>
       </div>
       <div className="mk-footer__base">
         <span>© {new Date().getFullYear()} Intellign AI</span>
         <span className="links">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="https://github.com/databackedafrica/intellign">GitHub ↗</a>
+          <a href="https://github.com/DataBacked-Africa" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
         </span>
       </div>
     </footer>
