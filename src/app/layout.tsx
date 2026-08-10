@@ -35,23 +35,68 @@ const jetbrainsMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Intellign — The math layer within AI",
-  description: "Describe the goal in plain English. Intellign formalises it, runs the solve, and hands back an assignment your team can defend.",
   metadataBase: new URL("https://www.intellign.ai"),
-  alternates: { canonical: "/" },
-  openGraph: {
-    title: "Intellign — The math layer within AI",
-    description: "Plain English in, explained optimization out — three chat turns from question to assignment.",
-    url: "https://www.intellign.ai",
-    siteName: "Intellign",
-    type: "website",
+
+  title: {
+    default: "Intellign — The Math Layer Within AI",
+    template: "%s | Intellign",
   },
+
+  description:
+    "Intellign turns plain-English optimization problems into formal mathematical models, solves them, and returns explainable assignments your team can defend.",
+
+  applicationName: "Intellign",
+
+  alternates: {
+    canonical: "/",
+  },
+
+  openGraph: {
+    type: "website",
+    siteName: "Intellign",
+    title: "Intellign — The Math Layer Within AI",
+    description:
+      "Intellign turns plain-English optimization problems into formal mathematical models, solves them, and returns explainable assignments your team can defend.",
+    url: "https://www.intellign.ai/",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Intellign — The Math Layer Within AI",
+      },
+    ],
+  },
+
   twitter: {
     card: "summary_large_image",
-    title: "Intellign — The math layer within AI",
-    description: "Plain English in, explained optimization out — three chat turns from question to assignment.",
+    title: "Intellign — The Math Layer Within AI",
+    description:
+      "Intellign turns plain-English optimization problems into formal mathematical models, solves them, and returns explainable assignments your team can defend.",
+    images: ["/og-image.png"],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
   },
 };
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Intellign",
+  url: "https://www.intellign.ai",
+  logo: "https://www.intellign.ai/logo.png",
+  description:
+    "Intellign is the math layer within AI, turning plain-English optimization problems into formal mathematical models, solving them, and returning explainable assignments.",
+  sameAs: [
+    // Add only real Intellign profiles
+    "https://www.linkedin.com/company/...",
+    "https://x.com/...",
+  ],
+};
+
 
 export default function RootLayout({
   children,
@@ -69,6 +114,13 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='light'}`,
+          }}
+        />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd),
           }}
         />
       </head>
