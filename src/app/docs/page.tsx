@@ -5,7 +5,7 @@ import MarketingNav from "@/components/Marketing/MarketingNav";
 import MarketingFooter from "@/components/Marketing/MarketingFooter";
 
 export const metadata: Metadata = {
-  title: "Docs — Intellign",
+  title: "Docs",
   description:
     "Everything you need to build with Intellign: the web app, the public API, the Python SDK, and the MCP server for AI agents.",
   alternates: { canonical: "/docs" },

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Live Demo — Intellign",
+  title: "Live Demo",
   description:
     "Click through a real optimization: 50 NYSC healthcare graduates assigned to 20 primary health facilities in three chat turns. No signup needed.",
   alternates: { canonical: "/demo" },

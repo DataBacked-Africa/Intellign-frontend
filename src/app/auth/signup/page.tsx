@@ -2,7 +2,7 @@ import SignupForm from "@/components/AuthComponents/SignupForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Sign Up | Intellign",
+    title: "Sign Up",
     description: "Create your Intellign account",
 };
 

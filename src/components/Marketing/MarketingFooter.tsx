@@ -43,6 +43,7 @@ export default function MarketingFooter() {
       <div className="mk-footer__base">
         <span>© {new Date().getFullYear()} Intellign AI</span>
         <span className="links">
+          <a href="https://www.linkedin.com/company/intellign-ai" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
           <a href="https://github.com/DataBacked-Africa" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
         </span>
       </div>

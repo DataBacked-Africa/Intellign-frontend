@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Service Status — Intellign",
+  title: "Service Status",
   description: "Live status of Intellign services: chat API, data ingestion, dataset generation, optimization engine.",
   alternates: { canonical: "/status" },
   robots: { index: true, follow: true },

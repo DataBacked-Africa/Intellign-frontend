@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Reset Password | Intellign",
+    title: "Reset Password",
     description: "Set a new Intellign account password",
 };
 

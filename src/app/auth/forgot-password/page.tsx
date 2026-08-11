@@ -2,7 +2,7 @@ import ForgotPasswordForm from "@/components/AuthComponents/ForgotPasswordForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Forgot Password | Intellign",
+    title: "Forgot Password",
     description: "Reset your Intellign account password",
 };
 

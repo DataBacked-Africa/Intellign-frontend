@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Verify Email | Intellign",
+    title: "Verify Email",
     description: "Confirm your Intellign email address",
 };
 

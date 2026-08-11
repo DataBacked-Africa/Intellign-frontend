@@ -100,7 +100,8 @@ const jsonLd = {
       description: SITE_DESCRIPTION,
       sameAs: [
         "https://github.com/DataBacked-Africa",
-        // TODO: add LinkedIn / X / Crunchbase once official profiles exist.
+        "https://www.linkedin.com/company/intellign-ai",
+        // TODO: add X/Twitter / Crunchbase once official profiles exist.
         // Do not invent URLs — verified none exist as of this implementation.
       ],
     },
