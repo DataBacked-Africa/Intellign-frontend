@@ -1,4 +1,5 @@
 import axiosInstance from '@/lib/axiosConfig';
+import { GoalDefinition } from '@/types/models';
 
 // Types for Results Management API
 export interface Assignment {
@@ -104,6 +105,185 @@ export interface ExportOptions {
     include_rejected?: boolean;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL, SPEC-GROUNDED RESULTS CONTRACT — source of truth: RESULTS_PAGE_DESIGN_SPEC.md
+// (copied from the tested backend endpoint, not a mockup). Every field below is
+// independently optional and OMITTED (never `null`) when the backend has nothing
+// for it — "key absent" means "don't render this section," not an error.
+// Kept fully separate from the speculative Pareto*/OptimizationMetrics types
+// above (those are dormant/unused) to avoid any collision.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TaskType = 'assignment' | 'routing' | 'scheduling' | 'budgeting';
+
+export interface ResultsHeadlineItem {
+    label: string;
+    value: string;
+    sub?: string;
+}
+
+export interface FairnessCheck {
+    goal: string;
+    status: 'pass' | 'fail' | 'not_evaluated';
+    detail: string;
+}
+
+export interface ResultsGaps {
+    coverage?: string | null;
+    dataTrust?: string | null;
+    fairnessIssues?: FairnessCheck[];
+}
+
+export interface GoalAttributionEntry {
+    description: string;
+    type: 'Reward' | 'Penalty';
+    weightPct: number;
+    avgRawValue: number;
+    rawValueStdev: number;
+    avgContribution: number;
+    contributionSharePct: number;
+    /** True means the goal never differentiated any assignment. */
+    isDeadWeight: boolean;
+    /** Capacity caps / shift-penalty modifiers — rawValueStdev: 0 here is by design, not dead weight. */
+    isGlobalModifier: boolean;
+    note: string;
+}
+
+export interface GoalAttribution {
+    goals: GoalAttributionEntry[];
+    assignmentsAnalyzed: number;
+    deadWeightCount: number;
+}
+
+export interface BudgetCandidate {
+    id: string;
+    status: 'SELECTED' | 'REJECTED';
+    value: number;
+    cost: number;
+    efficiency: number;
+    group?: string | null;
+    tier: 'A' | 'B' | 'C';
+    tierLabel: string;
+}
+
+export interface BudgetGroup {
+    group: string;
+    candidateCount: number;
+    fundedCount: number;
+    fundedRate: number;
+    avgEfficiency: number;
+    totalValue: number;
+    totalCost: number;
+    recommendation: 'concentrate' | 'sufficient' | 'deprioritize';
+}
+
+export interface BudgetPriority {
+    candidates: BudgetCandidate[];
+    groups?: BudgetGroup[] | null;
+}
+
+export interface GeoNode {
+    id: string;
+    lat: number;
+    lon: number;
+}
+
+export interface GeoData {
+    nodes: GeoNode[];
+    /** resource_id -> ordered target_id stops */
+    stops: Record<string, string[]>;
+}
+
+export interface ResultsPayloadColumn {
+    key: string;
+    label: string;
+}
+
+export interface ResultsPayload {
+    columns: ResultsPayloadColumn[];
+    rows: Record<string, any>[];
+}
+
+export interface SensitivityItem {
+    goal: string;
+    perturbation_pct: number;
+    holdsUnless: string;
+}
+
+export interface ScheduleTableRow {
+    resource: string;
+    /** Free-text shift labels, e.g. "Monday AM" — no real start/end datetimes exist yet. */
+    shifts: string[];
+}
+
+export interface ScheduleTable {
+    rows: ScheduleTableRow[];
+}
+
+export interface EnrichedResultsMetrics {
+    // Emitted by the optimizer, not the enrichment layer — shape varies by
+    // solver. Treat every field as optional; read what's there.
+    assigned_count?: number;
+    total_targets?: number;
+    unassigned_targets?: number;
+    coverage_pct?: number;
+    solution_quality?: number;
+    solver_used?: string;
+    is_proven_optimal?: boolean;
+    gap_percent?: number | null;
+    degraded?: boolean;
+    avg_fit_pct?: number;
+    total_resources?: number;
+    elapsed_time_seconds?: number;
+    [key: string]: any;
+}
+
+export interface EnrichedResultsResponse {
+    status: string;
+    job_id: string;
+    session_id: string;
+    optimization_status: string;
+    metrics: EnrichedResultsMetrics;
+    /** Present only for multi-objective solves. Item shape isn't documented anywhere yet. */
+    pareto_front?: unknown[] | null;
+    status_counts: StatusCounts;
+    pagination: Pagination;
+    assignments: Assignment[];
+    schedule_table?: ScheduleTable | null;
+    fitness_history: number[];
+    average_history: number[];
+    created_at: string;
+    goals_used?: GoalDefinition[];
+    solver_used?: string;
+    best_fitness?: number;
+    ga_params_used?: Record<string, any>;
+
+    // Dashboard enrichment — all optional, all omitted (never null) when absent
+    entityLabels?: { resource: string; target: string };
+    taskType?: TaskType;
+    title?: string;
+    context?: string;
+    /** LLM-generated with a deterministic fallback — effectively always present once enrichment ran. */
+    headline?: ResultsHeadlineItem[];
+    executiveSummary?: string;
+    taskExplanation?: string;
+    rationale?: string[];
+    gaps?: ResultsGaps;
+    fairnessChecks?: FairnessCheck[];
+    goalAttribution?: GoalAttribution;
+    /** taskType === 'budgeting' only */
+    budgetPriority?: BudgetPriority;
+    /** taskType === 'routing' only */
+    geo?: GeoData;
+    payload?: ResultsPayload;
+    scoreFormula?: string;
+    sensitivity?: SensitivityItem[];
+    validity?: string;
+    dataTrust?: Record<string, any>;
+    provenance?: { specVersion: string; solvedTurn: number };
+    scenarioFrontier?: unknown;
+}
+
 // Results Management Service
 export const resultsService = {
     /**
@@ -119,6 +299,22 @@ export const resultsService = {
             params: { page, page_size: pageSize, include_enriched: includeEnriched }
         });
         // ML API returns the object directly (no .data wrapper)
+        return response.data;
+    },
+
+    /**
+     * Get optimization results typed against the real, spec-grounded contract
+     * (RESULTS_PAGE_DESIGN_SPEC.md) — same endpoint as getResults, richer type.
+     * Used by the /results/[jobId] full-page dashboard.
+     */
+    getEnrichedResults: async (
+        jobId: string,
+        page: number = 1,
+        pageSize: number = 50
+    ): Promise<EnrichedResultsResponse> => {
+        const response = await axiosInstance.get(`/results/${jobId}`, {
+            params: { page, page_size: pageSize, include_enriched: true }
+        });
         return response.data;
     },
 
@@ -297,7 +493,7 @@ export const resultsService = {
      */
     exportResults: async (
         jobId: string,
-        format: 'csv' | 'json' = 'csv',
+        format: 'csv' | 'json' | 'xlsx' | 'ics' | 'pdf' = 'csv',
         includeRejected: boolean = false
     ): Promise<Blob | object> => {
         const response = await axiosInstance.post(
@@ -305,7 +501,7 @@ export const resultsService = {
             null,
             {
                 params: { format, include_rejected: includeRejected },
-                responseType: format === 'csv' ? 'blob' : 'json'
+                responseType: format === 'json' ? 'json' : 'blob'
             }
         );
         return response.data;
@@ -320,6 +516,25 @@ export const resultsService = {
         const link = document.createElement('a');
         link.href = url;
         link.download = `optimization-results-${jobId}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    },
+
+    /**
+     * Helper: download any binary export format (xlsx/ics/pdf/csv) as a file.
+     */
+    downloadExport: async (
+        jobId: string,
+        format: 'csv' | 'xlsx' | 'ics' | 'pdf',
+        includeRejected: boolean = false
+    ): Promise<void> => {
+        const blob = await resultsService.exportResults(jobId, format, includeRejected) as Blob;
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `optimization-results-${jobId}.${format}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
