@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "verify:nysc": "node scripts/verify-nysc-data.mjs",
+    "build:nysc-sample": "node scripts/build-nysc-sample.mjs",
+    "export:nysc": "node scripts/export-nysc-demo.mjs && node scripts/verify-nysc-export.mjs"
   },
   "dependencies": {
     "@microsoft/fetch-event-source": "^2.0.1",
@@ -29,6 +32,7 @@
     "@types/node": "^20.19.28",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

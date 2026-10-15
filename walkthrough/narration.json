@@ -1,0 +1,11 @@
+[
+  { "id": "s1", "title": "The site", "text": "This is Intellign. Describe the problem in plain English, and Intellign works out the best schedule, route, or assignment for your team. Then it shows you exactly why, so the result is one you can trust and defend. It works in four steps: describe, ingest, solve, and explain." },
+  { "id": "s2", "title": "Launch", "text": "To begin, choose Launch app. You will be asked to sign in first." },
+  { "id": "s3", "title": "Sign in", "text": "Sign in with your email and password. If you are new, you can create an account from the same screen, and verify your email once." },
+  { "id": "s4", "title": "Your workspace", "text": "This is the workspace. Your conversations are on the left, the chat is in the centre, and the canvas on the right shows goals, data, progress, and results." },
+  { "id": "s5", "title": "The live demo", "text": "To see a complete run, open the live demo. This one deploys healthcare graduates to primary health facilities across Nigeria. It is a precomputed run, shown so you can follow every step." },
+  { "id": "s6", "title": "Goals and data", "text": "You start by describing the goal in plain language. Intellign turns it into goals you can edit: match specialization to facility needs, prioritise critical disease burden, and respect facility capacity. The Datasets tab shows the data it checked them against." },
+  { "id": "s7", "title": "Run it", "text": "Choose Run optimization. Intellign picks the right solver for the problem and works through the stages: validating data, compiling goals, solving, and converging. This usually takes seconds." },
+  { "id": "s8", "title": "Results and reasons", "text": "When it converges, the results show what was assigned. Open the assignments to see every pairing. Each one comes with a reason you can read: here, the closest ICU-trained nurse, in the same state. You can approve, modify, or reject any pairing." },
+  { "id": "s9", "title": "Start here", "text": "That is the whole path. Describe the problem, check the goals, run it, and review the reasons. Start at intellign.ai." }
+]

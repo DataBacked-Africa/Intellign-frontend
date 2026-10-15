@@ -1,28 +1,38 @@
 // Plain data module (NOT "use client") so both the server page (JSON-LD)
-// and the client Faq component can import the same source of truth.
+// and the client FAQ component can import the same source of truth.
+// Answers are checked against the backend: solver quality claims, timings and
+// MCP details match what ships (see docs/intellign-landing.html in the draft).
 export const FAQ_ITEMS = [
   {
-    q: "What kinds of problems can Intellign solve?",
-    a: "Assignment, scheduling, matching, allocation and routing problems, who does what, who goes where, what gets which share. Staff rostering, field-worker deployment, teacher placement, delivery routing, budget allocation.",
-  },
-  {
     q: "Do I need my own data to try it?",
-    a: "No. Describe the problem and Intellign generates a realistic sample dataset in about 40 seconds, two linked tables matched to your domain. You can also upload CSV, Excel, or other common formats, and processing starts the moment the file is attached.",
+    a: "No. Intellign can generate a sample dataset in under a minute so you can see a full plan. Generated rows are always labelled as samples.",
   },
   {
-    q: "How is this different from asking an LLM directly?",
-    a: "LLMs estimate; solvers prove. Intellign uses the LLM only to understand your goal and translate it into a formal optimization problem, the actual assignment comes from exact mathematical solvers, not a language model's best guess. Every solution is feasible, scored, and explained per decision.",
+    q: "How is this different from asking a chatbot?",
+    a: "A chatbot writes an answer that sounds right. Intellign uses AI to understand your words, then hands the problem to a real solver. Every must-follow rule is checked again after solving, and you see which solver ran and how well the plan scored.",
   },
   {
-    q: "Can my AI agent call Intellign as a tool?",
-    a: "Yes, that's the point of the Python SDK and MCP server. When your agent needs an optimization answer, it calls Intellign's solve endpoint and receives structured assignments with rationale. pip install intellign.",
+    q: "Is the plan really the best one?",
+    a: "It depends on the solver. When an exact solver runs, Intellign reports how far the plan is from the best possible one, and tells you when it is proven optimal. For large or complex problems it uses search methods that find a very strong plan quickly, and reports a quality score instead of a proof. It always tells you which one ran.",
   },
   {
-    q: "How long does a solve take?",
-    a: "Typical problems (tens to hundreds of resources) solve in seconds. You watch progress live, and you get notified in-app if you've navigated away when it finishes.",
+    q: "How long does it take?",
+    a: "Small problems take seconds: assigning 40 staff to 10 wards took about four in our demo. Larger or schedule-heavy problems take longer, from tens of seconds up.",
   },
   {
-    q: "Can I trust the results?",
-    a: "Every assignment ships with a human-readable rationale and a score breakdown per goal. You can approve, modify or reject each one. If the primary solver is ever unavailable, results are clearly labeled as approximate, never silently degraded.",
+    q: "Can I trust the plan?",
+    a: "Every must-follow rule is checked again after solving, and any violation is flagged. When data is missing, Intellign asks you instead of filling the gap. The plan, with the reasons behind it, can be exported.",
+  },
+  {
+    q: "What kinds of problems can it plan?",
+    a: "Assignment (people to places), scheduling (rosters and timetables) and routing, plus combinations such as scheduling and routing together.",
+  },
+  {
+    q: "Can the plan go back to Google Sheets or my calendar?",
+    a: "Yes. You can send an approved plan to a new Google Sheet, push it to Google Calendar, or download it as CSV, Excel, PDF or .ics. Systems such as HR or hospital platforms connect through the API.",
+  },
+  {
+    q: "Can my AI assistant use Intellign?",
+    a: "Yes. Intellign has an MCP server, so any MCP-capable assistant can use it as a tool. Use the hosted server at mcp.intellign.ai with your API key, or run it yourself with pip install \"intellign[mcp]\".",
   },
 ];

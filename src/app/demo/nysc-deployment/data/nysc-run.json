@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "title": "NYSC Strategic Deployment",
+    "blurb": "500 graduates to 750 primary health facilities by specialization and disease burden",
+    "banner": "Recorded run of the NYSC deployment research. Every figure is from the invention disclosure.",
+    "replayLabel": "Recorded run replay, not a live solve",
+    "sampleLabel": "Illustrative sample: produced by a script over real facility and graduate rows, not output of the recorded run",
+    "confidentialBanner": "Confidential. Supporting document for an application. Do not redistribute.",
+    "resourceLabel": "graduates",
+    "targetLabel": "facilities",
+    "resourceCount": 500,
+    "targetCount": 750,
+    "solver": "Evolutionary engine"
+  },
+  "evolution": [
+    { "id": "v1", "name": "Genetic algorithm heuristic", "did": "Random starting plans scored on skill-match reward minus overload and mismatch penalties; improved by selection, recombination and mutation.", "exposed": "Random starts wasted generations on overloaded, mismatched plans.", "source": "Disclosure section 5" },
+    { "id": "v2", "name": "Version 2", "did": "Greedy starting plans, plus a classifier that labelled assignments Good or Poor for repair.", "exposed": "The classifier memorized hand-written rules (100% accuracy) and its repairs fought the search. Greedy starts left 146 overloads and 91 mismatches.", "source": "Disclosure section 5" },
+    { "id": "v3", "name": "Version 3", "did": "A model trained on the search's own score predicts how good a single move is; mixed starting population; changes kept only if the real score improves.", "exposed": "No way to carry decisions already made.", "source": "Disclosure section 5" },
+    { "id": "v4", "name": "Version 4", "did": "Decisions already made stay fixed; the 500 graduates are placed in five ordered batches; final passes fill empty facilities and clear over-capacity ones.", "exposed": "The need to measure and verify outcomes, which became the Intellign platform layer.", "source": "Disclosure section 5" },
+    { "id": "platform", "name": "Intellign platform (2026)", "did": "Plain-language front end, gated pipeline, checks before and after solving, several solvers.", "exposed": "Current embodiment. 2,531 backend tests passed; contract pipeline replayed over 91 cached live sessions.", "source": "Disclosure sections 5 and 12.1" }
+  ],
+  "mechanism": [
+    "The engine searches many possible deployments and keeps improving the best ones.",
+    "A learned model predicts whether moving one graduate to a different facility would make the plan better, so the search spends less time on bad moves.",
+    "Placements already decided stay fixed while the rest are solved in batches, so a reviewer can pin a person to a site and everything else adapts.",
+    "A final check recomputes the real score and keeps a change only if it helps, then removes anyone assigned to an over-capacity facility."
+  ],
+  "limits": [
+    "The graduate records are generated, and facility capacity, staffing, specialization and disease fields are augmented.",
+    "The learned model's contribution has not been isolated by an ablation, and no timing comparison against exact move scoring has been recorded.",
+    "During the version 4 run, model-guided repairs inside the search were rare (zero or one per batch).",
+    "The version 4 model evaluation output was not retained; the model figures shown are from the version 3 run.",
+    "Version 4 matches version 3 on skill match (409 of 500). Its recorded gain is structural: fixed decisions, staged batches, and no assigned graduate placed in an over-capacity facility."
+  ],
+  "goals": [
+    { "id": "g1", "description": "Match each graduate's specialization to what the facility needs.", "award_type": "Reward", "logic": "Specialization match" },
+    { "id": "g2", "description": "Prioritise facilities with a serious staffing gap and disease burden.", "award_type": "Reward", "logic": "Need scoring" },
+    { "id": "g3", "description": "Never staff a facility beyond its personnel capacity.", "award_type": "Penalty", "logic": "Capacity limit" }
+  ],
+  "timeline": [
+    { "stage": "ingest", "label": "Data validated", "sub": "Graduates and facilities checked" },
+    { "stage": "translate", "label": "Goals compiled", "sub": "Goals become an executable scoring function" },
+    { "stage": "init", "label": "Engine routed", "sub": "A model learns how good a single move is" },
+    { "stage": "solve", "label": "Placing in batches", "sub": "Five batches, earlier decisions locked" },
+    { "stage": "converge", "label": "Clean-up passes", "sub": "Fill empty facilities, clear over-capacity ones" },
+    { "stage": "explain", "label": "Result verified", "sub": "Checked against the data" }
+  ],
+  "batches": [
+    { "label": "Batch 1", "value": 16405 },
+    { "label": "Batch 2", "value": 15985 },
+    { "label": "Batch 3", "value": 14350 },
+    { "label": "Batch 4", "value": 13155 },
+    { "label": "Batch 5", "value": null, "note": "not recorded" }
+  ],
+  "batchSource": "Disclosure section 12.2. Batches stopped early at generations 11 to 13.",
+  "cleanup": [
+    { "label": "Before filling empty facilities", "value": 67195 },
+    { "label": "After filling (kept)", "value": 69850 },
+    { "label": "Final, after capacity correction", "value": 65640 }
+  ],
+  "cleanupSource": "Disclosure section 12.2. 94 empty facilities filled; 66 graduates moved out of over-capacity facilities and 2 mismatches fixed. The source does not break out the drop in the final pass.",
+  "compare": {
+    "head": ["Version 3", "Version 4"],
+    "rows": [
+      { "label": "Skill match", "a": "409 of 500 (81.8%)", "b": "409 of 500 (81.8%)", "source": "Disclosure section 12.2" },
+      { "label": "Facilities over capacity", "a": "423", "b": "372", "source": "Disclosure section 12.2" },
+      { "label": "Total excess staff", "a": "1,915", "b": "1,826", "source": "Disclosure section 12.2" },
+      { "label": "Cause of over-capacity", "a": "not reported", "b": "all from staff already there; no assigned graduate placed in them", "source": "Disclosure section 12.2" },
+      { "label": "Final fitness", "a": "63,920", "b": "65,640", "source": "Disclosure section 12.2" }
+    ]
+  },
+  "results": [
+    { "lbl": "Skill match", "val": "409", "sub": "of 500 (81.8%)", "hi": true },
+    { "lbl": "Facilities over capacity", "val": "372", "sub": "all from staff already there" },
+    { "lbl": "Final fitness", "val": "65,640" },
+    { "lbl": "Empty facilities filled", "val": "94" }
+  ],
+  "runStructure": [
+    { "lbl": "Graduates", "val": "500" },
+    { "lbl": "Facilities (sampled from 44,915)", "val": "750" },
+    { "lbl": "Batches", "val": "5 of 100" },
+    { "lbl": "Batch stop", "val": "generations 11 to 13" }
+  ],
+  "steps": [
+    {
+      "id": "prompt", "title": "The request", "stage": "idle", "tab": "goals", "durationMs": 6000,
+      "user": "Deploy 500 NYSC healthcare graduates to primary health centres across Nigeria. Match each graduate's specialization to what the facility needs, prioritise facilities with a serious disease burden, and never overload a facility.",
+      "assistant": "Got it, here's what I understand:\n\n- **graduates** → **facilities**\n- **Objectives:** match specialization to facility need · prioritise critical disease burden · respect facility capacity\n\nThis is a replay of the recorded NYSC deployment run. Press **Play** or step through it.",
+      "chips": ["Use the research data"],
+      "stats": [{ "lbl": "Graduates placed", "val": "0" }, { "lbl": "Batches", "val": "0 of 5" }, { "lbl": "Fitness", "val": "—" }]
+    },
+    {
+      "id": "data", "title": "Data validated", "stage": "ingest", "tab": "datasets", "durationMs": 6000,
+      "user": "Use the research data.",
+      "assistant": "Checked both tables:\n\n- **500 graduates** (generated records)\n- **750 facilities** sampled from 44,915 (GRID3 Nigeria, fixed random seed)\n- Facility capacity, staffing, specialization and disease fields are augmented\n\nOpen the **Datasets** tab for a sample of both.",
+      "action": "validate_data",
+      "stats": [{ "lbl": "Graduates placed", "val": "0" }, { "lbl": "Batches", "val": "0 of 5" }, { "lbl": "Fitness", "val": "—" }]
+    },
+    {
+      "id": "goals", "title": "Goals compiled", "stage": "translate", "tab": "goals", "durationMs": 6000,
+      "assistant": "I've turned your goals into a scoring function the engine can evaluate for any possible plan:\n\n- **Reward:** the graduate's specialization is accepted by the facility\n- **Reward:** the facility has a high staffing gap and disease burden\n- **Reward:** the facility receives at least one graduate\n- **Penalty:** the facility is staffed beyond its capacity\n- **Penalty:** the graduate is placed where their specialization is not accepted\n\n**Shall I run it?**",
+      "action": "compile_goals",
+      "stats": [{ "lbl": "Graduates placed", "val": "0" }, { "lbl": "Batches", "val": "0 of 5" }, { "lbl": "Fitness", "val": "—" }]
+    },
+    {
+      "id": "solver", "title": "Engine routed, move model trained", "stage": "init", "tab": "config", "durationMs": 7000,
+      "user": "Yes, run it.",
+      "assistant": "Routed to the **evolutionary engine**. First it learns how good a single move is, so the search wastes less time on bad ones:\n\n- **74,915** valid moves (59,932 train, 14,983 test)\n- Fit on held-out moves: **R² 0.7818**, **RMSE 61.57**\n\nThese figures are from the version 3 run; the version 4 evaluation output was not retained.",
+      "action": "route_solver",
+      "stats": [{ "lbl": "Graduates placed", "val": "0" }, { "lbl": "Batches", "val": "0 of 5" }, { "lbl": "Fitness", "val": "—" }]
+    },
+    {
+      "id": "batches", "title": "Five ordered batches", "stage": "solve", "tab": "monitor", "durationMs": 8000,
+      "assistant": "Placing **100 graduates at a time**. Each batch treats every earlier placement as fixed.\n\n| Batch | Best fitness |\n|---|---|\n| 1 | 16,405 |\n| 2 | 15,985 |\n| 3 | 14,350 |\n| 4 | 13,155 |\n| 5 | not recorded |\n\nBatches stopped early at generations 11 to 13.",
+      "action": "optimization_started",
+      "stats": [{ "lbl": "Graduates placed", "val": "500" }, { "lbl": "Batches", "val": "5 of 5" }, { "lbl": "Recorded batch best", "val": "13,155" }]
+    },
+    {
+      "id": "post", "title": "Verified clean-up passes", "stage": "converge", "tab": "monitor", "durationMs": 8000,
+      "assistant": "Two clean-up passes follow. A change is kept only if the real score allows it:\n\n- Filled **94** empty facilities: 67,195 → **69,850**, kept\n- Moved **66** graduates out of over-capacity facilities and fixed 2 mismatches: final **65,640**\n\nThe source does not break out the drop in the final pass.",
+      "action": "verified_cleanup",
+      "stats": [{ "lbl": "Graduates placed", "val": "500" }, { "lbl": "Batches", "val": "5 of 5" }, { "lbl": "Final fitness", "val": "65,640" }]
+    },
+    {
+      "id": "verify", "title": "Result verified", "stage": "explain", "tab": "results", "durationMs": 9000,
+      "assistant": "Checked the finished plan against the data, version 3 beside version 4:\n\n| Measure | Version 3 | Version 4 |\n|---|---|---|\n| Skill match | 409 of 500 (81.8%) | 409 of 500 (81.8%) |\n| Facilities over capacity | 423 | 372 |\n| Total excess staff | 1,915 | 1,826 |\n| Final fitness | 63,920 | 65,640 |\n\nSkill match is the same. Version 4's gain is structural: all **372** remaining over-capacity facilities come from staff already there, and no assigned graduate is placed in them.",
+      "action": "verify_result",
+      "stats": [{ "lbl": "Graduates placed", "val": "500" }, { "lbl": "Batches", "val": "5 of 5" }, { "lbl": "Final fitness", "val": "65,640" }]
+    },
+    {
+      "id": "sample", "title": "Assignment trace", "stage": "done", "tab": "assignments", "durationMs": 10000,
+      "assistant": "Every graduate comes back with a reason you can review. Open the **Assignments** tab and expand any row for **why this pairing**.\n\nThe rows shown are an illustrative sample built from real facility and graduate rows, not output of the recorded run.",
+      "action": "explain_assignments",
+      "stats": [{ "lbl": "Graduates placed", "val": "500" }, { "lbl": "Batches", "val": "5 of 5" }, { "lbl": "Final fitness", "val": "65,640" }]
+    }
+  ]
+}

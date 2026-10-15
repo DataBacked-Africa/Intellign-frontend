@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intellign: the best plan, proven</title>
+<meta name="description" content="Tell Intellign what you need in plain English. Get back a schedule, route or assignment that follows every rule, with the reason for each decision.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+html{scroll-behavior:smooth}
+body{margin:0;background:#F4EFE7;font-family:"Inter Tight",system-ui,sans-serif;color:#14110F;-webkit-font-smoothing:antialiased}
+a{color:#5C1427}a:hover{color:#731931}
+*{box-sizing:border-box}
+::selection{background:#5C1427;color:#F4EFE7}
+[id]{scroll-margin-top:16px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,5vw,72px)}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:clamp(32px,5vw,72px);align-items:start}
+.eyebrow-m{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:#5C1427}
+.h-sec{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(36px,4.8vw,64px);line-height:1;letter-spacing:-.025em;color:#3E0E1A;margin:0;text-wrap:balance}
+.lede{margin:0;font-size:clamp(16px,1.6vw,19px);line-height:1.6;color:#4A4945;text-wrap:pretty}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.serif{font-family:"Instrument Serif",Georgia,serif}
+button{font:inherit}
+.navlink{color:#2E2D2A;text-decoration:none;font-size:15px;font-weight:500;min-height:44px;display:inline-flex;align-items:center}
+.navlink:hover{color:#5C1427}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:"Inter Tight",system-ui,sans-serif;font-weight:600;font-size:15px;line-height:1;padding:14px 20px;min-height:46px;border-radius:2px;text-decoration:none;border:1px solid transparent;transition:background-color 140ms cubic-bezier(.2,0,0,1),color 140ms;cursor:pointer;white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn-p{background:#5C1427;color:#F4EFE7}.btn-p:hover{background:#731931;color:#F4EFE7}
+.btn-bone{background:#F4EFE7;color:#3E0E1A}.btn-bone:hover{background:#FFFFFF;color:#3E0E1A}
+.btn-line{border-color:#6E3442;color:#F4EFE7;background:transparent}.btn-line:hover{background:#4A1120;color:#F4EFE7}
+.btn-out{border-color:#CDCBC2;color:#3E0E1A;background:#FFFFFF}.btn-out:hover{background:#F2F1ED;color:#3E0E1A}
+
+/* ---------- wordmark ---------- */
+.wm{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.02em;line-height:1;display:inline-flex;align-items:baseline;color:#3E0E1A;text-decoration:none}
+.wm-dot{display:inline-block;width:.15em;height:.15em;margin-left:.07em;background:#5C1427;border-radius:1px}
+.wm.on-dark{color:#F4EFE7}
+.wm.on-dark .wm-dot{background:#D49AAA}
+
+/* ---------- roster cells (hero plan result) ---------- */
+.cell{width:14px;height:14px;border:1px solid #D49AAA}
+.cell.on{background:#D49AAA}
+
+/* ---------- scroll story: sheets + rail (the one dark moment) ---------- */
+.story-sec{background:#3E0E1A;color:#F4EFE7;padding:clamp(48px,6vw,88px) 0 clamp(48px,6vw,96px)}
+.story{display:flex;flex-wrap:wrap;gap:0 56px;align-items:flex-start;margin-top:24px}
+.stage{flex:1 1 460px;min-width:0;position:sticky;top:24px;z-index:2;padding:12px 0}
+.story-steps{flex:1 1 380px;min-width:0}
+
+/* paper-sheet deck (direction A) */
+.deck{--h:176px;--step:56px;--open:124px;position:relative;width:min(448px,100%);height:calc(var(--h) + var(--step) * 4 + var(--open) + 8px)}
+.sheet{--i:0;position:absolute;left:calc(var(--i) * 18px);top:calc(var(--i) * var(--step));width:calc(100% - 72px);height:var(--h);border:1px solid #D49AAA;border-radius:2px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;color:#F4EFE7;text-decoration:none;box-shadow:0 10px 24px -12px rgba(0,0,0,.55);transition:top 520ms cubic-bezier(.2,0,0,1),background-color 220ms,border-color 220ms,opacity 300ms}
+.sheet.after{top:calc(var(--i) * var(--step) + var(--open))}
+.sheet:focus-visible{outline:2px solid #F4EFE7;outline-offset:3px}
+.s0{--i:0;background:#4A1120;z-index:1}.s1{--i:1;background:#521425;z-index:2}.s2{--i:2;background:#5C1427;z-index:3}.s3{--i:3;background:#67172D;z-index:4}.s4{--i:4;background:#731931;z-index:5}
+.sheet.done{opacity:.8}
+.sheet.on{border-color:#F4EFE7}
+.sh-top{display:flex;justify-content:space-between;align-items:center}
+.sh-num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.sh-body{display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.45;color:#EBD0D7;opacity:0;transform:translateY(6px);transition:opacity 320ms cubic-bezier(.2,0,0,1) 120ms,transform 320ms cubic-bezier(.2,0,0,1) 120ms}
+.sheet.on .sh-body{opacity:1;transform:none}
+.sh-q{font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-size:20px;line-height:1.2;color:#F4EFE7}
+.sh-stat{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#F4EFE7}
+.sh-row{display:flex;gap:16px;flex-wrap:wrap}
+.cell{width:12px;height:12px;border:1px solid #D49AAA}
+.cell.on{background:#D49AAA}
+.grid7{display:grid;grid-template-columns:repeat(14,12px);gap:4px}
+/* plan sheet turns bone when it is the active layer */
+.s4.on{background:#F4EFE7;color:#3E0E1A}
+.s4.on .sh-body{color:#4A4945}
+.s4.on .chip{border-color:#5C1427;color:#5C1427}
+.s4.on .cell{border-color:#5C1427}
+.s4.on .cell.on{background:#5C1427}
+
+/* numbered rail (direction C) */
+.rail{position:relative}
+.rail::before{content:"";position:absolute;left:26px;top:48px;bottom:48px;width:1px;background:#6E3442}
+.step{position:relative;display:grid;grid-template-columns:54px 1fr;gap:0 20px;align-items:start;min-height:clamp(340px,52vh,500px);padding:28px 0;opacity:.35;transition:opacity 400ms cubic-bezier(.2,0,0,1)}
+.step.on{opacity:1}
+.tile{width:54px;height:54px;border:1px solid #D49AAA;border-radius:2px;background:#3E0E1A;display:flex;align-items:center;justify-content:center;font-family:"Instrument Serif",Georgia,serif;font-size:30px;line-height:1;color:#F4EFE7;position:relative;z-index:1;transition:background-color 220ms,color 220ms,border-color 220ms}
+.step.on .tile{background:#F4EFE7;color:#3E0E1A;border-color:#F4EFE7}
+.step .kicker{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;color:#D49AAA;display:block;margin:4px 0 14px}
+.step h3{margin:0 0 14px;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(34px,3.6vw,48px);line-height:1.05;color:#F4EFE7}
+.step p{margin:0 0 18px;font-size:17px;line-height:1.6;color:#EBD0D7;max-width:26em}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px;padding:8px 12px;border:1px solid #6E3442;border-radius:2px;color:#F4EFE7;background:#2A0911}
+.why{padding:14px 16px;background:#2A0911;border:1px solid #6E3442;border-radius:2px;max-width:26em;display:flex;flex-direction:column;gap:4px}
+
+@media (max-width:860px){
+  .stage{top:0;background:#3E0E1A;padding:10px 0 14px;border-bottom:1px solid #6E3442}
+  .deck{--h:132px;--step:42px;--open:90px;margin-inline:auto}
+  .sh-body{font-size:12px}
+  .grid7{grid-template-columns:repeat(14,10px);gap:3px}
+  .cell{width:10px;height:10px}
+  .step{min-height:360px}
+}
+.deck .cell{width:12px;height:12px}
+
+/* ---------- hero demo: sentence to plan ---------- */
+.sentence{font-family:"Instrument Serif",Georgia,serif;font-size:clamp(22px,2.4vw,30px);line-height:1.55;color:#14110F;margin:0}
+.tok{font:inherit;font-size:inherit;line-height:1.25;padding:1px 6px;margin:0 1px;border:0;border-bottom:2px solid currentColor;border-radius:2px;cursor:pointer;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.tok:hover{outline:2px solid #CDCBC2;outline-offset:1px}
+.tok.sel{outline:2px solid #14110F;outline-offset:1px}
+.k-res{background:#F7EAEE;color:#5C1427}
+.k-tgt{background:#E8E0D2;color:#3E0E1A}
+.k-hor{background:#F2F1ED;color:#4A4945}
+.k-hard{background:#DCEBE9;color:#155450}
+.k-soft{background:#FBF1DE;color:#6E4A10}
+.k-obj{background:#3E0E1A;color:#F4EFE7}
+.kchip{display:inline-flex;align-items:center;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;line-height:1;padding:6px 9px;border-radius:999px;white-space:nowrap}
+.st-ok{background:#DCEBE9;color:#155450}
+.st-ask{background:#FBF1DE;color:#6E4A10}
+.st-block{background:#F7E2D6;color:#8A3A20}
+.dtab{min-height:44px;padding:0 16px;border:1px solid #CDCBC2;background:#FFFFFF;color:#2E2D2A;border-radius:2px;cursor:pointer;font-size:14px;font-weight:600}
+.dtab:hover{background:#F2F1ED}
+.dtab.on{background:#3E0E1A;color:#F4EFE7;border-color:#3E0E1A}
+.plan-grid{display:grid;grid-template-columns:repeat(7,14px);gap:4px;flex:none}
+.plan-grid .cell{border-color:#CDBFB0}
+.plan-grid .cell.on{background:#5C1427;border-color:#5C1427}
+.track{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid #CDCBC2;flex:1 1 220px;min-width:0}
+.track-l{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6F6E66}
+
+/* ---------- connect ---------- */
+.cx-sec{background:#E8E0D2;padding:clamp(64px,8vw,112px) 0}
+.cx{position:relative;background:#FAFAF8;border:1px solid #CDCBC2;border-radius:6px;padding:clamp(16px,2.4vw,28px);display:flex;flex-direction:column;gap:20px}
+.cx-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.cx-label{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6F6E66}
+.ctl{min-height:36px;padding:0 12px;border:1px solid #CDCBC2;border-radius:2px;background:#FFFFFF;color:#3E0E1A;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;cursor:pointer}
+.ctl:hover{background:#F2F1ED}
+.cx-grid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,290px) minmax(0,1fr);gap:0 clamp(56px,9vw,128px);align-items:center}
+.cx-col{display:flex;flex-direction:column;gap:10px;position:relative;z-index:2}
+.cx-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
+.pk-layer{position:absolute;inset:0;z-index:3;pointer-events:none}
+.pk{position:absolute;left:0;top:0;padding:5px 8px;border-radius:2px;background:#FFFFFF;border:1px solid #5C1427;color:#3E0E1A;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;line-height:1;white-space:nowrap;opacity:0;will-change:transform}
+.pk.plan{background:#5C1427;color:#F4EFE7}
+
+.src{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;border:1px solid #CDCBC2;border-radius:2px;background:#FFFFFF;color:#2E2D2A;text-align:left;cursor:pointer;transition:background-color 180ms,border-color 180ms,color 180ms}
+.src:hover{background:#F2F1ED}
+.src.on{background:#5C1427;border-color:#5C1427;color:#F4EFE7}
+.src svg,.dst svg{flex:none}
+.src .t{display:flex;flex-direction:column;gap:3px;min-width:0}
+.src b,.dst b{font-size:15px;font-weight:600;line-height:1.2}
+.src small{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:#6F6E66}
+.src.on small{color:#D49AAA}
+.dst{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;border:1px solid #CDCBC2;border-radius:2px;background:#FFFFFF;color:#2E2D2A;transition:border-color 180ms,background-color 180ms,opacity 180ms;opacity:.55}
+.dst.lit{opacity:1;border-color:#5C1427}
+.dst .t{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.dst small{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:#6F6E66}
+.done{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;line-height:1;padding:5px 8px;border-radius:999px;background:#DCEBE9;color:#155450;opacity:0;transform:scale(.9);transition:opacity 220ms,transform 220ms;white-space:nowrap}
+.dst.ok .done{opacity:1;transform:none}
+
+.core{background:#F4EFE7;border:1px solid #5C1427;border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 14px 28px -20px rgba(62,14,26,.55)}
+.core-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rows{display:flex;align-items:baseline;gap:8px;border-top:1px solid #CDBFB0;padding-top:12px}
+.rows b{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:52px;line-height:.9;color:#3E0E1A;min-width:2ch;font-variant-numeric:tabular-nums}
+.rows span{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#4A4945}
+.stg{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #CDBFB0;border-radius:2px;background:#FAFAF8;transition:background-color 220ms,border-color 220ms}
+.stg .d{width:16px;height:16px;border-radius:50%;border:1px solid #9E9C92;flex:none;display:flex;align-items:center;justify-content:center;transition:background-color 220ms,border-color 220ms}
+.stg .d svg{opacity:0;transition:opacity 180ms}
+.stg .n{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stg b{font-size:14px;font-weight:600;color:#3E0E1A}
+.stg small{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:#6F6E66;min-height:13px}
+.stg.on{background:#FFFFFF;border-color:#5C1427}
+.stg.on .d{background:#5C1427;border-color:#5C1427}
+.stg.on .d svg{opacity:1}
+.plan-line{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#5C1427;min-height:16px;opacity:0;transition:opacity 260ms}
+.plan-line.on{opacity:1}
+
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:24px;margin-top:8px}
+.fact{display:flex;flex-direction:column;gap:6px}
+.fact .l{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6F6E66}
+.fact .l.hi{color:#5C1427}
+.fact .v{font-size:16px;line-height:1.5;color:#2E2D2A}
+.fact .big{font-family:"Instrument Serif",Georgia,serif;font-size:36px;line-height:1;color:#3E0E1A}
+
+.seg{display:inline-flex;border:1px solid #CDCBC2;border-radius:2px;background:#FFFFFF;overflow:hidden}
+.seg button{min-height:44px;padding:0 16px;border:0;background:transparent;color:#2E2D2A;font-size:14px;font-weight:600;cursor:pointer}
+.seg button.on{background:#3E0E1A;color:#F4EFE7}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:16px}
+.st{display:flex;gap:14px;align-items:flex-start;padding:16px;background:#FFFFFF;border:1px solid #CDCBC2;border-radius:6px}
+.st .num{width:34px;height:34px;flex:none;border:1px solid #5C1427;border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:"Instrument Serif",Georgia,serif;font-size:20px;color:#5C1427}
+.st span{font-size:15px;line-height:1.5;color:#2E2D2A}
+.codebox{background:#14110F;border-radius:6px;overflow:hidden}
+.mtabs{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;border-bottom:1px solid #2E2D2A}
+.mtab{min-height:44px;padding:0 14px;border:0;border-bottom:2px solid transparent;background:transparent;color:#9E9C92;cursor:pointer;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.06em}
+.mtab:hover{color:#F4EFE7}
+.mtab.on{color:#F4EFE7;border-bottom-color:#D49AAA}
+.code{margin:0;padding:20px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;line-height:1.75;color:#F4EFE7;white-space:pre;overflow-x:auto}
+
+@media (max-width:900px){
+  .cx-grid{grid-template-columns:1fr;gap:20px}
+  .cx-svg,.pk-layer{display:none}
+  .cx-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))}
+}
+/* ---------- case studies ---------- */
+.case{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:24px;align-items:start}
+.ctabs{display:flex;flex-direction:column;gap:8px}
+.ctab{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px;border:1px solid #CDCBC2;border-radius:6px;background:#FFFFFF;color:#2E2D2A;cursor:pointer;transition:background-color 180ms,border-color 180ms,color 180ms}
+.ctab:hover{background:#F2F1ED}
+.ctab.on{background:#3E0E1A;border-color:#3E0E1A;color:#F4EFE7}
+.ctab .m{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5C1427}
+.ctab.on .m{color:#D49AAA}
+.ctab b{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:26px;line-height:1.05}
+.ctab .s{font-size:14px;line-height:1.45;color:#4A4945}
+.ctab.on .s{color:#EBD0D7}
+.cpanel{background:#FFFFFF;border:1px solid #E5E3DC;border-radius:6px;padding:clamp(20px,3vw,32px);display:flex;flex-direction:column;gap:26px}
+.cl{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6F6E66;margin-bottom:10px}
+.cq{font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-size:clamp(22px,2.4vw,28px);line-height:1.3;color:#14110F;margin:0}
+.goal{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid #E5E3DC}
+.goal .t{flex:1;font-size:15px;line-height:1.4;color:#2E2D2A}
+.goal .w{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#4A4945}
+.cmetrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:#CDCBC2;border:1px solid #CDCBC2}
+.cm{background:#F4EFE7;padding:16px;display:flex;flex-direction:column;gap:4px}
+.cm b{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(28px,3vw,38px);line-height:1;color:#3E0E1A}
+.cm span{font-size:14px;color:#4A4945}
+.crow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #E5E3DC;font-size:15px;color:#2E2D2A}
+.crow .arr{color:#5C1427}
+.cfoot{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;justify-content:space-between;border-top:1px solid #E5E3DC;padding-top:18px}
+.cfoot p{margin:0;font-size:13px;line-height:1.5;color:#6F6E66;max-width:42em}
+@media (max-width:860px){.case{grid-template-columns:1fr}.ctabs{flex-direction:row;overflow-x:auto;padding-bottom:4px}.ctab{min-width:250px}}
+
+/* ---------- light sections ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:16px}
+.card{background:#FFFFFF;border:1px solid #E5E3DC;border-radius:6px;padding:24px;display:flex;flex-direction:column;gap:10px;transition:box-shadow 140ms cubic-bezier(.2,0,0,1),transform 140ms cubic-bezier(.2,0,0,1)}
+.card:hover{box-shadow:0 1px 0 rgba(20,17,15,.04),0 4px 12px rgba(20,17,15,.08);transform:translateY(-1px)}
+.card b{font-size:19px;font-weight:600;color:#3E0E1A}
+.card span{font-size:15px;line-height:1.5;color:#4A4945}
+.faq{width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:64px;padding:18px 0;border:0;background:transparent;text-align:left;cursor:pointer;font-size:18px;font-weight:600;color:#3E0E1A}
+.faq:hover{color:#5C1427}
+.price{background:#FAFAF8;border:1px solid #E5E3DC;border-radius:6px;padding:28px;display:flex;flex-direction:column;gap:18px}
+.price.feat{background:#3E0E1A;border-color:#3E0E1A;color:#F4EFE7}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14.5px;line-height:1.45}
+.plist li{display:flex;gap:10px;align-items:flex-start}
+.plist svg{flex:none;margin-top:2px}
+.flink{color:#4A4945;text-decoration:none;font-size:14px;min-height:32px;display:inline-flex;align-items:center}
+.flink:hover{color:#5C1427}
+.stat{background:#F4EFE7;padding:clamp(20px,3vw,32px);display:flex;flex-direction:column;gap:6px}
+.stat b{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(44px,5.5vw,68px);line-height:1;color:#3E0E1A}
+.stat span{font-size:14px;color:#4A4945}
+.trust{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.5;color:#2E2D2A}
+.trust svg{flex:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<header id="top" style="background:#F4EFE7;border-bottom:1px solid #E5E3DC;">
+<nav class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:8px 28px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px;" aria-label="Main">
+<a class="wm" href="#top" style="font-size:30px;min-height:44px;" aria-label="Intellign home">Intellign<span class="wm-dot" aria-hidden="true"></span></a>
+<div style="display:flex;align-items:center;gap:4px 24px;flex-wrap:wrap;">
+<a class="navlink" href="#how">How it works</a>
+<a class="navlink" href="#connect">Connect</a>
+<a class="navlink" href="#pricing">Pricing</a>
+<a class="navlink" href="https://intellign.ai/docs">Docs</a>
+<a class="navlink" href="https://intellign.ai/auth/login">Sign in</a>
+<a class="btn btn-p" href="https://intellign.ai/workspace" style="padding:12px 16px;min-height:44px;font-size:14px;">Launch app</a>
+</div>
+</nav>
+</header>
+
+<main>
+<!-- ================= HERO · SENTENCE TO PLAN ================= -->
+<section style="background:#F4EFE7;padding:clamp(40px,6vw,80px) 0 clamp(48px,6vw,88px);">
+<div class="wrap" style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:40px 56px;">
+<div style="flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:28px;">
+<div class="eyebrow-m">For anyone who plans people, routes or resources</div>
+<h1 style="margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(48px,6.4vw,88px);line-height:0.97;letter-spacing:-0.03em;color:#3E0E1A;text-wrap:balance;">The best plan, <em>proven.</em></h1>
+<p style="margin:0;font-size:clamp(17px,1.7vw,20px);line-height:1.55;color:#4A4945;max-width:30em;">Tell Intellign what you need in plain English. Get back a schedule, route or assignment that follows every rule, with the reason for each decision.</p>
+<div style="display:flex;flex-wrap:wrap;gap:20px 24px;">
+<div class="track">
+<span class="track-l">I plan people, routes or resources</span>
+<div><a class="btn btn-p" href="https://intellign.ai/workspace">Try it free</a></div>
+</div>
+<div class="track">
+<span class="track-l">I build with an API</span>
+<div><a class="btn btn-out" href="#connect">Connect your system</a></div>
+</div>
+</div>
+</div>
+
+<div id="demo" style="flex:1 1 540px;min-width:0;display:flex;flex-direction:column;gap:16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+<span class="mono" style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5C1427;">Tap any part of the sentence</span>
+<span class="mono" style="font-size:11px;color:#6F6E66;">Example, not live data</span>
+</div>
+<div id="domain-tabs" style="display:flex;flex-wrap:wrap;gap:6px;" role="group" aria-label="Example problems"></div>
+<div style="background:#FFFFFF;border:1px solid #E5E3DC;border-radius:6px;padding:clamp(18px,2.4vw,28px);display:flex;flex-direction:column;gap:18px;">
+<p class="sentence" id="sentence"></p>
+<div style="display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #E5E3DC;padding-top:14px;">
+<span class="kchip k-res">Who or what</span><span class="kchip k-tgt">Where</span><span class="kchip k-hor">When</span><span class="kchip k-hard">Must-follow rule</span><span class="kchip k-soft">Nice to have</span><span class="kchip k-obj">Goal</span>
+</div>
+<div style="background:#FAFAF8;border:1px solid #E5E3DC;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;" aria-live="polite">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+<span class="kchip" id="b-kind"></span>
+<span class="kchip" id="b-status"></span>
+</div>
+<div class="serif" style="font-size:24px;line-height:1.2;color:#3E0E1A;" id="b-text"></div>
+<div style="display:flex;flex-direction:column;gap:6px;">
+<span class="mono" style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6F6E66;">Becomes</span>
+<pre class="mono" style="margin:0;font-size:13px;line-height:1.6;white-space:pre-wrap;color:#14110F;background:#F4EFE7;padding:10px 12px;border-radius:2px;" id="b-formal"></pre>
+</div>
+<span style="font-size:15px;line-height:1.55;color:#4A4945;" id="b-note"></span>
+</div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;border-top:1px solid #E5E3DC;padding-top:14px;">
+<div class="plan-grid" aria-hidden="true"></div>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 200px;">
+<span class="mono" style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5C1427;">Then, your plan</span>
+<span style="font-size:15px;line-height:1.5;color:#14110F;" id="b-plan"></span>
+<span class="mono" style="font-size:12px;color:#4A4945;" id="b-summary"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ================= SCROLL STORY · sheets + rail, the one dark moment ================= -->
+<section id="how" class="story-sec">
+<div class="wrap">
+<div class="eyebrow-m" style="color:#D49AAA;">How it works</div>
+<h2 class="h-sec" style="color:#F4EFE7;max-width:14em;margin-top:16px;">Five layers between your data and your plan.</h2>
+
+<div class="story">
+<div class="stage">
+<div class="deck" id="deck" aria-label="The five layers">
+<a class="sheet s0 on" data-i="0" href="#step-connect"><div class="sh-top"><span class="sh-num">01 · Connect</span></div><div class="sh-body"><div class="chips"><span class="chip">staff.csv</span><span class="chip">leave.xlsx</span></div><span>24 rows · 6 columns, read as they are</span></div></a>
+<a class="sheet s1 after" data-i="1" href="#step-check"><div class="sh-top"><span class="sh-num">02 · Check</span></div><div class="sh-body"><div class="chips"><span class="chip">24 nurses</span><span class="chip">3 gaps → asked</span></div><span>Skill level is missing for 3 nurses. Intellign asks you instead of guessing.</span></div></a>
+<a class="sheet s2 after" data-i="2" href="#step-understand"><div class="sh-top"><span class="sh-num">03 · Understand</span></div><div class="sh-body"><span class="sh-q">“nobody works 4 nights in a row”</span><div class="chips"><span class="chip">nights in a row ≤ 3</span><span class="chip">confirmed</span></div></div></a>
+<a class="sheet s3 after" data-i="3" href="#step-solve"><div class="sh-top"><span class="sh-num">04 · Solve</span></div><div class="sh-body"><div class="sh-row"><span class="sh-stat">gap to best 0.00%</span><span class="sh-stat">rules broken 0</span><span class="sh-stat">4.2 s</span></div><span>Every rule is checked again before you see the result.</span></div></a>
+<a class="sheet s4 after" data-i="4" href="#step-plan"><div class="sh-top"><span class="sh-num">05 · Your plan</span></div><div class="sh-body"><div class="grid7" id="grid"></div><div class="chips"><span class="chip">84 shifts</span><span class="chip">84 reasons</span></div></div></a>
+</div>
+</div>
+
+<div class="story-steps">
+<div class="rail" id="rail">
+<div id="step-connect" class="step on" data-step="0"><div class="tile">1</div><div><span class="kicker">01 · Connect</span><h3>Bring your data as it is.</h3><p>Upload a spreadsheet or connect the system you already use. No setup project.</p><div class="pillrow"><span class="pill">staff.csv</span><span class="pill">leave.xlsx</span><span class="pill">your HR system</span></div></div></div>
+<div id="step-check" class="step" data-step="1"><div class="tile">2</div><div><span class="kicker">02 · Check</span><h3>We find what&#39;s missing in your data before it costs you.</h3><p>A blank skill level today is a bad shift next week. Intellign flags the gap and asks you. It never fills it with made-up rows.</p><div class="pillrow"><span class="pill">skill level missing for 3 nurses</span><span class="pill" style="background:#F4EFE7;color:#3E0E1A;border-color:#F4EFE7;">asked you</span></div></div></div>
+<div id="step-understand" class="step" data-step="2"><div class="tile">3</div><div><span class="kicker">03 · Understand</span><h3>Say what you need in plain English.</h3><p>Each sentence becomes a rule the computer can follow. You see the rules before anything runs.</p><div class="pillrow"><span class="pill serif" style="font-size:18px;font-style:italic;">“nobody works 4 nights in a row”</span><span class="pill">nights in a row ≤ 3</span></div></div></div>
+<div id="step-solve" class="step" data-step="3"><div class="tile">4</div><div><span class="kicker">04 · Solve</span><h3>The math finds the best plan.</h3><p>Proven solvers, not guesses. Every rule is checked again before you see the result.</p><div class="pillrow"><span class="pill">gap to best: 0.00%</span><span class="pill">rules broken: 0</span><span class="pill">time: 4.2 s</span></div></div></div>
+<div id="step-plan" class="step" data-step="4"><div class="tile">5</div><div><span class="kicker">05 · Your plan</span><h3>Get a plan you can explain.</h3><p>Every assignment comes with a reason. Change one thing and the rest re-plans around it.</p><div class="why"><span class="mono" style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#D49AAA;">Why is Amaka off on Saturday?</span><span style="font-size:15px;line-height:1.5;color:#F4EFE7;">She works nights Wednesday to Friday. A fourth night would break your rule.</span></div></div></div>
+<div id="step-all" class="step" data-step="5"><div class="tile">→</div><div><span class="kicker">That is the whole stack</span><h3>One sentence in. One proven plan out.</h3><p>Usually in seconds, and in three messages or fewer.</p><div style="display:flex;flex-wrap:wrap;gap:12px;"><a class="btn btn-bone" href="https://intellign.ai/workspace">Try it free</a><a class="btn btn-line" href="#demo">Try a sentence</a></div></div></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ================= CONNECT · works with what you already run ================= -->
+<section id="connect" class="cx-sec">
+<div class="wrap" style="display:flex;flex-direction:column;gap:40px;">
+<div class="split">
+<div style="display:flex;flex-direction:column;gap:20px;">
+<div class="eyebrow-m">Connect</div>
+<h2 class="h-sec">Works with what you already run.</h2>
+</div>
+<p class="lede">Drop in a spreadsheet, or connect the system your team already uses. Your plan goes back where the work happens.</p>
+</div>
+
+<div class="cx" id="cx">
+<div class="cx-head">
+<span class="cx-label">Pick where your data lives</span>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+<span class="cx-label" style="text-transform:none;letter-spacing:.04em;">Example flow · counts are illustrative</span>
+<button class="ctl" id="ctl" type="button" aria-pressed="false">Pause</button>
+</div>
+</div>
+
+<div class="cx-grid" id="cxgrid">
+<svg class="cx-svg" id="svg" aria-hidden="true"></svg>
+<div class="pk-layer" id="pk" aria-hidden="true"></div>
+
+<div class="cx-col" id="srcs"></div>
+
+<div class="core" aria-live="polite">
+<div class="core-top">
+<span class="wm" style="font-size:26px;">Intellign<i aria-hidden="true"></i></span>
+<span class="cx-label">Workspace</span>
+</div>
+<div class="rows"><b id="rows">0</b><span id="rows-l">rows in</span></div>
+<div class="stg" id="stg0"><span class="d"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#F4EFE7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="n"><b>Check</b><small id="stg0s">&nbsp;</small></span></div>
+<div class="stg" id="stg1"><span class="d"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#F4EFE7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="n"><b>Understand</b><small id="stg1s">&nbsp;</small></span></div>
+<div class="stg" id="stg2"><span class="d"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#F4EFE7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="n"><b>Solve</b><small id="stg2s">&nbsp;</small></span></div>
+<div class="plan-line" id="plan-line">&nbsp;</div>
+</div>
+
+<div class="cx-col" id="dsts"></div>
+</div>
+
+<div class="facts" aria-live="polite">
+<div class="fact"><span class="l hi">Way in</span><span class="big" id="f-way"></span></div>
+<div class="fact"><span class="l">Goes in</span><span class="v" id="f-reads"></span></div>
+<div class="fact"><span class="l">Comes back</span><span class="v" id="f-back"></span></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:20px;">
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
+<span class="cx-label">How to set it up</span>
+<div class="seg" role="group" aria-label="Setup style"><button type="button" id="m-no">Without code</button><button type="button" id="m-yes">With code</button></div>
+</div>
+<div id="panel-no" class="steps"></div>
+<div id="panel-yes" class="codebox" hidden>
+<div class="mtabs"><div id="mtabs" role="tablist" aria-label="Integration method"></div><span class="mono" style="font-size:11px;color:#9E9C92;padding:8px 0;" id="m-host"></span></div>
+<pre class="code" id="m-code"></pre>
+<div style="padding:12px 20px;border-top:1px solid #2E2D2A;font-size:13px;color:#9E9C92;" id="m-note"></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ================= PROOF + USE CASES + TRUST ================= -->
+<section style="padding:clamp(64px,8vw,112px) 0;">
+<div class="wrap" style="display:flex;flex-direction:column;gap:56px;">
+<div id="cases" style="display:flex;flex-direction:column;gap:32px;">
+<div class="split" style="align-items:end;">
+<div style="display:flex;flex-direction:column;gap:18px;">
+<div class="eyebrow-m">Case studies</div>
+<h2 class="h-sec">Real deployments, solved and explained.</h2>
+</div>
+<p class="lede">One research deployment and three hospital scenarios, run through Intellign. The records are generated or synthetic, and every number below comes from a recorded run.</p>
+</div>
+<div class="case">
+<div class="ctabs" id="case-tabs" role="tablist" aria-label="Case studies"></div>
+<div class="cpanel" id="case-panel" aria-live="polite"></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:24px;">
+<h2 class="h-sec" style="font-size:clamp(30px,3.6vw,44px);">Built for teams that schedule, route or match.</h2>
+<div class="cards">
+<div class="card"><b>Healthcare</b><span>Nurse rosters, patient-to-doctor matching, home-care visits.</span></div>
+<div class="card"><b>Health insurance</b><span>Claims to reviewers, enrollees to providers.</span></div>
+<div class="card"><b>Logistics</b><span>Delivery routes, driver assignment, less fuel.</span></div>
+<div class="card"><b>Education</b><span>Timetables, teacher placement, classroom use.</span></div>
+<div class="card"><b>Public sector</b><span>Field-worker postings and fair allocation.</span></div>
+<div class="card"><b>Business operations</b><span>Task assignment and balanced workloads.</span></div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:24px;border-top:1px solid #CDCBC2;padding-top:32px;">
+<div class="trust"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5C1427" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span><strong>Encrypted</strong> at rest and in transit.</span></div>
+<div class="trust"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5C1427" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg><span><strong>Yours only.</strong> Only your team can see your data.</span></div>
+<div class="trust"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5C1427" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span><strong>Traceable.</strong> Every number points to its source row.</span></div>
+<div class="trust"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5C1427" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg><span><strong>Export anytime,</strong> no request needed.</span></div>
+</div>
+</div>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section id="pricing" style="padding:clamp(64px,8vw,112px) 0;background:#FFFFFF;border-top:1px solid #E5E3DC;">
+<div class="wrap" style="display:flex;flex-direction:column;gap:40px;">
+<div style="display:flex;flex-direction:column;gap:18px;">
+<div class="eyebrow-m">Pricing</div>
+<h2 class="h-sec">Start free.</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:16px;align-items:stretch;" id="pricing-grid"></div>
+</div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq" style="padding:clamp(64px,8vw,112px) 0;">
+<div class="wrap split">
+<div style="display:flex;flex-direction:column;gap:18px;">
+<div class="eyebrow-m">Questions</div>
+<h2 class="h-sec">Before your first plan.</h2>
+</div>
+<div style="border-top:1px solid #CDCBC2;" id="faq-list"></div>
+</div>
+</section>
+
+<!-- ================= CLOSE ================= -->
+<section style="background:#E8E0D2;padding:clamp(56px,7vw,96px) 0;border-top:1px solid #CDCBC2;">
+<div class="wrap" style="display:flex;flex-wrap:wrap;align-items:center;gap:32px 48px;">
+<div style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:22px;">
+<h2 class="h-sec" style="font-size:clamp(44px,6vw,80px);">Bring one real problem.</h2>
+<p style="margin:0;font-size:18px;line-height:1.6;color:#2E2D2A;max-width:28em;">Send us a rota, a route list or an allocation from last month. We will show you the best plan for it.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px;">
+<a class="btn btn-p" href="https://intellign.ai/workspace">Try it free</a>
+<a class="btn btn-out" href="mailto:adeolad@intellign.ai">Book a session</a>
+</div>
+</div>
+<div style="flex:1 1 320px;min-width:0;display:flex;justify-content:center;">
+<span class="wm" style="font-size:clamp(64px,10vw,140px);" aria-hidden="true">Intellign<span class="wm-dot"></span></span>
+</div>
+</div>
+</section>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer style="background:#F4EFE7;padding:56px 0 32px;">
+<div class="wrap" style="display:flex;flex-direction:column;gap:40px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:32px;">
+<div style="display:flex;flex-direction:column;gap:12px;">
+<span class="wm" style="font-size:30px;">Intellign<span class="wm-dot" aria-hidden="true"></span></span>
+<span style="font-size:14px;line-height:1.55;color:#4A4945;">Built and tested in Africa by DataBacked Africa, Abuja.</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;"><span class="mono" style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6F6E66;margin-bottom:6px;">Product</span><a class="flink" href="#how">How it works</a><a class="flink" href="#demo">Try a sentence</a><a class="flink" href="#pricing">Pricing</a><a class="flink" href="https://intellign.ai/workspace">Launch app</a></div>
+<div style="display:flex;flex-direction:column;gap:4px;"><span class="mono" style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6F6E66;margin-bottom:6px;">Developers</span><a class="flink" href="https://intellign.ai/docs">Documentation</a><a class="flink" href="https://intellign.ai/docs">MCP guide</a><a class="flink" href="https://intellign.ai/demo">Live demo</a><a class="flink" href="https://intellign.ai/status">Status</a></div>
+<div style="display:flex;flex-direction:column;gap:4px;"><span class="mono" style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6F6E66;margin-bottom:6px;">Company</span><a class="flink" href="https://intellign.ai/about">About</a><a class="flink" href="mailto:adeolad@intellign.ai">adeolad@intellign.ai</a><a class="flink" href="https://github.com/DataBacked-Africa">GitHub</a></div>
+</div>
+<div style="border-top:1px solid #E5E3DC;padding-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;"><span style="display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;"><span style="font-size:13px;color:#6F6E66;">© 2026 Intellign AI</span><a class="flink" href="terms.html">Terms</a><a class="flink" href="privacy.html">Privacy</a></span><span class="mono" style="font-size:12px;color:#6F6E66;">api.intellign.ai · mcp.intellign.ai</span></div>
+</div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- roster grids (hero plan result + plan sheet) ---------- */
+  var pattern = '1011010010110101101001011011010110100';
+  var cellsHtml = pattern.split('').map(function (c) { return '<span class="cell' + (c === '1' ? ' on' : '') + '"></span>'; }).join('');
+  document.querySelectorAll('.plan-grid').forEach(function (g) { g.innerHTML = cellsHtml; });
+  var deckPat = '10110100101101' + '01101001011010' + '11010010110101';
+  $('grid').innerHTML = deckPat.split('').map(function (c) { return '<span class="cell' + (c === '1' ? ' on' : '') + '"></span>'; }).join('');
+
+  /* ---------- scroll story: the active step opens its sheet ---------- */
+  var sheets = document.querySelectorAll('.sheet');
+  var steps = document.querySelectorAll('.step');
+  var current = -1;
+  function setStep(k) {
+    if (k === current) return;
+    current = k;
+    var d = Math.min(k, 4);
+    sheets.forEach(function (s) {
+      var i = +s.getAttribute('data-i');
+      s.classList.toggle('on', i === d);
+      s.classList.toggle('done', i < d);
+      s.classList.toggle('after', i > d);
+    });
+    steps.forEach(function (s, i) { s.classList.toggle('on', i === k); });
+  }
+  setStep(0);
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) setStep(+e.target.getAttribute('data-step')); });
+    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+    steps.forEach(function (s) { io.observe(s); });
+  } else {
+    steps.forEach(function (s) { s.classList.add('on'); });
+  }
+
+  /* ---------- hero: sentence to plan ---------- */
+  var K = { res: ['Who or what', 'k-res'], tgt: ['Where', 'k-tgt'], hor: ['When', 'k-hor'], hard: ['Must-follow rule', 'k-hard'], soft: ['Nice to have', 'k-soft'], obj: ['Goal', 'k-obj'] };
+  var S = { ok: ['Ready', 'st-ok'], ask: ['Asks you', 'st-ask'], block: ['Needs more data', 'st-block'] };
+  function t(text, k, formal, st, note) { return { text: text, k: k, formal: formal, st: st, note: note }; }
+  var D = {
+    health: { label: 'Nurse roster', plan: '84 shifts filled across 3 wards, 0 rules broken, solved in 4.2 s. Each shift has a reason.', parts: [
+      'Roster ', t('our 24 nurses', 'res', '24 nurses from staff.csv', 'ok', 'These are the people Intellign will place.'),
+      ' across ', t('3 wards', 'tgt', 'Ward 1, Ward 2, Ward 3', 'ok', 'These are the places that need covering.'),
+      ' for ', t('next week', 'hor', 'Mon to Sun, day and night shifts', 'ok', 'Intellign assumes 12-hour shifts and asks you to confirm.'),
+      '. ', t('Nobody works more than 3 nights in a row', 'hard', 'nights in a row ≤ 3, for every nurse', 'ok', 'A plan that breaks this rule will never be shown to you.'),
+      ', ', t('every ward has a senior nurse on each shift', 'hard', 'senior nurses per shift ≥ 1, for every ward', 'ask', 'Skill level is missing for 3 nurses. Intellign asks who is senior instead of guessing.'),
+      ', and ', t('spread weekends fairly', 'soft', 'keep weekend counts as even as possible', 'ok', 'Followed as closely as possible, without breaking a must-follow rule.'),
+      '.'] },
+    logistics: { label: 'Delivery routes', plan: '12 van routes covering 140 stops, every delivery window met, with arrival times per stop.', parts: [
+      "Plan tomorrow's routes for ", t('our 12 vans', 'res', '12 vans from fleet.csv', 'ok', 'These are the vehicles Intellign will route.'),
+      ' to ', t('140 orders', 'tgt', '140 stops from orders.xlsx', 'ok', 'Every order is visited exactly once.'),
+      ', ', t("inside each customer's delivery window", 'hard', 'arrive between open and close, for every stop', 'ok', 'No route that misses a window will be shown.'),
+      ', ', t('no van over 1.2 tonnes', 'hard', 'load ≤ 1,200 kg, for every van', 'ok', 'Checked for each van on each route.'),
+      ', and ', t('use as little fuel as possible', 'obj', 'smallest total fuel use', 'ask', 'Fuel rates are missing. Intellign suggests using distance instead and asks you first.'),
+      '.'] },
+    claims: { label: 'Insurance claims', plan: '3,000 claims shared across 9 reviewers, no one over 400. One goal is saved and waiting for billing data.', parts: [
+      'Share ', t("this month's 3,000 claims", 'res', '3,000 claims from claims.csv', 'ok', 'These are the claims to assign.'),
+      ' between ', t('our 9 reviewers', 'tgt', '9 reviewers from reviewers.csv', 'ok', 'These are the people who review them.'),
+      '. ', t('Match each claim to the right specialty', 'hard', 'claim specialty must match reviewer skill', 'ok', 'Wrong pairings are ruled out before solving.'),
+      ', ', t('nobody gets more than 400', 'hard', 'claims per reviewer ≤ 400', 'ok', 'A hard cap for every reviewer.'),
+      ', and ', t('flag providers with unusual billing', 'soft', 'saved as a goal, waiting for data', 'block', 'Kept, not dropped. This file has no billing history, so Intellign tells you what it needs.'),
+      '.'] }
+  };
+  var bState = { domain: 'health', tok: 0 };
+  function renderBreakdown() {
+    var d = D[bState.domain];
+    var toks = d.parts.filter(function (p) { return typeof p !== 'string'; });
+    $('domain-tabs').innerHTML = Object.keys(D).map(function (k) {
+      return '<button class="dtab' + (k === bState.domain ? ' on' : '') + '" data-domain="' + k + '" aria-pressed="' + (k === bState.domain) + '">' + esc(D[k].label) + '</button>';
+    }).join('');
+    var n = -1;
+    $('sentence').innerHTML = d.parts.map(function (p) {
+      if (typeof p === 'string') return '<span>' + esc(p) + '</span>';
+      n++;
+      return '<button class="tok ' + K[p.k][1] + (n === bState.tok ? ' sel' : '') + '" data-tok="' + n + '" aria-pressed="' + (n === bState.tok) + '">' + esc(p.text) + '</button>';
+    }).join('');
+    var b = toks[bState.tok];
+    var kind = $('b-kind'); kind.className = 'kchip ' + K[b.k][1]; kind.textContent = K[b.k][0];
+    var st = $('b-status'); st.className = 'kchip ' + S[b.st][1]; st.textContent = S[b.st][0];
+    $('b-text').textContent = '“' + b.text + '”';
+    $('b-formal').textContent = b.formal;
+    $('b-note').textContent = b.note;
+    $('b-plan').textContent = d.plan;
+    var ok = toks.filter(function (p) { return p.st === 'ok'; }).length;
+    $('b-summary').textContent = toks.length + ' parts understood · ' + ok + ' ready · ' + (toks.length - ok) + ' need you';
+  }
+  $('domain-tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-domain]'); if (!b) return; bState = { domain: b.getAttribute('data-domain'), tok: 0 }; renderBreakdown(); });
+  $('sentence').addEventListener('click', function (e) { var b = e.target.closest('[data-tok]'); if (!b) return; bState.tok = +b.getAttribute('data-tok'); renderBreakdown(); });
+  renderBreakdown();
+
+  (function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ICON = {
+    sheet: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M4 9h16M4 15h16M10 3v18"/>',
+    clinic: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 8v8M8 12h8"/>',
+    hr: '<circle cx="9" cy="9" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8" r="2.2"/><path d="M16 14c2.8 0 5 2.2 5 5"/>',
+    fleet: '<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
+    code: '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',
+    assistant: '<path d="M4 5h16v11H9l-5 4z"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    file: '<path d="M12 4v11m-4-4 4 4 4-4M5 20h14"/>',
+    system: '<rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/><path d="M7 7h.01M7 17h.01"/>'
+  };
+  var ic = function (n) { return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[n] + '</svg>'; };
+
+  /* ---------- data: what each source does, in the truth of the product ---------- */
+  var SRC = {
+    sheet: { label: 'Spreadsheets', icon: 'sheet', method: 'Upload', mode: 'no', code: 'upload', packets: ['staff.csv', 'leave.xlsx'], rows: 24, unit: 'rows · 6 columns', stages: ['3 gaps → asked', '4 rules confirmed', '0.00% gap · 4.2 s'], outs: ['sheets', 'file'], sys: 'Your system', plan: '84 shifts · 84 reasons', way: 'Upload', reads: 'Your CSV or Excel file, as it is.', back: 'Your plan in Google Sheets or as a file, plus a shared view for your team.' },
+    emr: { label: 'Hospital or clinic system', icon: 'clinic', method: 'REST API', mode: 'no', code: 'rest', packets: ['staff', 'wards', 'leave'], rows: 24, unit: 'staff · 3 wards', stages: ['3 gaps → asked', '4 rules confirmed', '0.00% gap · 4.2 s'], outs: ['system', 'file'], sys: 'Your hospital system', plan: '84 shifts · written back', way: 'REST API', reads: 'Staff, skills, wards and leave.', back: 'A roster with reasons, written back to your system.' },
+    hr: { label: 'HR or rostering tool', icon: 'hr', method: 'REST API', mode: 'no', code: 'rest', packets: ['employees', 'availability'], rows: 62, unit: 'employees', stages: ['5 gaps → asked', '7 rules confirmed', '0.00% gap · 6.8 s'], outs: ['system', 'calendar'], sys: 'Your HR system', plan: 'rota approved · synced', way: 'REST API', reads: 'Employees, contracts and availability.', back: 'An approved rota, written back and pushed to calendars.' },
+    tms: { label: 'Dispatch or fleet system', icon: 'fleet', method: 'REST API', mode: 'no', code: 'rest', packets: ['vehicles', 'orders'], rows: 140, unit: 'stops · 12 vans', stages: ['0 gaps', '3 rules confirmed', '0.00% gap · 9.1 s'], outs: ['system', 'file'], sys: 'Your dispatch system', plan: '12 routes · arrival times', way: 'REST API', reads: 'Vehicles, orders and delivery windows.', back: 'Routes per vehicle with arrival times.' },
+    data: { label: 'Our own data team', icon: 'code', method: 'Python SDK', mode: 'yes', code: 'python', packets: ['DataFrame'], rows: 3000, unit: 'rows in', stages: ['0 gaps', '5 rules confirmed', '0.00% gap · 3.4 s'], outs: ['system'], sys: 'Your next pipeline step', plan: 'assignments as a DataFrame', way: 'Python SDK', reads: 'Any table you pass in.', back: 'Assignments ready for your next pipeline step.' },
+    agent: { label: 'An AI assistant', icon: 'assistant', method: 'MCP', mode: 'yes', code: 'mcp', packets: ['tool call'], rows: 24, unit: 'nurses', stages: ['3 gaps → asked', '4 rules confirmed', '0.00% gap · 4.2 s'], outs: ['system'], sys: 'Back to your assistant', plan: 'a plan it can explain', way: 'MCP', reads: 'Whatever your assistant passes in.', back: 'A proven plan your assistant can explain.' }
+  };
+  var DST = {
+    sheets: { label: 'Google Sheets', icon: 'sheet', chip: 'Native', done: 'Sent' },
+    calendar: { label: 'Calendar', icon: 'calendar', chip: 'Native · .ics', done: 'Pushed' },
+    file: { label: 'Excel, CSV or PDF', icon: 'file', chip: 'Native', done: 'Ready' },
+    system: { label: 'Your system', icon: 'system', chip: 'Via API', done: 'Synced' }
+  };
+  var ORDER = ['sheet', 'emr', 'hr', 'tms', 'data', 'agent'];
+  var DORDER = ['sheets', 'calendar', 'file', 'system'];
+
+  var CODE = {
+    upload: { label: 'Upload', host: 'intellign.ai/workspace', note: 'No code. Works in the browser at intellign.ai/workspace.', code: '1  Open intellign.ai/workspace\n2  Drop in your spreadsheet\n3  Say what you need in plain English\n4  Check the rules Intellign shows you\n5  Approve the plan, then send it to Google Sheets\n   or download it as CSV, Excel, PDF or .ics' },
+    rest: { label: 'REST', host: 'api.intellign.ai', note: 'Send your two tables as datasets first, then solve. Full reference in the docs.', code: 'curl -X POST https://api.intellign.ai/api/public/v1/solve \\\n  -H "Authorization: Bearer $INTELLIGN_API_KEY" \\\n  -H "Idempotency-Key: roster-week-42" \\\n  -H "Content-Type: application/json" \\\n  -d \'{\n    "problem": "Roster our 24 nurses across 3 wards. Nobody works more than 3 nights in a row.",\n    "entities_dataset_id": "<staff dataset id>",\n    "targets_dataset_id": "<shifts dataset id>",\n    "quality_mode": "balanced"\n  }\'\n\n# 202 Accepted. Poll the job, then read the plan back.' },
+    python: { label: 'Python', host: 'pip install intellign', note: 'ik_test_ keys are a free sandbox; ik_live_ keys are for production.', code: 'from intellign import Client, Problem\n\nclient = Client(api_key="ik_live_...", base_url="https://api.intellign.ai")\n\nproblem = (\n    Problem.assignment(name="Nurse roster")\n    .entities(rows=nurses)\n    .targets(rows=wards)\n    .maximize("skill_match", weight=70,\n              entity_column="skills", target_column="required_skills")\n    .require("entity.skills superset_of target.required_skills")\n    .quality("balanced")\n)\n\nresult = client.submit(problem).wait()\nprint(result.assignments[0])' },
+    mcp: { label: 'MCP', host: 'mcp.intellign.ai/mcp', note: 'Hosted at mcp.intellign.ai, or run it yourself with pip install "intellign[mcp]". Works with any MCP-capable assistant.', code: '# Hosted: add it to Claude Code\nclaude mcp add --transport http intellign https://mcp.intellign.ai/mcp \\\n  --header "Authorization: Bearer ik_live_..."\n\n# Or run it locally (stdio)\npip install "intellign[mcp]"\nINTELLIGN_API_KEY=ik_live_... intellign-mcp\n\n# Then ask your assistant:\n# "Use Intellign to roster my nurses for next week."' }
+  };
+  var STEPS = {
+    sheet: ['Open Intellign and drop in your spreadsheet.', 'Say what you need in plain English and check the rules.', 'Approve the plan, then send it to Google Sheets or download it.'],
+    system: ['Tell us which system you use.', 'We connect it with you, so your data flows in on its own.', 'Approved plans appear back in your system. No re-typing.'],
+    dev: ['Create an API key in your dashboard.', 'Send your tables and your sentence.', 'Read the plan back, with a reason for every assignment.']
+  };
+
+  /* ---------- build tiles ---------- */
+  $('srcs').innerHTML = ORDER.map(function (k) {
+    var s = SRC[k];
+    return '<button type="button" class="src" data-src="' + k + '" aria-pressed="false">' + ic(s.icon) + '<span class="t"><b>' + s.label + '</b><small>' + s.method + '</small></span></button>';
+  }).join('');
+  $('dsts').innerHTML = DORDER.map(function (k) {
+    var d = DST[k];
+    return '<div class="dst" data-dst="' + k + '">' + ic(d.icon) + '<span class="t"><b data-lbl>' + d.label + '</b><small>' + d.chip + '</small></span><span class="done">' + d.done + '</span></div>';
+  }).join('');
+
+  var grid = $('cxgrid'), svg = $('svg'), pkLayer = $('pk'), core = grid.querySelector('.core');
+  var inPaths = {}, outPaths = {};
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function rel(el, side) {
+    var b = grid.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: (side === 'r' ? r.right : r.left) - b.left, y: r.top + r.height / 2 - b.top };
+  }
+  function curve(a, b) {
+    var dx = Math.max(24, (b.x - a.x) * 0.5);
+    return 'M' + a.x + ' ' + a.y + ' C' + (a.x + dx) + ' ' + a.y + ' ' + (b.x - dx) + ' ' + b.y + ' ' + b.x + ' ' + b.y;
+  }
+  function mk(d, cls) {
+    var p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', d); p.setAttribute('class', cls); p.setAttribute('fill', 'none');
+    if (cls === 'base') { p.setAttribute('stroke', '#CDBFB0'); p.setAttribute('stroke-width', '1'); }
+    else { p.setAttribute('stroke', '#5C1427'); p.setAttribute('stroke-width', '1.6'); p.setAttribute('stroke-linecap', 'round'); p.style.opacity = '0'; }
+    svg.appendChild(p);
+    return p;
+  }
+  function layout() {
+    if (!svg.getBoundingClientRect().width) return;
+    var b = grid.getBoundingClientRect();
+    svg.setAttribute('viewBox', '0 0 ' + b.width + ' ' + b.height);
+    svg.innerHTML = '';
+    inPaths = {}; outPaths = {};
+    var coreIn = rel(core, 'l'), coreOut = rel(core, 'r');
+    ORDER.forEach(function (k) {
+      var el = grid.querySelector('[data-src="' + k + '"]');
+      var d = curve(rel(el, 'r'), coreIn);
+      mk(d, 'base'); inPaths[k] = mk(d, 'act');
+    });
+    DORDER.forEach(function (k) {
+      var el = grid.querySelector('[data-dst="' + k + '"]');
+      var d = curve(coreOut, rel(el, 'l'));
+      mk(d, 'base'); outPaths[k] = mk(d, 'act');
+    });
+  }
+
+  /* ---------- motion engine ---------- */
+  var token = 0, CANCEL = {};
+  var sleep = function (ms, tk) {
+    return new Promise(function (res, rej) { setTimeout(function () { tk === token ? res() : rej(CANCEL); }, ms); });
+  };
+  function ease(t) { return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function frames(ms, tk, fn) {
+    return new Promise(function (res, rej) {
+      var t0 = performance.now();
+      (function f(now) {
+        if (tk !== token) return rej(CANCEL);
+        var t = Math.min(1, (now - t0) / ms);
+        fn(t);
+        t < 1 ? requestAnimationFrame(f) : res();
+      })(t0);
+    });
+  }
+  function drawPath(p, ms, tk) {
+    if (!p) return Promise.resolve();
+    var len = p.getTotalLength();
+    p.style.opacity = '1';
+    p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+    return frames(ms, tk, function (t) { p.style.strokeDashoffset = len * (1 - ease(t)); });
+  }
+  function travel(path, label, cls, ms, tk) {
+    if (!path || !svg.getBoundingClientRect().width) return sleep(ms / 3, tk);
+    var el = document.createElement('span');
+    el.className = 'pk ' + (cls || ''); el.textContent = label;
+    pkLayer.appendChild(el);
+    var len = path.getTotalLength(), h = el.offsetHeight / 2;
+    return frames(ms, tk, function (t) {
+      var e = ease(t), pt = path.getPointAtLength(len * e);
+      el.style.transform = 'translate(' + (pt.x - el.offsetWidth / 2) + 'px,' + (pt.y - h) + 'px) scale(' + (1 - 0.18 * e) + ')';
+      el.style.opacity = t < .1 ? t * 10 : (t > .88 ? (1 - t) * 8 : 1);
+    }).then(function () { el.remove(); }, function (e) { el.remove(); throw e; });
+  }
+  function count(to, ms, tk, unit) {
+    $('rows-l').textContent = unit;
+    return frames(ms, tk, function (t) { $('rows').textContent = Math.round(to * ease(t)).toLocaleString(); });
+  }
+
+  var cur = 'sheet', auto = true, started = false, setupReady = false;
+  function resetCore() {
+    $('rows').textContent = '0';
+    for (var i = 0; i < 3; i++) { $('stg' + i).classList.remove('on'); $('stg' + i + 's').innerHTML = '&nbsp;'; }
+    $('plan-line').classList.remove('on'); $('plan-line').innerHTML = '&nbsp;';
+    grid.querySelectorAll('.dst').forEach(function (d) { d.classList.remove('ok'); });
+    svg.querySelectorAll('.act').forEach(function (p) { p.style.opacity = '0'; });
+    pkLayer.innerHTML = '';
+  }
+  function select(k, fromUser) {
+    cur = k;
+    var s = SRC[k];
+    grid.querySelectorAll('.src').forEach(function (b) { var on = b.getAttribute('data-src') === k; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    grid.querySelectorAll('.dst').forEach(function (d) {
+      var key = d.getAttribute('data-dst');
+      d.classList.toggle('lit', s.outs.indexOf(key) > -1);
+      if (key === 'system') d.querySelector('[data-lbl]').textContent = s.sys;
+    });
+    $('f-way').textContent = s.way; $('f-reads').textContent = s.reads; $('f-back').textContent = s.back;
+    if (fromUser || !setupReady) { mode = s.mode; method = s.code; setupReady = true; renderSetup(); }
+  }
+  function finalState() {
+    var s = SRC[cur];
+    $('rows').textContent = s.rows.toLocaleString(); $('rows-l').textContent = s.unit;
+    for (var i = 0; i < 3; i++) { $('stg' + i).classList.add('on'); $('stg' + i + 's').textContent = s.stages[i]; }
+    $('plan-line').textContent = s.plan; $('plan-line').classList.add('on');
+    s.outs.forEach(function (o) { grid.querySelector('[data-dst="' + o + '"]').classList.add('ok'); });
+  }
+  async function play(k, fromUser) {
+    var tk = ++token, s = SRC[k];
+    select(k, fromUser); resetCore();
+    if (reduce) { finalState(); return; }
+    try {
+      await sleep(250, tk);
+      await Promise.all([drawPath(inPaths[k], 700, tk)].concat(s.packets.map(function (name, i) {
+        return sleep(i * 240, tk).then(function () { return travel(inPaths[k], name, '', 900, tk); });
+      })));
+      await count(s.rows, 700, tk, s.unit);
+      for (var i = 0; i < 3; i++) {
+        $('stg' + i).classList.add('on'); $('stg' + i + 's').textContent = s.stages[i];
+        await sleep(520, tk);
+      }
+      $('plan-line').textContent = s.plan; $('plan-line').classList.add('on');
+      await Promise.all(s.outs.map(function (o, i) {
+        return sleep(i * 200, tk).then(function () {
+          return Promise.all([drawPath(outPaths[o], 700, tk), travel(outPaths[o], 'plan', 'plan', 900, tk)]);
+        }).then(function () { grid.querySelector('[data-dst="' + o + '"]').classList.add('ok'); });
+      }));
+      await sleep(2400, tk);
+      if (auto) play(ORDER[(ORDER.indexOf(k) + 1) % ORDER.length]);
+    } catch (e) { if (e !== CANCEL) throw e; }
+  }
+
+  /* ---------- how to set it up ---------- */
+  var mode = 'no', method = 'upload';
+  function renderSetup() {
+    $('m-no').classList.toggle('on', mode === 'no'); $('m-yes').classList.toggle('on', mode === 'yes');
+    $('m-no').setAttribute('aria-pressed', mode === 'no'); $('m-yes').setAttribute('aria-pressed', mode === 'yes');
+    $('panel-no').hidden = mode !== 'no'; $('panel-yes').hidden = mode !== 'yes';
+    var kind = cur === 'sheet' ? 'sheet' : (method === 'rest' ? 'system' : 'dev');
+    $('panel-no').innerHTML = STEPS[kind].map(function (t, i) { return '<div class="st"><span class="num">' + (i + 1) + '</span><span>' + t + '</span></div>'; }).join('');
+    var C = CODE[method];
+    $('mtabs').innerHTML = Object.keys(CODE).map(function (k) {
+      return '<button class="mtab' + (k === method ? ' on' : '') + '" type="button" role="tab" aria-selected="' + (k === method) + '" data-method="' + k + '">' + CODE[k].label + '</button>';
+    }).join('');
+    $('m-host').textContent = C.host; $('m-code').textContent = C.code; $('m-note').textContent = C.note;
+  }
+  $('m-no').addEventListener('click', function () { mode = 'no'; renderSetup(); });
+  $('m-yes').addEventListener('click', function () { mode = 'yes'; renderSetup(); });
+  $('mtabs').addEventListener('click', function (e) { var b = e.target.closest('[data-method]'); if (!b) return; method = b.getAttribute('data-method'); renderSetup(); });
+
+  /* ---------- controls ---------- */
+  $('srcs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-src]'); if (!b) return;
+    auto = false; $('ctl').textContent = 'Play'; $('ctl').setAttribute('aria-pressed', 'true');
+    play(b.getAttribute('data-src'), true);
+  });
+  $('ctl').addEventListener('click', function () {
+    auto = !auto;
+    $('ctl').textContent = auto ? 'Pause' : 'Play'; $('ctl').setAttribute('aria-pressed', String(!auto));
+    if (auto) play(cur); else token++;
+  });
+
+  /* ---------- run only while visible ---------- */
+  function start() {
+    if (started) return;
+    started = true; layout(); play('sheet');
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { if (!started) start(); else if (auto) play(cur); }
+        else if (started) { token++; }
+      });
+    }, { threshold: 0.25 }).observe($('cx'));
+  } else { start(); }
+  var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { layout(); }, 120); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (started) layout(); });
+  select('sheet'); finalState();
+})();
+
+  /* ---------- case studies ---------- */
+  var CASES = [
+    { id: 'nysc', module: 'Research deployment', title: 'NYSC health graduate deployment', blurb: '500 graduates placed across 750 primary health facilities.',
+      prompt: 'Deploy 500 NYSC healthcare graduates to primary health centres across Nigeria. Match each graduate\'s specialization to what the facility needs, prioritise facilities with a serious disease burden, and never overload a facility.',
+      goals: [['Reward', 'Match each graduate\'s specialization to what the facility needs', null], ['Reward', 'Prioritise facilities with a serious staffing gap and disease burden', null], ['Penalty', 'Never staff a facility beyond its personnel capacity', null]],
+      metrics: [['500 → 750', 'graduates to primary health facilities'], ['82%', 'matched to their specialization'], ['0', 'graduates placed into an over-capacity facility']],
+      note: 'Graduate records are generated and facility fields are augmented. This is a recorded research run, not a live solve.',
+      foot: 'Details of the method and the full study are available on request.', link: ['mailto:adeolad@intellign.ai?subject=NYSC%20deployment%20study', 'Request the full study'] },
+    { id: 'bed', module: 'Bed management', title: 'Bed assignment', blurb: '60 patients to 20 beds, by condition, ward type and severity.',
+      prompt: 'I need to assign admitted patients to hospital beds. Match each patient\'s condition to the right ward type, and prioritise our most severe patients for placement first.',
+      goals: [['Reward', 'Match patient condition to ward type', 55], ['Reward', 'Prioritise higher-severity patients for placement', 25], ['Penalty', 'Respect bed availability per ward', 20]],
+      metrics: [['60 / 60', 'patients placed'], ['95 / 100', 'solution quality'], ['8.1 s', 'to solve'], ['Genetic algorithm', 'solver']],
+      rows: [['Victor Eze', 'Ward C - General', 'General Medical'], ['Aisha Abubakar', 'Orthopaedic Unit', 'Orthopaedic'], ['Fatima Bello', 'ICU Unit 2', 'Intensive Care Unit'], ['Chukwudi Okoro', 'Surgical Recovery', 'Surgical']],
+      foot: 'Synthetic data, generated for a design-partner pitch and solved by Intellign\'s production pipeline. Times are from the recorded run.', link: ['https://intellign.ai/demo/helium-health', 'Open the interactive demo'] },
+    { id: 'ward', module: 'Ward staffing · runs live', title: 'Ward personnel', blurb: '40 staff to 10 wards, by specialization and ward acuity.',
+      prompt: 'Assign our ward personnel, nurses, doctors and support staff, across hospital wards. Match specialization to what each ward needs, and prioritise our higher-acuity wards.',
+      goals: [['Reward', 'Match personnel specialization to ward requirement', 45], ['Reward', 'Prioritise higher-acuity wards', 30], ['Penalty', 'Respect ward staffing capacity', 25]],
+      metrics: [['40 / 40', 'staff placed'], ['90 / 100', 'solution quality'], ['3.9 s', 'to solve'], ['Live', 'runs in the demo']],
+      rows: [['Aisha Bello, Nurse', 'General Med Ward A', 'General Medicine'], ['Chidi Okoro, Doctor', 'Surgical Ward 1', 'General Surgery'], ['Ngozi Eze, Doctor', 'Maternity Ward', 'Obstetrics & Gynaecology'], ['Fatima Musa, Support', 'Physiotherapy Unit', 'Physiotherapy']],
+      foot: 'Synthetic data. This scenario is generated and solved live in the demo; the figures shown are from a recorded run.', link: ['https://intellign.ai/demo/helium-health', 'Run it live'] },
+    { id: 'appt', module: 'Appointment scheduling', title: 'Doctor scheduling', blurb: '30 doctors across 8 clinic departments for a week of demand.',
+      prompt: 'Schedule our doctors across clinic departments for the week so we cover patient appointment demand. Match each doctor\'s specialty to the department and cover as many appointment slots as possible.',
+      goals: [['Reward', 'Match doctor specialty to clinic department', 55], ['Reward', 'Cover patient appointment slot demand', 45]],
+      metrics: [['30 → 8', 'doctors across departments'], ['100%', 'of appointment slots covered'], ['71 / 100', 'schedule quality'], ['45.7 s', 'to solve']],
+      note: 'This solver scores the whole schedule rather than each doctor, so there is no per-doctor fit to show.',
+      foot: 'Synthetic data, generated for a design-partner pitch and solved by Intellign\'s production pipeline.', link: ['https://intellign.ai/demo/helium-health', 'Open the interactive demo'] }
+  ];
+  var caseIdx = 0;
+  function renderCases() {
+    $('case-tabs').innerHTML = CASES.map(function (c, i) {
+      return '<button type="button" class="ctab' + (i === caseIdx ? ' on' : '') + '" role="tab" aria-selected="' + (i === caseIdx) + '" data-case="' + i + '"><span class="m">' + esc(c.module) + '</span><b>' + esc(c.title) + '</b><span class="s">' + esc(c.blurb) + '</span></button>';
+    }).join('');
+    var c = CASES[caseIdx], h = '';
+    h += '<div><div class="cl">What was asked</div><p class="cq">“' + esc(c.prompt) + '”</p></div>';
+    h += '<div><div class="cl">What Intellign understood</div>' + c.goals.map(function (g) {
+      return '<div class="goal"><span class="kchip ' + (g[0] === 'Penalty' ? 'st-block' : 'st-ok') + '">' + g[0] + '</span><span class="t">' + esc(g[1]) + '</span>' + (g[2] != null ? '<span class="w">weight ' + g[2] + '</span>' : '') + '</div>';
+    }).join('') + '</div>';
+    h += '<div class="cmetrics">' + c.metrics.map(function (m) { return '<div class="cm"><b' + (m[0].length > 9 ? ' style="font-size:24px;line-height:1.15;"' : '') + '>' + esc(m[0]) + '</b><span>' + esc(m[1]) + '</span></div>'; }).join('') + '</div>';
+    if (c.compare) h += '<div><div class="cl">How the engine improved</div><div style="overflow-x:auto;border:1px solid #E5E3DC;border-radius:6px;"><table style="width:100%;border-collapse:collapse;font-size:14px;"><thead><tr style="background:#FAFAF8;text-align:left;">' + c.compareHead.map(function (x) { return '<th class="mono" style="padding:10px 14px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6F6E66;font-weight:500;">' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>' + c.compare.map(function (r) { return '<tr style="border-top:1px solid #E5E3DC;"><td style="padding:10px 14px;font-weight:600;color:#2E2D2A;">' + esc(r[0]) + '</td><td style="padding:10px 14px;color:#4A4945;">' + esc(r[1]) + '</td><td style="padding:10px 14px;color:#3E0E1A;font-weight:600;">' + esc(r[2]) + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
+    if (c.rows) h += '<div><div class="cl">A few of the decisions</div>' + c.rows.map(function (r) {
+      return '<div class="crow"><strong>' + esc(r[0]) + '</strong><span class="arr">→</span><span>' + esc(r[1]) + '</span><span class="kchip st-ok">' + esc(r[2]) + '</span></div>';
+    }).join('') + '</div>';
+    if (c.limits) h += '<div><div class="cl">Limits we state openly</div><ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.5;color:#4A4945;">' + c.limits.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>';
+    if (c.note) h += '<p style="margin:0;font-size:14px;line-height:1.5;color:#4A4945;">' + esc(c.note) + '</p>';
+    h += '<div class="cfoot"><p>' + esc(c.foot) + '</p><a class="btn btn-p" href="' + c.link[0] + '">' + esc(c.link[1]) + '</a></div>';
+    $('case-panel').innerHTML = h;
+  }
+  $('case-tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-case]'); if (!b) return; caseIdx = +b.getAttribute('data-case'); renderCases(); });
+  renderCases();
+
+  /* ---------- pricing ---------- */
+  var tick = function (c) { return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + c + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>'; };
+  var tiers = [
+    { name: 'Free', price: '$0', per: '/ month', items: ['10 datasets a month', 'Capped prompts and dataset size', 'Community support'], cta: 'Start free', href: 'https://intellign.ai/auth/signup', btn: 'btn-out' },
+    { name: 'Pro', price: '$15', per: '/ month', items: ['Scheduling, routing, assignment', 'Unlimited datasets, faster runs', 'Priority email support'], cta: 'Choose Pro', href: 'https://intellign.ai/auth/signup', btn: 'btn-bone', feat: true },
+    { name: 'Enterprise', price: 'Custom', per: '', items: ['Unlimited usage', 'Connected to your systems', 'Dedicated support and SLAs'], cta: 'Talk to us', href: 'mailto:adeolad@intellign.ai', btn: 'btn-p' },
+    { name: 'Developer API', price: '$0.10', per: '/ solve', items: ['REST, Python SDK, MCP', 'Function calling for AI agents', 'Long-term contracts available'], cta: 'Read the docs', href: 'https://intellign.ai/docs', btn: 'btn-out' }
+  ];
+  $('pricing-grid').innerHTML = tiers.map(function (x) {
+    var f = !!x.feat, ink = f ? '#F4EFE7' : '#3E0E1A', accent = f ? '#D49AAA' : '#5C1427', sub = f ? '#D49AAA' : '#6F6E66', body = f ? '#F4EFE7' : '#2E2D2A';
+    return '<div class="price' + (f ? ' feat' : '') + '">' +
+      '<span class="mono" style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:' + accent + ';">' + esc(x.name) + '</span>' +
+      '<div style="display:flex;align-items:baseline;gap:6px;"><span class="serif" style="font-size:56px;line-height:1;color:' + ink + ';">' + esc(x.price) + '</span><span style="font-size:14px;color:' + sub + ';">' + esc(x.per) + '</span></div>' +
+      '<ul class="plist" style="color:' + body + ';">' + x.items.map(function (i) { return '<li>' + tick(accent) + esc(i) + '</li>'; }).join('') + '</ul>' +
+      '<a class="btn ' + x.btn + '" href="' + x.href + '" style="margin-top:auto;">' + esc(x.cta) + '</a></div>';
+  }).join('');
+
+  /* ---------- faq ---------- */
+  var FQ = [
+    ['Do I need my own data to try it?', 'No. Intellign can generate a sample dataset in under a minute so you can see a full plan. Generated rows are always labelled as samples.'],
+    ['How is this different from asking a chatbot?', 'A chatbot writes an answer that sounds right. Intellign uses AI to understand your words, then hands the problem to a real solver. Every must-follow rule is checked again after solving, and you see which solver ran and how well the plan scored.'],
+    ['Is the plan really the best one?', 'It depends on the solver. When an exact solver runs, Intellign reports how far the plan is from the best possible one, and tells you when it is proven optimal. For large or complex problems it uses search methods that find a very strong plan quickly, and reports a quality score instead of a proof. It always tells you which one ran.'],
+    ['How long does it take?', 'Small problems take seconds: assigning 40 staff to 10 wards took about four in our demo. Larger or schedule-heavy problems take longer, from tens of seconds up.'],
+    ['Can I trust the plan?', 'Every must-follow rule is checked again after solving, and any violation is flagged. When data is missing, Intellign asks you instead of filling the gap. The plan, with the reasons behind it, can be exported.'],
+    ['What kinds of problems can it plan?', 'Assignment (people to places), scheduling (rosters and timetables) and routing, plus combinations such as scheduling and routing together.'],
+    ['Can the plan go back to Google Sheets or my calendar?', 'Yes. You can send an approved plan to a new Google Sheet, push it to Google Calendar, or download it as CSV, Excel, PDF or .ics. Systems such as HR or hospital platforms connect through the API.'],
+    ['Can my AI assistant use Intellign?', 'Yes. Intellign has an MCP server, so any MCP-capable assistant can use it as a tool. Use the hosted server at mcp.intellign.ai with your API key, or run it yourself with pip install "intellign[mcp]".']
+  ];
+  var openFaq = 0;
+  function renderFaq() {
+    $('faq-list').innerHTML = FQ.map(function (f, i) {
+      var o = i === openFaq;
+      return '<div style="border-bottom:1px solid #CDCBC2;"><button class="faq" data-faq="' + i + '" aria-expanded="' + o + '"><span>' + esc(f[0]) + '</span><span class="mono" style="font-size:20px;color:#5C1427;flex:none;">' + (o ? '−' : '+') + '</span></button>' +
+        (o ? '<p style="margin:0 0 22px;font-size:16px;line-height:1.65;color:#4A4945;max-width:38em;">' + esc(f[1]) + '</p>' : '') + '</div>';
+    }).join('');
+  }
+  $('faq-list').addEventListener('click', function (e) { var b = e.target.closest('[data-faq]'); if (!b) return; var i = +b.getAttribute('data-faq'); openFaq = openFaq === i ? -1 : i; renderFaq(); });
+  renderFaq();
+})();
+</script>
+</body>
+</html>

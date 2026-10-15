@@ -1,0 +1,107 @@
+1
+00:00:00,300 --> 00:00:01,490
+This is Intellign.
+
+2
+00:00:01,490 --> 00:00:09,220
+Describe the problem in plain English, and Intellign works out the best schedule, route, or assignment for your team.
+
+3
+00:00:09,220 --> 00:00:14,310
+Then it shows you exactly why, so the result is one you can trust and defend.
+
+4
+00:00:14,320 --> 00:00:18,950
+It works in four steps: describe, ingest, solve, and explain.
+
+5
+00:00:20,020 --> 00:00:21,580
+To begin, choose Launch app.
+
+6
+00:00:21,580 --> 00:00:24,140
+You will be asked to sign in first.
+
+7
+00:00:27,370 --> 00:00:29,660
+Sign in with your email and password.
+
+8
+00:00:29,660 --> 00:00:35,890
+If you are new, you can create an account from the same screen, and verify your email once.
+
+9
+00:00:40,040 --> 00:00:41,410
+This is the workspace.
+
+10
+00:00:41,420 --> 00:00:50,250
+Your conversations are on the left, the chat is in the centre, and the canvas on the right shows goals, data, progress, and results.
+
+11
+00:00:51,650 --> 00:00:54,480
+To see a complete run, open the live demo.
+
+12
+00:00:54,480 --> 00:01:00,010
+This one deploys healthcare graduates to primary health facilities across Nigeria.
+
+13
+00:01:00,010 --> 00:01:04,660
+It is a precomputed run, shown so you can follow every step.
+
+14
+00:01:05,700 --> 00:01:09,040
+You start by describing the goal in plain language.
+
+15
+00:01:09,040 --> 00:01:18,880
+Intellign turns it into goals you can edit: match specialization to facility needs, prioritise critical disease burden, and respect facility capacity.
+
+16
+00:01:18,880 --> 00:01:23,150
+The Datasets tab shows the data it checked them against.
+
+17
+00:01:26,300 --> 00:01:27,910
+Choose Run optimization.
+
+18
+00:01:27,910 --> 00:01:37,110
+Intellign picks the right solver for the problem and works through the stages: validating data, compiling goals, solving, and converging.
+
+19
+00:01:37,110 --> 00:01:39,520
+This usually takes seconds.
+
+20
+00:01:40,460 --> 00:01:44,030
+When it converges, the results show what was assigned.
+
+21
+00:01:44,030 --> 00:01:46,810
+Open the assignments to see every pairing.
+
+22
+00:01:46,800 --> 00:01:53,280
+Each one comes with a reason you can read: here, the closest ICU-trained nurse, in the same state.
+
+23
+00:01:53,280 --> 00:01:56,990
+You can approve, modify, or reject any pairing.
+
+24
+00:01:57,730 --> 00:01:59,270
+That is the whole path.
+
+25
+00:01:59,270 --> 00:02:03,940
+Describe the problem, check the goals, run it, and review the reasons.
+
+26
+00:02:03,940 --> 00:02:05,210
+Start at intellign.
+
+27
+00:02:05,210 --> 00:02:06,010
+ai.

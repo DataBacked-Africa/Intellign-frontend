@@ -1,0 +1,1 @@
+A two-minute walkthrough of Intellign: sign in, describe the problem in plain English, run it, and read the reason behind every assignment. Shown on the live demo's NYSC healthcare deployment. intellign.ai

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intellign: combined stack prototype (sheets + rail)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* tokens copied from docs/intellign-landing.html */
+html{scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:#F4EFE7;font-family:"Inter Tight",system-ui,sans-serif;color:#14110F;-webkit-font-smoothing:antialiased}
+::selection{background:#5C1427;color:#F4EFE7}
+a{color:#5C1427}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,5vw,72px)}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.serif{font-family:"Instrument Serif",Georgia,serif}
+.eyebrow-m{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:#5C1427}
+.h-sec{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(36px,4.8vw,64px);line-height:1;letter-spacing:-.025em;color:#3E0E1A;margin:0;text-wrap:balance}
+.lede{margin:0;font-size:clamp(16px,1.6vw,19px);line-height:1.6;color:#4A4945}
+.btn{display:inline-flex;align-items:center;justify-content:center;font-family:"Inter Tight",system-ui,sans-serif;font-weight:600;font-size:15px;line-height:1;padding:14px 20px;min-height:46px;border-radius:2px;text-decoration:none;border:1px solid transparent;transition:background-color 140ms cubic-bezier(.2,0,0,1),color 140ms;cursor:pointer;white-space:nowrap}
+.btn-bone{background:#F4EFE7;color:#3E0E1A}.btn-bone:hover{background:#FFFFFF;color:#3E0E1A}
+.btn-line{border-color:#6E3442;color:#F4EFE7;background:transparent}.btn-line:hover{background:#4A1120;color:#F4EFE7}
+.wm{font-family:"Instrument Serif",Georgia,serif;font-size:30px;letter-spacing:-.02em;line-height:1;color:#3E0E1A;display:inline-flex;align-items:baseline;text-decoration:none}
+.wm i{display:inline-block;width:.15em;height:.15em;margin-left:.07em;background:#5C1427;border-radius:1px}
+.chip{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;line-height:1;padding:5px 7px;border:1px solid #D49AAA;border-radius:2px;white-space:nowrap;color:#D49AAA}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* ---------- story ---------- */
+.story-sec{background:#3E0E1A;color:#F4EFE7;padding:clamp(48px,6vw,88px) 0 clamp(48px,6vw,96px)}
+.story{display:flex;flex-wrap:wrap;gap:0 56px;align-items:flex-start;margin-top:24px}
+.stage{flex:1 1 460px;min-width:0;position:sticky;top:24px;z-index:2;padding:12px 0}
+.story-steps{flex:1 1 380px;min-width:0}
+
+/* paper-sheet deck (direction A) */
+.deck{--h:176px;--step:56px;--open:124px;position:relative;width:min(448px,100%);height:calc(var(--h) + var(--step) * 4 + var(--open) + 8px)}
+.sheet{--i:0;position:absolute;left:calc(var(--i) * 18px);top:calc(var(--i) * var(--step));width:calc(100% - 72px);height:var(--h);border:1px solid #D49AAA;border-radius:2px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;color:#F4EFE7;text-decoration:none;box-shadow:0 10px 24px -12px rgba(0,0,0,.55);transition:top 520ms cubic-bezier(.2,0,0,1),background-color 220ms,border-color 220ms,opacity 300ms}
+.sheet.after{top:calc(var(--i) * var(--step) + var(--open))}
+.sheet:focus-visible{outline:2px solid #F4EFE7;outline-offset:3px}
+.s0{--i:0;background:#4A1120;z-index:1}.s1{--i:1;background:#521425;z-index:2}.s2{--i:2;background:#5C1427;z-index:3}.s3{--i:3;background:#67172D;z-index:4}.s4{--i:4;background:#731931;z-index:5}
+.sheet.done{opacity:.8}
+.sheet.on{border-color:#F4EFE7}
+.sh-top{display:flex;justify-content:space-between;align-items:center}
+.sh-num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.sh-body{display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.45;color:#EBD0D7;opacity:0;transform:translateY(6px);transition:opacity 320ms cubic-bezier(.2,0,0,1) 120ms,transform 320ms cubic-bezier(.2,0,0,1) 120ms}
+.sheet.on .sh-body{opacity:1;transform:none}
+.sh-q{font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-size:20px;line-height:1.2;color:#F4EFE7}
+.sh-stat{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#F4EFE7}
+.sh-row{display:flex;gap:16px;flex-wrap:wrap}
+.cell{width:12px;height:12px;border:1px solid #D49AAA}
+.cell.on{background:#D49AAA}
+.grid7{display:grid;grid-template-columns:repeat(14,12px);gap:4px}
+/* plan sheet turns bone when it is the active layer */
+.s4.on{background:#F4EFE7;color:#3E0E1A}
+.s4.on .sh-body{color:#4A4945}
+.s4.on .chip{border-color:#5C1427;color:#5C1427}
+.s4.on .cell{border-color:#5C1427}
+.s4.on .cell.on{background:#5C1427}
+
+/* numbered rail (direction C) */
+.rail{position:relative}
+.rail::before{content:"";position:absolute;left:26px;top:48px;bottom:48px;width:1px;background:#6E3442}
+.step{position:relative;display:grid;grid-template-columns:54px 1fr;gap:0 20px;align-items:start;min-height:clamp(340px,52vh,500px);padding:28px 0;opacity:.35;transition:opacity 400ms cubic-bezier(.2,0,0,1)}
+.step.on{opacity:1}
+.tile{width:54px;height:54px;border:1px solid #D49AAA;border-radius:2px;background:#3E0E1A;display:flex;align-items:center;justify-content:center;font-family:"Instrument Serif",Georgia,serif;font-size:30px;line-height:1;color:#F4EFE7;position:relative;z-index:1;transition:background-color 220ms,color 220ms,border-color 220ms}
+.step.on .tile{background:#F4EFE7;color:#3E0E1A;border-color:#F4EFE7}
+.step .kicker{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;color:#D49AAA;display:block;margin:4px 0 14px}
+.step h3{margin:0 0 14px;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(34px,3.6vw,48px);line-height:1.05;color:#F4EFE7}
+.step p{margin:0 0 18px;font-size:17px;line-height:1.6;color:#EBD0D7;max-width:26em}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px;padding:8px 12px;border:1px solid #6E3442;border-radius:2px;color:#F4EFE7;background:#2A0911}
+.why{padding:14px 16px;background:#2A0911;border:1px solid #6E3442;border-radius:2px;max-width:26em;display:flex;flex-direction:column;gap:4px}
+
+@media (max-width:860px){
+  .stage{top:0;background:#3E0E1A;padding:10px 0 14px;border-bottom:1px solid #6E3442}
+  .deck{--h:132px;--step:42px;--open:90px;margin-inline:auto}
+  .sh-body{font-size:12px}
+  .grid7{grid-template-columns:repeat(14,10px);gap:3px}
+  .cell{width:10px;height:10px}
+  .step{min-height:360px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header id="top" style="background:#F4EFE7;border-bottom:1px solid #E5E3DC;">
+<div class="wrap" style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px;">
+<a class="wm" href="#top">Intellign<i aria-hidden="true"></i></a>
+<span class="mono" style="font-size:12px;color:#6F6E66;">prototype · scroll the dark section</span>
+</div>
+</header>
+
+<section style="padding:clamp(48px,7vw,96px) 0;">
+<div class="wrap" style="display:flex;flex-direction:column;gap:18px;">
+<div class="eyebrow-m">Above the story section</div>
+<h2 class="h-sec" style="max-width:14em;">Hero and the sentence demo live up here.</h2>
+<p class="lede" style="max-width:34em;">Scroll down. The dark section below is the combined stack: paper sheets on the left, a numbered rail on the right. The sheet for the active step opens and the others settle behind it.</p>
+</div>
+</section>
+
+<section id="how" class="story-sec">
+<div class="wrap">
+<div class="eyebrow-m" style="color:#D49AAA;">How it works</div>
+<h2 class="h-sec" style="color:#F4EFE7;max-width:14em;margin-top:16px;">Five layers between your data and your plan.</h2>
+
+<div class="story">
+<div class="stage">
+<div class="deck" id="deck" aria-label="The five layers">
+<a class="sheet s0 on" data-i="0" href="#step-connect"><div class="sh-top"><span class="sh-num">01 · Connect</span></div><div class="sh-body"><div class="chips"><span class="chip">staff.csv</span><span class="chip">leave.xlsx</span></div><span>24 rows · 6 columns, read as they are</span></div></a>
+<a class="sheet s1 after" data-i="1" href="#step-check"><div class="sh-top"><span class="sh-num">02 · Check</span></div><div class="sh-body"><div class="chips"><span class="chip">24 nurses</span><span class="chip">3 gaps → asked</span></div><span>Skill level is missing for 3 nurses. Intellign asks you instead of guessing.</span></div></a>
+<a class="sheet s2 after" data-i="2" href="#step-understand"><div class="sh-top"><span class="sh-num">03 · Understand</span></div><div class="sh-body"><span class="sh-q">“nobody works 4 nights in a row”</span><div class="chips"><span class="chip">nights in a row ≤ 3</span><span class="chip">confirmed</span></div></div></a>
+<a class="sheet s3 after" data-i="3" href="#step-solve"><div class="sh-top"><span class="sh-num">04 · Solve</span></div><div class="sh-body"><div class="sh-row"><span class="sh-stat">gap to best 0.00%</span><span class="sh-stat">rules broken 0</span><span class="sh-stat">4.2 s</span></div><span>Every rule is checked again before you see the result.</span></div></a>
+<a class="sheet s4 after" data-i="4" href="#step-plan"><div class="sh-top"><span class="sh-num">05 · Your plan</span></div><div class="sh-body"><div class="grid7" id="grid"></div><div class="chips"><span class="chip">84 shifts</span><span class="chip">84 reasons</span></div></div></a>
+</div>
+</div>
+
+<div class="story-steps">
+<div class="rail" id="rail">
+<div id="step-connect" class="step on" data-step="0"><div class="tile">1</div><div><span class="kicker">01 · Connect</span><h3>Bring your data as it is.</h3><p>Upload a spreadsheet or connect the system you already use. No setup project.</p><div class="pillrow"><span class="pill">staff.csv</span><span class="pill">leave.xlsx</span><span class="pill">your HR system</span></div></div></div>
+<div id="step-check" class="step" data-step="1"><div class="tile">2</div><div><span class="kicker">02 · Check</span><h3>We find what&#39;s missing in your data before it costs you.</h3><p>A blank skill level today is a bad shift next week. Intellign flags the gap and asks you. It never fills it with made-up rows.</p><div class="pillrow"><span class="pill">skill level missing for 3 nurses</span><span class="pill" style="background:#F4EFE7;color:#3E0E1A;border-color:#F4EFE7;">asked you</span></div></div></div>
+<div id="step-understand" class="step" data-step="2"><div class="tile">3</div><div><span class="kicker">03 · Understand</span><h3>Say what you need in plain English.</h3><p>Each sentence becomes a rule the computer can follow. You see the rules before anything runs.</p><div class="pillrow"><span class="pill serif" style="font-size:18px;font-style:italic;">“nobody works 4 nights in a row”</span><span class="pill">nights in a row ≤ 3</span></div></div></div>
+<div id="step-solve" class="step" data-step="3"><div class="tile">4</div><div><span class="kicker">04 · Solve</span><h3>The math finds the best plan.</h3><p>Proven solvers, not guesses. Every rule is checked again before you see the result.</p><div class="pillrow"><span class="pill">gap to best: 0.00%</span><span class="pill">rules broken: 0</span><span class="pill">time: 4.2 s</span></div></div></div>
+<div id="step-plan" class="step" data-step="4"><div class="tile">5</div><div><span class="kicker">05 · Your plan</span><h3>Get a plan you can explain.</h3><p>Every assignment comes with a reason. Change one thing and the rest re-plans around it.</p><div class="why"><span class="mono" style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#D49AAA;">Why is Amaka off on Saturday?</span><span style="font-size:15px;line-height:1.5;color:#F4EFE7;">She works nights Wednesday to Friday. A fourth night would break your rule.</span></div></div></div>
+<div id="step-all" class="step" data-step="5"><div class="tile">→</div><div><span class="kicker">That is the whole stack</span><h3>One sentence in. One proven plan out.</h3><p>Usually in seconds, and in three messages or fewer.</p><div style="display:flex;flex-wrap:wrap;gap:12px;"><a class="btn btn-bone" href="#top">Try it free</a><a class="btn btn-line" href="#top">Try a sentence</a></div></div></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section style="padding:clamp(48px,7vw,96px) 0;">
+<div class="wrap"><p class="lede">Below the story section: the Connect / developer track, case study, pricing and FAQ continue as in the landing draft.</p></div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+  var pat = '10110100101101' + '01101001011010' + '11010010110101';
+  document.getElementById('grid').innerHTML = pat.split('').map(function (c) { return '<span class="cell' + (c === '1' ? ' on' : '') + '"></span>'; }).join('');
+
+  var sheets = document.querySelectorAll('.sheet');
+  var steps = document.querySelectorAll('.step');
+  var current = -1;
+  function setStep(k) {
+    if (k === current) return;
+    current = k;
+    var d = Math.min(k, 4);                       // the closing step keeps the plan sheet open
+    sheets.forEach(function (s) {
+      var i = +s.getAttribute('data-i');
+      s.classList.toggle('on', i === d);
+      s.classList.toggle('done', i < d);
+      s.classList.toggle('after', i > d);
+    });
+    steps.forEach(function (s, i) { s.classList.toggle('on', i === k); });
+  }
+  setStep(0);
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) setStep(+e.target.getAttribute('data-step')); });
+    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+    steps.forEach(function (s) { io.observe(s); });
+  } else {
+    steps.forEach(function (s) { s.classList.add('on'); });
+  }
+})();
+</script>
+</body>
+</html>

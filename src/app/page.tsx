@@ -1,19 +1,15 @@
-"use client";
-
-import MarketingNav from "@/components/Marketing/MarketingNav";
-import Hero from "@/components/Marketing/Hero";
-import CapabilityStrip from "@/components/Marketing/CapabilityStrip";
-import InterfaceShowcase from "@/components/Marketing/InterfaceShowcase";
-import HowItWorks from "@/components/Marketing/HowItWorks";
-import ProofStrip from "@/components/Marketing/ProofStrip";
-import UseCases from "@/components/Marketing/UseCases";
-import CodeSample from "@/components/Marketing/CodeSample";
-import Pricing from "@/components/Marketing/Pricing";
-import LaunchCta from "@/components/Marketing/LaunchCta";
-import Faq from "@/components/Marketing/Faq";
+import "@/components/Marketing/landing/landing.css";
+import LdNav from "@/components/Marketing/landing/LdNav";
+import LdHero from "@/components/Marketing/landing/LdHero";
+import LdStory from "@/components/Marketing/landing/LdStory";
+import LdConnect from "@/components/Marketing/landing/LdConnect";
+import LdCases from "@/components/Marketing/landing/LdCases";
+import LdProof from "@/components/Marketing/landing/LdProof";
+import LdPricing from "@/components/Marketing/landing/LdPricing";
+import LdFaq from "@/components/Marketing/landing/LdFaq";
+import LdClose from "@/components/Marketing/landing/LdClose";
+import LdFooter from "@/components/Marketing/landing/LdFooter";
 import { FAQ_ITEMS } from "@/components/Marketing/faq-data";
-import MarketingFooter from "@/components/Marketing/MarketingFooter";
-import { motion } from "framer-motion";
 
 const SITE_URL = "https://www.intellign.ai";
 
@@ -58,56 +54,26 @@ const JSON_LD = {
   ],
 };
 
+// Server component: the interactive sections are client components of their
+// own, so the static copy and the JSON-LD above ship as plain HTML.
 export default function MarketingPage() {
   return (
-    <div className="mk-page px-[5%]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
-      />
-      <MarketingNav />
+    <div className="ld">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
+      <LdNav home />
       <main>
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }}>
-          <Hero />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, delay: 0.1 }}>
-          <CapabilityStrip />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0, scale: 0.98 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8, ease: "easeOut" }}>
-          <InterfaceShowcase />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-          <ProofStrip />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
-          <HowItWorks />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
-          <UseCases />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0, scale: 0.98 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7 }}>
-          <CodeSample />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
-          <Pricing />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6 }}>
-          <Faq />
-        </motion.div>
-        
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.8 }}>
-          <LaunchCta />
-        </motion.div>
+        <LdHero />
+        <LdStory />
+        <LdConnect />
+        <section style={{ padding: "clamp(64px,8vw,112px) 0" }}>
+          <div className="ld-wrap"><LdCases /></div>
+        </section>
+        <LdProof />
+        <LdPricing />
+        <LdFaq />
+        <LdClose />
       </main>
-      <MarketingFooter />
+      <LdFooter home />
     </div>
   );
 }

@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intellign: Connect section prototype (motion)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* tokens copied from docs/intellign-landing.html */
+html{scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:#F4EFE7;font-family:"Inter Tight",system-ui,sans-serif;color:#14110F;-webkit-font-smoothing:antialiased}
+::selection{background:#5C1427;color:#F4EFE7}
+a{color:#5C1427}
+button{font:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,5vw,72px)}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:clamp(24px,5vw,72px);align-items:end}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.serif{font-family:"Instrument Serif",Georgia,serif}
+.eyebrow-m{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:#5C1427}
+.h-sec{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(36px,4.8vw,64px);line-height:1;letter-spacing:-.025em;color:#3E0E1A;margin:0;text-wrap:balance}
+.lede{margin:0;font-size:clamp(16px,1.6vw,19px);line-height:1.6;color:#4A4945;text-wrap:pretty}
+.wm{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.02em;line-height:1;display:inline-flex;align-items:baseline;color:#3E0E1A;text-decoration:none}
+.wm i{display:inline-block;width:.15em;height:.15em;margin-left:.07em;background:#5C1427;border-radius:1px}
+
+/* ---------- connect ---------- */
+.cx-sec{background:#E8E0D2;padding:clamp(64px,8vw,112px) 0}
+.cx{position:relative;background:#FAFAF8;border:1px solid #CDCBC2;border-radius:6px;padding:clamp(16px,2.4vw,28px);display:flex;flex-direction:column;gap:20px}
+.cx-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.cx-label{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6F6E66}
+.ctl{min-height:36px;padding:0 12px;border:1px solid #CDCBC2;border-radius:2px;background:#FFFFFF;color:#3E0E1A;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;cursor:pointer}
+.ctl:hover{background:#F2F1ED}
+.cx-grid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,290px) minmax(0,1fr);gap:0 clamp(56px,9vw,128px);align-items:center}
+.cx-col{display:flex;flex-direction:column;gap:10px;position:relative;z-index:2}
+.cx-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
+.pk-layer{position:absolute;inset:0;z-index:3;pointer-events:none}
+.pk{position:absolute;left:0;top:0;padding:5px 8px;border-radius:2px;background:#FFFFFF;border:1px solid #5C1427;color:#3E0E1A;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;line-height:1;white-space:nowrap;opacity:0;will-change:transform}
+.pk.plan{background:#5C1427;color:#F4EFE7}
+
+.src{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;border:1px solid #CDCBC2;border-radius:2px;background:#FFFFFF;color:#2E2D2A;text-align:left;cursor:pointer;transition:background-color 180ms,border-color 180ms,color 180ms}
+.src:hover{background:#F2F1ED}
+.src.on{background:#5C1427;border-color:#5C1427;color:#F4EFE7}
+.src svg,.dst svg{flex:none}
+.src .t{display:flex;flex-direction:column;gap:3px;min-width:0}
+.src b,.dst b{font-size:15px;font-weight:600;line-height:1.2}
+.src small{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:#6F6E66}
+.src.on small{color:#D49AAA}
+.dst{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;border:1px solid #CDCBC2;border-radius:2px;background:#FFFFFF;color:#2E2D2A;transition:border-color 180ms,background-color 180ms,opacity 180ms;opacity:.55}
+.dst.lit{opacity:1;border-color:#5C1427}
+.dst .t{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.dst small{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:#6F6E66}
+.done{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;line-height:1;padding:5px 8px;border-radius:999px;background:#DCEBE9;color:#155450;opacity:0;transform:scale(.9);transition:opacity 220ms,transform 220ms;white-space:nowrap}
+.dst.ok .done{opacity:1;transform:none}
+
+.core{background:#F4EFE7;border:1px solid #5C1427;border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 14px 28px -20px rgba(62,14,26,.55)}
+.core-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rows{display:flex;align-items:baseline;gap:8px;border-top:1px solid #CDBFB0;padding-top:12px}
+.rows b{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:52px;line-height:.9;color:#3E0E1A;min-width:2ch;font-variant-numeric:tabular-nums}
+.rows span{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#4A4945}
+.stg{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid #CDBFB0;border-radius:2px;background:#FAFAF8;transition:background-color 220ms,border-color 220ms}
+.stg .d{width:16px;height:16px;border-radius:50%;border:1px solid #9E9C92;flex:none;display:flex;align-items:center;justify-content:center;transition:background-color 220ms,border-color 220ms}
+.stg .d svg{opacity:0;transition:opacity 180ms}
+.stg .n{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stg b{font-size:14px;font-weight:600;color:#3E0E1A}
+.stg small{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:#6F6E66;min-height:13px}
+.stg.on{background:#FFFFFF;border-color:#5C1427}
+.stg.on .d{background:#5C1427;border-color:#5C1427}
+.stg.on .d svg{opacity:1}
+.plan-line{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#5C1427;min-height:16px;opacity:0;transition:opacity 260ms}
+.plan-line.on{opacity:1}
+
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:24px;margin-top:8px}
+.fact{display:flex;flex-direction:column;gap:6px}
+.fact .l{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6F6E66}
+.fact .l.hi{color:#5C1427}
+.fact .v{font-size:16px;line-height:1.5;color:#2E2D2A}
+.fact .big{font-family:"Instrument Serif",Georgia,serif;font-size:36px;line-height:1;color:#3E0E1A}
+
+.seg{display:inline-flex;border:1px solid #CDCBC2;border-radius:2px;background:#FFFFFF;overflow:hidden}
+.seg button{min-height:44px;padding:0 16px;border:0;background:transparent;color:#2E2D2A;font-size:14px;font-weight:600;cursor:pointer}
+.seg button.on{background:#3E0E1A;color:#F4EFE7}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:16px}
+.st{display:flex;gap:14px;align-items:flex-start;padding:16px;background:#FFFFFF;border:1px solid #CDCBC2;border-radius:6px}
+.st .num{width:34px;height:34px;flex:none;border:1px solid #5C1427;border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:"Instrument Serif",Georgia,serif;font-size:20px;color:#5C1427}
+.st span{font-size:15px;line-height:1.5;color:#2E2D2A}
+.codebox{background:#14110F;border-radius:6px;overflow:hidden}
+.mtabs{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;border-bottom:1px solid #2E2D2A}
+.mtab{min-height:44px;padding:0 14px;border:0;border-bottom:2px solid transparent;background:transparent;color:#9E9C92;cursor:pointer;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.06em}
+.mtab:hover{color:#F4EFE7}
+.mtab.on{color:#F4EFE7;border-bottom-color:#D49AAA}
+.code{margin:0;padding:20px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;line-height:1.75;color:#F4EFE7;white-space:pre;overflow-x:auto}
+
+@media (max-width:900px){
+  .cx-grid{grid-template-columns:1fr;gap:20px}
+  .cx-svg,.pk-layer{display:none}
+  .cx-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header style="background:#F4EFE7;border-bottom:1px solid #E5E3DC;">
+<div class="wrap" style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px;">
+<a class="wm" href="#" style="font-size:30px;">Intellign<i aria-hidden="true"></i></a>
+<span class="mono" style="font-size:12px;color:#6F6E66;">prototype · Connect section</span>
+</div>
+</header>
+
+<section id="connect" class="cx-sec">
+<div class="wrap" style="display:flex;flex-direction:column;gap:40px;">
+<div class="split">
+<div style="display:flex;flex-direction:column;gap:20px;">
+<div class="eyebrow-m">Connect</div>
+<h2 class="h-sec">Works with what you already run.</h2>
+</div>
+<p class="lede">Drop in a spreadsheet, or connect the system your team already uses. Your plan goes back where the work happens.</p>
+</div>
+
+<div class="cx" id="cx">
+<div class="cx-head">
+<span class="cx-label">Pick where your data lives</span>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+<span class="cx-label" style="text-transform:none;letter-spacing:.04em;">Example flow · counts are illustrative</span>
+<button class="ctl" id="ctl" type="button" aria-pressed="false">Pause</button>
+</div>
+</div>
+
+<div class="cx-grid" id="grid">
+<svg class="cx-svg" id="svg" aria-hidden="true"></svg>
+<div class="pk-layer" id="pk" aria-hidden="true"></div>
+
+<div class="cx-col" id="srcs"></div>
+
+<div class="core" aria-live="polite">
+<div class="core-top">
+<span class="wm" style="font-size:26px;">Intellign<i aria-hidden="true"></i></span>
+<span class="cx-label">Workspace</span>
+</div>
+<div class="rows"><b id="rows">0</b><span id="rows-l">rows in</span></div>
+<div class="stg" id="stg0"><span class="d"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#F4EFE7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="n"><b>Check</b><small id="stg0s">&nbsp;</small></span></div>
+<div class="stg" id="stg1"><span class="d"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#F4EFE7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="n"><b>Understand</b><small id="stg1s">&nbsp;</small></span></div>
+<div class="stg" id="stg2"><span class="d"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#F4EFE7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="n"><b>Solve</b><small id="stg2s">&nbsp;</small></span></div>
+<div class="plan-line" id="plan-line">&nbsp;</div>
+</div>
+
+<div class="cx-col" id="dsts"></div>
+</div>
+
+<div class="facts" aria-live="polite">
+<div class="fact"><span class="l hi">Way in</span><span class="big" id="f-way"></span></div>
+<div class="fact"><span class="l">Goes in</span><span class="v" id="f-reads"></span></div>
+<div class="fact"><span class="l">Comes back</span><span class="v" id="f-back"></span></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:20px;">
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
+<span class="cx-label">How to set it up</span>
+<div class="seg" role="group" aria-label="Setup style"><button type="button" id="m-no">Without code</button><button type="button" id="m-yes">With code</button></div>
+</div>
+<div id="panel-no" class="steps"></div>
+<div id="panel-yes" class="codebox" hidden>
+<div class="mtabs"><div id="mtabs" role="tablist" aria-label="Integration method"></div><span class="mono" style="font-size:11px;color:#9E9C92;padding:8px 0;" id="m-host"></span></div>
+<pre class="code" id="m-code"></pre>
+<div style="padding:12px 20px;border-top:1px solid #2E2D2A;font-size:13px;color:#9E9C92;" id="m-note"></div>
+</div>
+</div>
+</div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ICON = {
+    sheet: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M4 9h16M4 15h16M10 3v18"/>',
+    clinic: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 8v8M8 12h8"/>',
+    hr: '<circle cx="9" cy="9" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8" r="2.2"/><path d="M16 14c2.8 0 5 2.2 5 5"/>',
+    fleet: '<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
+    code: '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',
+    assistant: '<path d="M4 5h16v11H9l-5 4z"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    file: '<path d="M12 4v11m-4-4 4 4 4-4M5 20h14"/>',
+    system: '<rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/><path d="M7 7h.01M7 17h.01"/>'
+  };
+  var ic = function (n) { return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[n] + '</svg>'; };
+
+  /* ---------- data: what each source does, in the truth of the product ---------- */
+  var SRC = {
+    sheet: { label: 'Spreadsheets', icon: 'sheet', method: 'Upload', mode: 'no', code: 'upload', packets: ['staff.csv', 'leave.xlsx'], rows: 24, unit: 'rows · 6 columns', stages: ['3 gaps → asked', '4 rules confirmed', '0.00% gap · 4.2 s'], outs: ['sheets', 'file'], sys: 'Your system', plan: '84 shifts · 84 reasons', way: 'Upload', reads: 'Your CSV or Excel file, as it is.', back: 'Your plan in Google Sheets or as a file, plus a shared view for your team.' },
+    emr: { label: 'Hospital or clinic system', icon: 'clinic', method: 'REST API', mode: 'no', code: 'rest', packets: ['staff', 'wards', 'leave'], rows: 24, unit: 'staff · 3 wards', stages: ['3 gaps → asked', '4 rules confirmed', '0.00% gap · 4.2 s'], outs: ['system', 'file'], sys: 'Your hospital system', plan: '84 shifts · written back', way: 'REST API', reads: 'Staff, skills, wards and leave.', back: 'A roster with reasons, written back to your system.' },
+    hr: { label: 'HR or rostering tool', icon: 'hr', method: 'REST API', mode: 'no', code: 'rest', packets: ['employees', 'availability'], rows: 62, unit: 'employees', stages: ['5 gaps → asked', '7 rules confirmed', '0.00% gap · 6.8 s'], outs: ['system', 'calendar'], sys: 'Your HR system', plan: 'rota approved · synced', way: 'REST API', reads: 'Employees, contracts and availability.', back: 'An approved rota, written back and pushed to calendars.' },
+    tms: { label: 'Dispatch or fleet system', icon: 'fleet', method: 'REST API', mode: 'no', code: 'rest', packets: ['vehicles', 'orders'], rows: 140, unit: 'stops · 12 vans', stages: ['0 gaps', '3 rules confirmed', '0.00% gap · 9.1 s'], outs: ['system', 'file'], sys: 'Your dispatch system', plan: '12 routes · arrival times', way: 'REST API', reads: 'Vehicles, orders and delivery windows.', back: 'Routes per vehicle with arrival times.' },
+    data: { label: 'Our own data team', icon: 'code', method: 'Python SDK', mode: 'yes', code: 'python', packets: ['DataFrame'], rows: 3000, unit: 'rows in', stages: ['0 gaps', '5 rules confirmed', '0.00% gap · 3.4 s'], outs: ['system'], sys: 'Your next pipeline step', plan: 'assignments as a DataFrame', way: 'Python SDK', reads: 'Any table you pass in.', back: 'Assignments ready for your next pipeline step.' },
+    agent: { label: 'An AI assistant', icon: 'assistant', method: 'MCP', mode: 'yes', code: 'mcp', packets: ['tool call'], rows: 24, unit: 'nurses', stages: ['3 gaps → asked', '4 rules confirmed', '0.00% gap · 4.2 s'], outs: ['system'], sys: 'Back to your assistant', plan: 'a plan it can explain', way: 'MCP', reads: 'Whatever your assistant passes in.', back: 'A proven plan your assistant can explain.' }
+  };
+  var DST = {
+    sheets: { label: 'Google Sheets', icon: 'sheet', chip: 'Native', done: 'Sent' },
+    calendar: { label: 'Calendar', icon: 'calendar', chip: 'Native · .ics', done: 'Pushed' },
+    file: { label: 'Excel, CSV or PDF', icon: 'file', chip: 'Native', done: 'Ready' },
+    system: { label: 'Your system', icon: 'system', chip: 'Via API', done: 'Synced' }
+  };
+  var ORDER = ['sheet', 'emr', 'hr', 'tms', 'data', 'agent'];
+  var DORDER = ['sheets', 'calendar', 'file', 'system'];
+
+  var CODE = {
+    upload: { label: 'Upload', host: 'intellign.ai/workspace', note: 'No code. Works in the browser at intellign.ai/workspace.', code: '1  Open intellign.ai/workspace\n2  Drop in your spreadsheet\n3  Say what you need in plain English\n4  Check the rules Intellign shows you\n5  Approve the plan, then send it to Google Sheets\n   or download it as CSV, Excel, PDF or .ics' },
+    rest: { label: 'REST', host: 'api.intellign.ai', note: 'Send your two tables as datasets first, then solve. Full reference in the docs.', code: 'curl -X POST https://api.intellign.ai/api/public/v1/solve \\\n  -H "Authorization: Bearer $INTELLIGN_API_KEY" \\\n  -H "Idempotency-Key: roster-week-42" \\\n  -H "Content-Type: application/json" \\\n  -d \'{\n    "problem": "Roster our 24 nurses across 3 wards. Nobody works more than 3 nights in a row.",\n    "entities_dataset_id": "<staff dataset id>",\n    "targets_dataset_id": "<shifts dataset id>",\n    "quality_mode": "balanced"\n  }\'\n\n# 202 Accepted. Poll the job, then read the plan back.' },
+    python: { label: 'Python', host: 'pip install intellign', note: 'ik_test_ keys are a free sandbox; ik_live_ keys are for production.', code: 'from intellign import Client, Problem\n\nclient = Client(api_key="ik_live_...", base_url="https://api.intellign.ai")\n\nproblem = (\n    Problem.assignment(name="Nurse roster")\n    .entities(rows=nurses)\n    .targets(rows=wards)\n    .maximize("skill_match", weight=70,\n              entity_column="skills", target_column="required_skills")\n    .require("entity.skills superset_of target.required_skills")\n    .quality("balanced")\n)\n\nresult = client.submit(problem).wait()\nprint(result.assignments[0])' },
+    mcp: { label: 'MCP', host: 'intellign-mcp', note: 'pip install "intellign[mcp]". Works with any MCP-capable assistant.', code: '{\n  "mcpServers": {\n    "intellign": {\n      "command": "intellign-mcp",\n      "env": { "INTELLIGN_API_KEY": "ik_live_..." }\n    }\n  }\n}\n\n# Then ask your assistant:\n# "Use Intellign to roster my nurses for next week."' }
+  };
+  var STEPS = {
+    sheet: ['Open Intellign and drop in your spreadsheet.', 'Say what you need in plain English and check the rules.', 'Approve the plan, then send it to Google Sheets or download it.'],
+    system: ['Tell us which system you use.', 'We connect it with you, so your data flows in on its own.', 'Approved plans appear back in your system. No re-typing.'],
+    dev: ['Create an API key in your dashboard.', 'Send your tables and your sentence.', 'Read the plan back, with a reason for every assignment.']
+  };
+
+  /* ---------- build tiles ---------- */
+  $('srcs').innerHTML = ORDER.map(function (k) {
+    var s = SRC[k];
+    return '<button type="button" class="src" data-src="' + k + '" aria-pressed="false">' + ic(s.icon) + '<span class="t"><b>' + s.label + '</b><small>' + s.method + '</small></span></button>';
+  }).join('');
+  $('dsts').innerHTML = DORDER.map(function (k) {
+    var d = DST[k];
+    return '<div class="dst" data-dst="' + k + '">' + ic(d.icon) + '<span class="t"><b data-lbl>' + d.label + '</b><small>' + d.chip + '</small></span><span class="done">' + d.done + '</span></div>';
+  }).join('');
+
+  var grid = $('grid'), svg = $('svg'), pkLayer = $('pk'), core = grid.querySelector('.core');
+  var inPaths = {}, outPaths = {};
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function rel(el, side) {
+    var b = grid.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: (side === 'r' ? r.right : r.left) - b.left, y: r.top + r.height / 2 - b.top };
+  }
+  function curve(a, b) {
+    var dx = Math.max(24, (b.x - a.x) * 0.5);
+    return 'M' + a.x + ' ' + a.y + ' C' + (a.x + dx) + ' ' + a.y + ' ' + (b.x - dx) + ' ' + b.y + ' ' + b.x + ' ' + b.y;
+  }
+  function mk(d, cls) {
+    var p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', d); p.setAttribute('class', cls); p.setAttribute('fill', 'none');
+    if (cls === 'base') { p.setAttribute('stroke', '#CDBFB0'); p.setAttribute('stroke-width', '1'); }
+    else { p.setAttribute('stroke', '#5C1427'); p.setAttribute('stroke-width', '1.6'); p.setAttribute('stroke-linecap', 'round'); p.style.opacity = '0'; }
+    svg.appendChild(p);
+    return p;
+  }
+  function layout() {
+    if (!svg.getBoundingClientRect().width) return;
+    var b = grid.getBoundingClientRect();
+    svg.setAttribute('viewBox', '0 0 ' + b.width + ' ' + b.height);
+    svg.innerHTML = '';
+    inPaths = {}; outPaths = {};
+    var coreIn = rel(core, 'l'), coreOut = rel(core, 'r');
+    ORDER.forEach(function (k) {
+      var el = grid.querySelector('[data-src="' + k + '"]');
+      var d = curve(rel(el, 'r'), coreIn);
+      mk(d, 'base'); inPaths[k] = mk(d, 'act');
+    });
+    DORDER.forEach(function (k) {
+      var el = grid.querySelector('[data-dst="' + k + '"]');
+      var d = curve(coreOut, rel(el, 'l'));
+      mk(d, 'base'); outPaths[k] = mk(d, 'act');
+    });
+  }
+
+  /* ---------- motion engine ---------- */
+  var token = 0, CANCEL = {};
+  var sleep = function (ms, tk) {
+    return new Promise(function (res, rej) { setTimeout(function () { tk === token ? res() : rej(CANCEL); }, ms); });
+  };
+  function ease(t) { return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function frames(ms, tk, fn) {
+    return new Promise(function (res, rej) {
+      var t0 = performance.now();
+      (function f(now) {
+        if (tk !== token) return rej(CANCEL);
+        var t = Math.min(1, (now - t0) / ms);
+        fn(t);
+        t < 1 ? requestAnimationFrame(f) : res();
+      })(t0);
+    });
+  }
+  function drawPath(p, ms, tk) {
+    if (!p) return Promise.resolve();
+    var len = p.getTotalLength();
+    p.style.opacity = '1';
+    p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+    return frames(ms, tk, function (t) { p.style.strokeDashoffset = len * (1 - ease(t)); });
+  }
+  function travel(path, label, cls, ms, tk) {
+    if (!path || !svg.getBoundingClientRect().width) return sleep(ms / 3, tk);
+    var el = document.createElement('span');
+    el.className = 'pk ' + (cls || ''); el.textContent = label;
+    pkLayer.appendChild(el);
+    var len = path.getTotalLength(), h = el.offsetHeight / 2;
+    return frames(ms, tk, function (t) {
+      var e = ease(t), pt = path.getPointAtLength(len * e);
+      el.style.transform = 'translate(' + (pt.x - el.offsetWidth / 2) + 'px,' + (pt.y - h) + 'px) scale(' + (1 - 0.18 * e) + ')';
+      el.style.opacity = t < .1 ? t * 10 : (t > .88 ? (1 - t) * 8 : 1);
+    }).then(function () { el.remove(); }, function (e) { el.remove(); throw e; });
+  }
+  function count(to, ms, tk, unit) {
+    $('rows-l').textContent = unit;
+    return frames(ms, tk, function (t) { $('rows').textContent = Math.round(to * ease(t)).toLocaleString(); });
+  }
+
+  var cur = 'sheet', auto = true, started = false, setupReady = false;
+  function resetCore() {
+    $('rows').textContent = '0';
+    for (var i = 0; i < 3; i++) { $('stg' + i).classList.remove('on'); $('stg' + i + 's').innerHTML = '&nbsp;'; }
+    $('plan-line').classList.remove('on'); $('plan-line').innerHTML = '&nbsp;';
+    grid.querySelectorAll('.dst').forEach(function (d) { d.classList.remove('ok'); });
+    svg.querySelectorAll('.act').forEach(function (p) { p.style.opacity = '0'; });
+    pkLayer.innerHTML = '';
+  }
+  function select(k, fromUser) {
+    cur = k;
+    var s = SRC[k];
+    grid.querySelectorAll('.src').forEach(function (b) { var on = b.getAttribute('data-src') === k; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    grid.querySelectorAll('.dst').forEach(function (d) {
+      var key = d.getAttribute('data-dst');
+      d.classList.toggle('lit', s.outs.indexOf(key) > -1);
+      if (key === 'system') d.querySelector('[data-lbl]').textContent = s.sys;
+    });
+    $('f-way').textContent = s.way; $('f-reads').textContent = s.reads; $('f-back').textContent = s.back;
+    if (fromUser || !setupReady) { mode = s.mode; method = s.code; setupReady = true; renderSetup(); }
+  }
+  function finalState() {
+    var s = SRC[cur];
+    $('rows').textContent = s.rows.toLocaleString(); $('rows-l').textContent = s.unit;
+    for (var i = 0; i < 3; i++) { $('stg' + i).classList.add('on'); $('stg' + i + 's').textContent = s.stages[i]; }
+    $('plan-line').textContent = s.plan; $('plan-line').classList.add('on');
+    s.outs.forEach(function (o) { grid.querySelector('[data-dst="' + o + '"]').classList.add('ok'); });
+  }
+  async function play(k, fromUser) {
+    var tk = ++token, s = SRC[k];
+    select(k, fromUser); resetCore();
+    if (reduce) { finalState(); return; }
+    try {
+      await sleep(250, tk);
+      await Promise.all([drawPath(inPaths[k], 700, tk)].concat(s.packets.map(function (name, i) {
+        return sleep(i * 240, tk).then(function () { return travel(inPaths[k], name, '', 900, tk); });
+      })));
+      await count(s.rows, 700, tk, s.unit);
+      for (var i = 0; i < 3; i++) {
+        $('stg' + i).classList.add('on'); $('stg' + i + 's').textContent = s.stages[i];
+        await sleep(520, tk);
+      }
+      $('plan-line').textContent = s.plan; $('plan-line').classList.add('on');
+      await Promise.all(s.outs.map(function (o, i) {
+        return sleep(i * 200, tk).then(function () {
+          return Promise.all([drawPath(outPaths[o], 700, tk), travel(outPaths[o], 'plan', 'plan', 900, tk)]);
+        }).then(function () { grid.querySelector('[data-dst="' + o + '"]').classList.add('ok'); });
+      }));
+      await sleep(2400, tk);
+      if (auto) play(ORDER[(ORDER.indexOf(k) + 1) % ORDER.length]);
+    } catch (e) { if (e !== CANCEL) throw e; }
+  }
+
+  /* ---------- how to set it up ---------- */
+  var mode = 'no', method = 'upload';
+  function renderSetup() {
+    $('m-no').classList.toggle('on', mode === 'no'); $('m-yes').classList.toggle('on', mode === 'yes');
+    $('m-no').setAttribute('aria-pressed', mode === 'no'); $('m-yes').setAttribute('aria-pressed', mode === 'yes');
+    $('panel-no').hidden = mode !== 'no'; $('panel-yes').hidden = mode !== 'yes';
+    var kind = cur === 'sheet' ? 'sheet' : (method === 'rest' ? 'system' : 'dev');
+    $('panel-no').innerHTML = STEPS[kind].map(function (t, i) { return '<div class="st"><span class="num">' + (i + 1) + '</span><span>' + t + '</span></div>'; }).join('');
+    var C = CODE[method];
+    $('mtabs').innerHTML = Object.keys(CODE).map(function (k) {
+      return '<button class="mtab' + (k === method ? ' on' : '') + '" type="button" role="tab" aria-selected="' + (k === method) + '" data-method="' + k + '">' + CODE[k].label + '</button>';
+    }).join('');
+    $('m-host').textContent = C.host; $('m-code').textContent = C.code; $('m-note').textContent = C.note;
+  }
+  $('m-no').addEventListener('click', function () { mode = 'no'; renderSetup(); });
+  $('m-yes').addEventListener('click', function () { mode = 'yes'; renderSetup(); });
+  $('mtabs').addEventListener('click', function (e) { var b = e.target.closest('[data-method]'); if (!b) return; method = b.getAttribute('data-method'); renderSetup(); });
+
+  /* ---------- controls ---------- */
+  $('srcs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-src]'); if (!b) return;
+    auto = false; $('ctl').textContent = 'Play'; $('ctl').setAttribute('aria-pressed', 'true');
+    play(b.getAttribute('data-src'), true);
+  });
+  $('ctl').addEventListener('click', function () {
+    auto = !auto;
+    $('ctl').textContent = auto ? 'Pause' : 'Play'; $('ctl').setAttribute('aria-pressed', String(!auto));
+    if (auto) play(cur); else token++;
+  });
+
+  /* ---------- run only while visible ---------- */
+  function start() {
+    if (started) return;
+    started = true; layout(); play('sheet');
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { if (!started) start(); else if (auto) play(cur); }
+        else if (started) { token++; }
+      });
+    }, { threshold: 0.25 }).observe($('cx'));
+  } else { start(); }
+  var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { layout(); }, 120); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (started) layout(); });
+  select('sheet'); finalState();
+})();
+</script>
+</body>
+</html>

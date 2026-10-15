@@ -40,3 +40,19 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .next-build/
+
+# nysc demo export (confidential, never served)
+/exports
+
+# brag trailer scratch (reproducible; keep the project, ignore tooling)
+/brag-output/composition/node_modules
+/brag-output/composition/snapshots
+/brag-output/composition/package-lock.json
+/brag-output/brag-draft.mp4
+/brag-output/brag-raw.mp4
+/walkthrough/node_modules
+/walkthrough/.env.local
+/walkthrough/raw
+/walkthrough/shots
+/walkthrough/package-lock.json
+/walkthrough/.backend.env
